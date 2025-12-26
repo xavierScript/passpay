@@ -18,4 +18,4 @@ export const PLANS = [
 ] as const;
 
 // Where to send subscription payments (replace with your wallet)
-export const RECIPIENT_WALLET = "8L2Lst5eKnmat8HvKUG9jZ37d1W8fg2qERpUSdTMrFFc";
+export const RECIPIENT_WALLET = "55czFRi1njMSE7eJyDLx1R5yS1Bi5GiL2Ek4F1cZPLFx";
