@@ -1,40 +1,21 @@
+// LazorKit Default Configuration (from docs)
 export const DEFAULT_CONFIG = {
-  rpcUrl:
-    process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com",
+  rpcUrl: "https://api.devnet.solana.com",
   portalUrl: "https://portal.lazor.sh",
   paymasterConfig: {
     paymasterUrl: "https://kora.devnet.lazorkit.com",
-    apiKey: process.env.NEXT_PUBLIC_LAZORKIT_API_KEY || undefined,
   },
-  clusterSimulation: "devnet" as const,
 };
 
-export const USDC_MINT =
-  process.env.NEXT_PUBLIC_USDC_MINT ||
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// Devnet USDC mint address
+export const USDC_MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
 
+// Subscription plans (amounts in USDC)
 export const PLANS = [
-  {
-    id: "basic",
-    name: "Basic",
-    amount: 5,
-    description: "Access to basic content",
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    amount: 10,
-    description: "Premium content + features",
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    amount: 20,
-    description: "All content + priority support",
-  },
+  { id: "basic", name: "Basic", amount: 0.01 },
+  { id: "pro", name: "Pro", amount: 0.05 },
+  { id: "premium", name: "Premium", amount: 0.1 },
 ] as const;
 
-export type PlanId = (typeof PLANS)[number]["id"];
-
-export const SUBSCRIPTION_USDC_RECIPIENT =
-  "6kQPt6c83oQKvJxfk2s8wU2zH1GvvpPYGQkqkMZRecipient"; // Replace with your recipient address
+// Where to send subscription payments (replace with your wallet)
+export const RECIPIENT_WALLET = "8L2Lst5eKnmat8HvKUG9jZ37d1W8fg2qERpUSdTMrFFc";

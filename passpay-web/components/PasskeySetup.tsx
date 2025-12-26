@@ -54,7 +54,10 @@ export function PasskeySetup({
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold">Login with Passkey</h2>
+        <h2 className="text-lg font-semibold">🔐 Create Passkey Wallet</h2>
+        <p className="text-sm text-neutral-400 mt-1">
+          No seed phrases. Just your biometrics.
+        </p>
       </CardHeader>
       <CardContent>
         {supported === false && (
@@ -62,22 +65,30 @@ export function PasskeySetup({
             Your device doesn't support biometric login. Use PIN instead.
           </div>
         )}
-        <div className="flex items-center gap-3">
-          <Button onClick={handleConnect} disabled={isConnecting}>
-            {isConnecting ? "Connecting..." : "Login with Biometrics"}
-          </Button>
+        <div className="space-y-3">
           <Button
-            variant="secondary"
-            onClick={() => toast("Fallback PIN flow coming soon")}
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="w-full"
           >
-            Use PIN Instead
+            {isConnecting
+              ? "Creating Wallet..."
+              : "✨ Create Wallet with Passkey"}
           </Button>
+          <p className="text-xs text-neutral-400 text-center">
+            Powered by LazorKit - Your device is your wallet
+          </p>
         </div>
         {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
         {wallet?.smartWallet && (
-          <p className="mt-3 text-sm text-neutral-300">
-            Connected wallet: {wallet.smartWallet}
-          </p>
+          <div className="mt-4 p-3 rounded bg-green-900/20 border border-green-500/40">
+            <p className="text-sm text-green-200 font-semibold">
+              ✓ Wallet Created!
+            </p>
+            <p className="text-xs text-neutral-300 mt-1 font-mono break-all">
+              {wallet.smartWallet}
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

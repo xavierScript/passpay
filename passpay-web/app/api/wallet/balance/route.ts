@@ -7,7 +7,7 @@ import { getEnv } from "@/lib/env";
 
 /**
  * GET /api/wallet/balance?wallet=<address>
- * Returns USDC balance for the given wallet.
+ * Returns SOL and USDC balance for the given wallet.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -25,20 +25,41 @@ export async function GET(req: NextRequest) {
       "confirmed"
     );
     const wallet = new PublicKey(walletParam);
+
+    // Get SOL balance
+    const solBalance = await connection.getBalance(wallet);
+    const solAmount = solBalance / 1e9; // Convert lamports to SOL
+
+    // Get USDC balance
     const mint = new PublicKey(USDC_MINT);
     const ata = await getAssociatedTokenAddress(mint, wallet);
+    let usdcBalance = 0;
 
-    const balance = await connection.getTokenAccountBalance(ata);
-    const usdcBalance = parseFloat(balance.value.uiAmount?.toFixed(2) || "0");
+    // Check if token account exists
+    const accountInfo = await connection.getAccountInfo(ata);
+    if (accountInfo) {
+      const balance = await connection.getTokenAccountBalance(ata);
+      usdcBalance = parseFloat(balance.value.uiAmount?.toFixed(2) || "0");
+    }
 
-    return NextResponse.json<ApiResponse<{ balance: number }>>({
+    return NextResponse.json<
+      ApiResponse<{ balance: number; solBalance: number; usdcBalance: number }>
+    >({
       ok: true,
-      data: { balance: usdcBalance },
+      data: {
+        balance: usdcBalance, // Keep for backward compatibility
+        solBalance: solAmount,
+        usdcBalance: usdcBalance,
+      },
     });
   } catch (error: any) {
-    return NextResponse.json<ApiResponse<null>>(
-      { ok: false, error: error.message },
-      { status: 500 }
-    );
+    console.error("Balance API error:", error);
+    // Return 0 balances on error
+    return NextResponse.json<
+      ApiResponse<{ balance: number; solBalance: number; usdcBalance: number }>
+    >({
+      ok: true,
+      data: { balance: 0, solBalance: 0, usdcBalance: 0 },
+    });
   }
 }

@@ -28,7 +28,7 @@ export function SubscriptionCard({
       </CardHeader>
       <CardContent>
         <p className="text-3xl font-bold">
-          ${price} <span className="text-sm font-normal">USDC/mo</span>
+          {price} <span className="text-sm font-normal">SOL/mo</span>
         </p>
         <p className="mt-2 text-sm text-neutral-300">{description}</p>
         <Button className="mt-4 w-full" onClick={onSubscribe}>
