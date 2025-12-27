@@ -1,9 +1,4 @@
-/**
- * Root Layout with Polyfills and Lazorkit Provider
- * Must be the entry point to configure React Native environment
- */
-
-// CRITICAL: Polyfills must be imported first
+// Polyfills for React Native
 import { Buffer } from "buffer";
 import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
@@ -20,10 +15,17 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { LAZORKIT_CONFIG, SOLANA_CONFIG } from "@/lib/constants";
 
 export const unstable_settings = {
   anchor: "(tabs)",
+};
+
+const LAZORKIT_CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  configPaymaster: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  },
 };
 
 export default function RootLayout() {
@@ -31,50 +33,20 @@ export default function RootLayout() {
 
   return (
     <LazorKitProvider
-      rpcUrl={SOLANA_CONFIG.RPC_URL}
-      portalUrl={LAZORKIT_CONFIG.PORTAL_URL}
-      configPaymaster={{
-        paymasterUrl: LAZORKIT_CONFIG.PAYMASTER_URL,
-        apiKey: LAZORKIT_CONFIG.API_KEY,
-      }}
-      isDebug={__DEV__}
+      rpcUrl={LAZORKIT_CONFIG.rpcUrl}
+      portalUrl={LAZORKIT_CONFIG.portalUrl}
+      configPaymaster={LAZORKIT_CONFIG.configPaymaster}
+      isDebug={true}
     >
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="send"
-            options={{
-              presentation: "modal",
-              title: "Send USDC",
-              headerStyle: { backgroundColor: "#000" },
-              headerTintColor: "#fff",
-            }}
-          />
-          <Stack.Screen
-            name="scan-qr"
-            options={{
-              presentation: "modal",
-              title: "Scan QR Code",
-              headerStyle: { backgroundColor: "#000" },
-              headerTintColor: "#fff",
-            }}
-          />
-          <Stack.Screen
-            name="transaction-success"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
           <Stack.Screen
             name="modal"
             options={{ presentation: "modal", title: "Modal" }}
           />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </ThemeProvider>
     </LazorKitProvider>
   );

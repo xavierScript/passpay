@@ -1,311 +1,216 @@
-# 📱 PassPay Mobile - Lazorkit Wallet Starter
+# PassPay - Passkey-Powered Solana Wallet
 
-> Create a Solana wallet with Face ID in 10 seconds. Send USDC gaslessly.
+A minimal React Native dApp demonstrating LazorKit SDK integration with Raydium swap functionality for passkey-based Solana transactions.
 
-A minimalist React Native mobile wallet app demonstrating **Lazorkit's** biometric authentication and gasless USDC transfers on Solana.
+## 🎯 Features
 
-## ✨ Features
-
-✅ **Face ID / Touch ID wallet creation** - No seed phrases required  
-✅ **Gasless USDC transfers** - Send USDC without paying network fees  
-✅ **QR code scanning** - Easy recipient address input  
-✅ **Session persistence** - Wallet stays connected across app restarts  
-✅ **Clean native mobile UI** - Native feeling design for iOS & Android  
-✅ **TypeScript strict mode** - Full type safety  
-✅ **Solana Devnet ready** - Test with devnet tokens
+1. **Passkey Wallet Creation** - Create wallets using biometric authentication (FaceID, TouchID, Fingerprint)
+2. **SOL Transfer** - Send SOL with gasless transactions via paymaster
+3. **Raydium Token Swap** - Swap tokens on Raydium DEX with passkey verification
 
 ## 🏗️ Tech Stack
 
-- **React Native** with Expo SDK 52+
-- **TypeScript** strict mode
-- **Lazorkit SDK** for React Native ([docs](https://docs.lazorkit.com/))
-- **Expo Router** for file-based navigation
-- **React Native Reanimated** for smooth animations
-- **Solana Web3.js** for blockchain interactions
-- **Expo Camera** for QR scanning
-- **Expo LocalAuthentication** for biometrics
-- **Expo SecureStore** for encrypted storage
+- **React Native** with Expo
+- **LazorKit SDK** - Passkey wallet adapter for mobile
+- **Solana Web3.js** - Solana blockchain interactions
+- **Raydium SDK** - DEX swap functionality
+- **TypeScript** - Type safety
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 16+ installed
 - Expo CLI (`npm install -g expo-cli`)
 - iOS Simulator (Mac) or Android Emulator
 
 ### Installation
 
 ```bash
-# Clone and navigate to directory
-cd passpay-mobile
-
 # Install dependencies
 npm install
 
 # Start the development server
-npx expo start
+npm start
+
+# Run on iOS
+npm run ios
+
+# Run on Android
+npm run android
 ```
 
-### Running on Device
+## 📱 App Structure
 
-**iOS (with Face ID):**
-
-```bash
-npx expo start --ios
+```
+app/
+├── _layout.tsx          # Root layout with LazorKit provider
+├── (tabs)/
+│   ├── _layout.tsx      # Tab navigation
+│   ├── index.tsx        # Wallet creation/connection
+│   ├── transfer.tsx     # SOL transfer
+│   └── swap.tsx         # Raydium swap
+constants/
+└── theme.ts             # App colors (Solana green theme)
 ```
 
-**Android (with Fingerprint):**
+## 🔐 Deep Linking
 
-```bash
-npx expo start --android
+The app uses the scheme `passpaymobile://` for LazorKit redirects:
+
+- Wallet connection: `passpaymobile://home`
+- Transfer: `passpaymobile://transfer`
+- Swap: `passpaymobile://callback`
+
+## 🎨 Design
+
+Clean dark theme with Solana branding:
+
+```typescript
+const colors = {
+  background: "#000000",
+  card: "#1A1A1A",
+  primary: "#14F195", // Solana green
+  text: "#FFFFFF",
+  gray: "#8F8F8F",
+};
 ```
 
-**Physical Device:**
+## 🔧 Configuration
 
-1. Install **Expo Go** app from App Store / Play Store
-2. Scan QR code from terminal
-3. App will launch on your device
+### LazorKit Setup (Devnet)
 
-## 📖 Usage
-
-### First Time Setup
-
-1. Launch the app
-2. Tap "Get Started" on welcome screen
-3. Tap "Create Wallet with Face ID" (or Touch ID)
-4. Authenticate with biometrics
-5. Your wallet is created! 🎉
-
-### Sending USDC
-
-1. From home screen, tap "Send USDC"
-2. Enter or scan recipient address
-3. Enter amount
-4. Tap "Send USDC"
-5. Confirm with Face ID
-6. Transaction sent gaslessly!
-
-### Receiving USDC
-
-1. From home screen, tap "Receive"
-2. Share your wallet address or QR code
-3. Sender sends USDC to your address
-4. Balance updates automatically
-
-## 🛠️ Configuration
-
-### Environment Variables
-
-Create a `.env` file (copy from `.env.example`):
-
-```env
-# Solana Configuration
-EXPO_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
-EXPO_PUBLIC_CLUSTER=devnet
-
-# Lazorkit Configuration
-EXPO_PUBLIC_LAZORKIT_PORTAL_URL=https://portal.lazor.sh
-EXPO_PUBLIC_LAZORKIT_PAYMASTER_URL=https://kora.devnet.lazorkit.com
-EXPO_PUBLIC_LAZORKIT_API_KEY=your_api_key_here
-
-# USDC Token Mint (Devnet)
-EXPO_PUBLIC_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-
-# App Configuration
-EXPO_PUBLIC_APP_SCHEME=passpay
+```typescript
+const LAZORKIT_CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  configPaymaster: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  },
+};
 ```
 
-### App Configuration
+### Polyfills
 
-The `app.json` file contains iOS/Android permissions and settings:
+Required for Solana Web3.js on React Native (configured in `app/_layout.tsx`):
+
+```typescript
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
+import { Buffer } from "buffer";
+global.Buffer = global.Buffer || Buffer;
+```
+
+## 📖 Key Implementation Details
+
+### 1. Wallet Creation
+
+Uses LazorKit's `connect()` method with biometric authentication:
+
+```typescript
+const { connect, wallet, isConnected } = useWallet();
+
+await connect({
+  redirectUrl: "passpaymobile://home",
+  onSuccess: (wallet) => console.log(wallet.smartWallet),
+});
+```
+
+### 2. SOL Transfer (Gasless)
+
+Creates system transfer instruction and signs with passkey:
+
+```typescript
+const ix = SystemProgram.transfer({
+  fromPubkey: new PublicKey(wallet.smartWallet),
+  toPubkey: recipientPubkey,
+  lamports: amount * LAMPORTS_PER_SOL,
+});
+
+await signAndSendTransaction(
+  {
+    instructions: [ix],
+    transactionOptions: {
+      feeToken: "USDC",
+      clusterSimulation: "devnet",
+    },
+  },
+  {
+    redirectUrl: "passpaymobile://transfer",
+  }
+);
+```
+
+### 3. Raydium Swap
+
+Production implementation would:
+
+1. Fetch pool keys from Raydium API
+2. Calculate swap amounts with slippage
+3. Create swap instruction
+4. Sign with passkey
+5. Send gasless transaction
+
+```typescript
+// Production code (commented in swap.tsx)
+const { innerTransaction } = await Liquidity.makeSwapInstruction({
+  poolKeys,
+  userKeys: { owner, tokenAccountIn, tokenAccountOut },
+  amountIn,
+  amountOut: minimumAmountOut,
+  fixedSide: "in",
+});
+```
+
+## 🔍 Testing
+
+1. **Connect Wallet** - Tap "Connect with Passkey" → Use biometric auth
+2. **Transfer SOL** - Navigate to Transfer tab → Enter recipient & amount → Confirm with passkey
+3. **Swap Tokens** - Navigate to Swap tab → Select tokens & amount → Execute swap
+
+## 📦 Dependencies
+
+Key packages:
 
 ```json
 {
-  "ios": {
-    "infoPlist": {
-      "NSFaceIDUsageDescription": "Authenticate to access your Solana wallet",
-      "NSCameraUsageDescription": "Scan QR codes for recipient addresses"
-    }
-  },
-  "android": {
-    "permissions": ["USE_BIOMETRIC", "USE_FINGERPRINT", "CAMERA"]
-  }
+  "@lazorkit/wallet-mobile-adapter": "^1.0.0",
+  "@raydium-io/raydium-sdk": "^1.3.1-beta.58",
+  "@solana/web3.js": "^1.98.0",
+  "@solana/spl-token": "^0.4.9",
+  "react-native-get-random-values": "^1.11.0",
+  "react-native-url-polyfill": "^2.0.0",
+  "buffer": "^6.0.3"
 }
 ```
 
-## 📁 Project Structure
+## 🌐 Network
 
-```
-passpay-mobile/
-├── app/                          # Expo Router screens
-│   ├── _layout.tsx               # Root layout with providers
-│   ├── index.tsx                 # Entry point
-│   ├── (onboarding)/             # Onboarding flow
-│   │   ├── welcome.tsx           # Welcome screen
-│   │   └── create-wallet.tsx     # Wallet creation
-│   ├── (tabs)/                   # Main app tabs
-│   │   ├── index.tsx             # Home screen
-│   │   └── explore.tsx           # Settings screen
-│   ├── send.tsx                  # Send USDC modal
-│   ├── scan-qr.tsx               # QR scanner
-│   └── transaction-success.tsx   # Success screen
-├── components/                   # Reusable components
-│   └── LoadingOverlay.tsx        # Loading indicator
-├── lib/                          # Core utilities
-│   ├── lazorkit.ts               # Lazorkit SDK wrapper
-│   ├── biometric.ts              # Biometric auth helpers
-│   ├── storage.ts                # SecureStore wrapper
-│   └── constants.ts              # App constants & config
-├── types/                        # TypeScript definitions
-│   └── index.ts                  # Type interfaces
-├── docs/                         # Documentation
-│   ├── 01-mobile-passkey.md      # Passkey tutorial
-│   └── 02-gasless-mobile.md      # Gasless transfers tutorial
-└── README.md                     # This file
-```
+Currently configured for **Solana Devnet**. For mainnet:
 
-## 🔐 Security
+1. Update RPC URL in `app/_layout.tsx`
+2. Change `clusterSimulation` to `'mainnet'`
+3. Update paymaster URL (if available)
 
-- **No seed phrases stored** - Lazorkit manages keys via passkeys
-- **Encrypted storage** - All credentials stored in SecureStore
-- **Biometric required** - Face ID/Touch ID for all transactions
-- **Input validation** - All addresses and amounts validated
-- **Secure connections** - HTTPS for all network requests
+## 🎥 Demo Flow
 
-## 📚 Tutorials
+1. Launch app → See PassPay branding
+2. Tap "Connect with Passkey" → Portal opens
+3. Complete biometric auth → Wallet created
+4. View wallet address on home screen
+5. Navigate to Transfer → Send SOL gaslessly
+6. Navigate to Swap → Demo Raydium integration
 
-### 1. Mobile Passkey Integration
+## 📄 License
 
-Learn how to integrate Lazorkit passkey authentication:
-
-```
-docs/01-mobile-passkey.md
-```
-
-Topics covered:
-
-- Setting up Expo LocalAuthentication
-- Creating passkey wallets
-- Storing credentials securely
-- Handling biometric fallbacks
-
-### 2. Gasless Mobile Transactions
-
-Implement gasless USDC transfers:
-
-```
-docs/02-gasless-mobile.md
-```
-
-Topics covered:
-
-- Building the send flow
-- QR code scanning
-- Executing gasless transactions
-- Transaction status handling
-
-## 🧪 Testing
-
-### Device Testing Checklist
-
-- [ ] iPhone with Face ID (iOS 16+)
-- [ ] Android with fingerprint (Android 10+)
-- [ ] Device without biometrics (PIN fallback)
-
-### Flow Testing
-
-- [ ] Create wallet → Success screen
-- [ ] Send USDC → Transaction confirms
-- [ ] Scan QR code → Address populates
-- [ ] Insufficient balance → Error shown
-- [ ] App restart → Session persists
-- [ ] Logout → Credential cleared
-
-### Edge Cases
-
-- [ ] No internet connection
-- [ ] Biometric fails 3 times
-- [ ] Camera permission denied
-- [ ] Invalid Solana address entered
-- [ ] Transaction timeout
-
-## 🎨 Customization
-
-### Color Scheme
-
-Edit `lib/constants.ts` to change colors:
-
-```typescript
-export const COLORS = {
-  primary: "#14F195", // Solana green
-  background: "#000000", // Black
-  card: "#1A1A1A", // Dark gray
-  text: "#FFFFFF", // White
-  // ... more colors
-};
-```
-
-### Typography
-
-```typescript
-export const TYPOGRAPHY = {
-  sizes: {
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
-    // ... more sizes
-  },
-};
-```
-
-## 🐛 Troubleshooting
-
-### "Module not found" errors
-
-```bash
-# Clear cache and reinstall
-rm -rf node_modules
-npm install
-npx expo start --clear
-```
-
-### Biometric authentication not working
-
-1. Check device settings - ensure Face ID/Touch ID is set up
-2. Check `app.json` - verify permissions are configured
-3. iOS: Check Info.plist usage descriptions
-
-### Camera not scanning QR codes
-
-1. Grant camera permissions in device settings
-2. Ensure good lighting for QR code
-3. Check `expo-camera` is installed
-
-### Lazorkit connection fails
-
-1. Verify `.env` configuration
-2. Check internet connection
-3. Ensure Lazorkit services are running
-
-## 📝 License
-
-MIT License - feel free to use this starter for your projects!
+MIT
 
 ## 🙏 Acknowledgments
 
-- **Lazorkit** for the amazing SDK
-- **Expo** for the best React Native development experience
-- **Solana** for the fast, low-cost blockchain
-
-## 🔗 Links
-
-- [Lazorkit Documentation](https://docs.lazorkit.com/)
-- [Expo Documentation](https://docs.expo.dev/)
-- [Solana Documentation](https://docs.solana.com/)
-- [React Native](https://reactnative.dev/)
+- [LazorKit](https://lazorkit.com) - Passkey wallet infrastructure
+- [Raydium](https://raydium.io) - Solana DEX
+- [Solana](https://solana.com) - Blockchain platform
 
 ---
 
-Built with ❤️ for the Lazorkit bounty submission
+Built with ❤️ for the LazorKit bounty submission

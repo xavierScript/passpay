@@ -1,44 +1,51 @@
-/**
- * Tabs Layout
- */
-
 import { Tabs } from "expo-router";
 import React from "react";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { COLORS } from "@/lib/constants";
+import { AppColors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: AppColors.primary,
+        tabBarInactiveTintColor: AppColors.gray,
+        tabBarStyle: {
+          backgroundColor: AppColors.card,
+          borderTopColor: AppColors.card,
+        },
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: COLORS.background,
-          borderTopColor: COLORS.border,
-          borderTopWidth: 1,
-        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Wallet",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <IconSymbol size={28} name="wallet.pass.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="transfer"
         options={{
-          title: "Settings",
+          title: "Transfer",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="gear" color={color} />
+            <IconSymbol size={28} name="arrow.up.circle.fill" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="swap"
+        options={{
+          title: "Swap",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="arrow.2.squarepath" color={color} />
           ),
         }}
       />

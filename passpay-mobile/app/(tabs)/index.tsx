@@ -1,453 +1,296 @@
-/**
- * Home Screen
- * Shows wallet balance, recent activity, and action buttons
- */
-
+import { AppColors } from "@/constants/theme";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
-import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
+  ActivityIndicator,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import Animated, { FadeIn, SlideInRight } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  COLORS,
-  RADIUS,
-  SPACING,
-  TYPOGRAPHY,
-  formatAddress,
-  formatUSDC,
-} from "@/lib/constants";
-import { lazorkitManager } from "@/lib/lazorkit";
-import { BalanceInfo, Transaction } from "@/types";
+const APP_SCHEME = "passpaymobile://home";
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const { wallet, isConnected, disconnect } = useWallet();
-
-  const [balance, setBalance] = useState<BalanceInfo>({
-    sol: 0,
-    usdc: 0,
-    lastUpdated: 0,
-  });
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (wallet) {
-      loadWalletData();
+  const {
+    connect,
+    isConnected,
+    smartWalletPubkey,
+    disconnect,
+    isConnecting,
+    signMessage,
+  } = useWallet();
+  const [isLoading, setIsLoading] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [signature, setSignature] = useState<{
+    signature: string;
+    signedPayload: string;
+  } | null>(null);
+  const [signError, setSignError] = useState<string | null>(null);
+  const handleSignMessage = async () => {
+    setSignature(null);
+    setSignError(null);
+    setSigning(true);
+    try {
+      const sig = await signMessage("Welcome to PassPay!", {
+        redirectUrl: "myapp://callback",
+      });
+      setSignature(sig);
+    } catch (e: any) {
+      setSignError(e?.message || "Failed to sign message");
+    } finally {
+      setSigning(false);
     }
-  }, [wallet]);
+  };
 
-  const loadWalletData = async () => {
-    if (!wallet) return;
+  const handleConnect = async () => {
+    if (isConnecting || isLoading) return; // Prevent multiple calls
 
     try {
       setIsLoading(true);
-      const [balanceData, txData] = await Promise.all([
-        lazorkitManager.getBalances(wallet.smartWallet),
-        lazorkitManager.getRecentTransactions(wallet.smartWallet, 5),
-      ]);
-
-      setBalance(balanceData);
-      setTransactions(txData);
+      await connect({
+        redirectUrl: APP_SCHEME,
+        onSuccess: (wallet) => {
+          console.log("Connected successfully:", wallet.smartWallet);
+          setIsLoading(false);
+        },
+        onFail: (error) => {
+          console.error("Connection failed:", error);
+          setIsLoading(false);
+        },
+      });
     } catch (error) {
-      console.error("Failed to load wallet data:", error);
-      Alert.alert("Error", "Failed to load wallet data. Pull to refresh.");
-    } finally {
+      console.error("Error connecting:", error);
       setIsLoading(false);
     }
   };
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await loadWalletData();
-    setIsRefreshing(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [wallet]);
-
-  const handleCopyAddress = async () => {
-    if (wallet) {
-      await Clipboard.setStringAsync(wallet.smartWallet);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Copied", "Wallet address copied to clipboard");
+  const handleDisconnect = async () => {
+    try {
+      await disconnect({
+        onSuccess: () => console.log("Disconnected"),
+        onFail: (error) => console.error("Disconnect failed:", error),
+      });
+    } catch (error) {
+      console.error("Error disconnecting:", error);
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          await disconnect({
-            onSuccess: () => router.replace("/(onboarding)/welcome"),
-          });
-        },
-      },
-    ]);
-  };
-
-  if (!isConnected || !wallet) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No wallet connected</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={COLORS.primary}
-          />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Your Wallet</Text>
-            <Pressable
-              onPress={handleCopyAddress}
-              style={styles.addressContainer}
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>PassPay</Text>
+        <Text style={styles.subtitle}>Passkey-Powered Solana Wallet</Text>
+
+        {isConnected && smartWalletPubkey ? (
+          <View style={styles.walletContainer}>
+            <View style={styles.walletCard}>
+              <Text style={styles.label}>Wallet Address</Text>
+              <Text
+                style={styles.address}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {smartWalletPubkey.toBase58()}
+              </Text>
+              <Text style={styles.infoText}>Connected with Passkey</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.buttonSecondary]}
+              onPress={handleDisconnect}
             >
-              <Text style={styles.address}>
-                {formatAddress(wallet.smartWallet)}
+              <Text style={styles.buttonText}>Disconnect</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { marginTop: 12 }]}
+              onPress={handleSignMessage}
+              disabled={signing}
+            >
+              <Text style={styles.buttonText}>
+                {signing ? "Signing..." : "Sign Message"}
               </Text>
-              <Text style={styles.copyIcon}>📋</Text>
-            </Pressable>
+            </TouchableOpacity>
+
+            {signature && (
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.label}>Signature:</Text>
+                <Text
+                  style={{ fontSize: 12, color: AppColors.text, marginTop: 2 }}
+                  numberOfLines={2}
+                  ellipsizeMode="middle"
+                >
+                  {/* Check later */}
+                  {signature?.signature.length > 40
+                    ? signature.signature.slice(0, 20) +
+                      "..." +
+                      signature.signature.slice(-20)
+                    : signature.signature}
+                </Text>
+                ) : (
+                <>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: AppColors.text,
+                      marginTop: 2,
+                    }}
+                    numberOfLines={2}
+                    ellipsizeMode="middle"
+                  >
+                    {signature.signature}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: AppColors.gray,
+                      marginTop: 6,
+                    }}
+                    numberOfLines={2}
+                    ellipsizeMode="middle"
+                  >
+                    Payload: {signature.signedPayload}
+                  </Text>
+                </>
+              </View>
+            )}
+            {signError && (
+              <Text style={{ color: "red", marginTop: 8 }}>{signError}</Text>
+            )}
           </View>
-          <Pressable onPress={handleLogout} style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </Pressable>
-        </View>
+        ) : (
+          <View style={styles.connectContainer}>
+            <Text style={styles.description}>
+              Create or connect your wallet using biometric authentication
+              (FaceID, TouchID, or fingerprint)
+            </Text>
 
-        {/* Balance Card */}
-        <Animated.View
-          entering={FadeIn.duration(600)}
-          style={styles.balanceCard}
-        >
-          <Text style={styles.balanceLabel}>USDC Balance</Text>
-          <Text style={styles.balanceAmount}>${formatUSDC(balance.usdc)}</Text>
-          <Text style={styles.solBalance}>{balance.sol.toFixed(4)} SOL</Text>
-        </Animated.View>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (isConnecting || isLoading) && styles.buttonDisabled,
+              ]}
+              onPress={handleConnect}
+              disabled={isConnecting || isLoading}
+            >
+              {isConnecting || isLoading ? (
+                <ActivityIndicator color={AppColors.background} />
+              ) : (
+                <Text style={styles.buttonText}>Connect with Passkey</Text>
+              )}
+            </TouchableOpacity>
 
-        {/* Action Buttons */}
-        <Animated.View
-          entering={SlideInRight.delay(200)}
-          style={styles.actionsContainer}
-        >
-          <ActionButton
-            icon="↑"
-            label="Send USDC"
-            onPress={() => router.push("/send")}
-            color={COLORS.primary}
-          />
-          <ActionButton
-            icon="↓"
-            label="Receive"
-            onPress={() => Alert.alert("Receive", "Show QR code modal")}
-            color={COLORS.success}
-          />
-        </Animated.View>
-
-        {/* Recent Activity */}
-        <View style={styles.activitySection}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          {transactions.length === 0 ? (
-            <View style={styles.emptyActivity}>
-              <Text style={styles.emptyActivityText}>No transactions yet</Text>
-              <Text style={styles.emptyActivitySubtext}>
-                Send or receive USDC to get started
-              </Text>
+            <View style={styles.features}>
+              <FeatureItem text="🔐 Biometric Security" />
+              <FeatureItem text="⚡ Gasless Transactions" />
+              <FeatureItem text="🔄 Token Swaps" />
             </View>
-          ) : (
-            <View style={styles.transactionsList}>
-              {transactions.map((tx, index) => (
-                <TransactionItem
-                  key={tx.signature}
-                  transaction={tx}
-                  index={index}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          </View>
+        )}
+      </View>
+    </View>
   );
 }
 
-function ActionButton({
-  icon,
-  label,
-  onPress,
-  color,
-}: {
-  icon: string;
-  label: string;
-  onPress: () => void;
-  color: string;
-}) {
+function FeatureItem({ text }: { text: string }) {
   return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.actionButton,
-        pressed && styles.actionButtonPressed,
-      ]}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onPress();
-      }}
-    >
-      <View style={[styles.actionIcon, { backgroundColor: color + "20" }]}>
-        <Text style={styles.actionIconText}>{icon}</Text>
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function TransactionItem({
-  transaction,
-  index,
-}: {
-  transaction: Transaction;
-  index: number;
-}) {
-  const isSend = transaction.type === "send";
-
-  return (
-    <Animated.View
-      entering={FadeIn.delay(index * 100)}
-      style={styles.transactionItem}
-    >
-      <View
-        style={[
-          styles.transactionIcon,
-          {
-            backgroundColor: isSend
-              ? COLORS.error + "20"
-              : COLORS.success + "20",
-          },
-        ]}
-      >
-        <Text style={styles.transactionIconText}>{isSend ? "↑" : "↓"}</Text>
-      </View>
-
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionType}>
-          {isSend ? "Sent" : "Received"} {transaction.token}
-        </Text>
-        <Text style={styles.transactionAddress}>
-          {isSend
-            ? `To: ${formatAddress(transaction.to)}`
-            : `From: ${formatAddress(transaction.from)}`}
-        </Text>
-      </View>
-
-      <Text
-        style={[
-          styles.transactionAmount,
-          { color: isSend ? COLORS.error : COLORS.success },
-        ]}
-      >
-        {isSend ? "-" : "+"}
-        {transaction.amount.toFixed(2)}
-      </Text>
-    </Animated.View>
+    <View style={styles.featureItem}>
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: AppColors.background,
   },
-  scrollView: {
+  content: {
     flex: 1,
+    padding: 24,
+    justifyContent: "center",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.lg,
+  title: {
+    fontSize: 48,
+    fontWeight: "bold",
+    color: AppColors.primary,
+    textAlign: "center",
+    marginBottom: 8,
   },
-  headerTitle: {
-    fontSize: TYPOGRAPHY.sizes.xl,
-    fontWeight: TYPOGRAPHY.weights.bold,
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
+  subtitle: {
+    fontSize: 16,
+    color: AppColors.gray,
+    textAlign: "center",
+    marginBottom: 48,
   },
-  addressContainer: {
-    flexDirection: "row",
+  connectContainer: {
     alignItems: "center",
-    gap: SPACING.xs,
+  },
+  description: {
+    fontSize: 16,
+    color: AppColors.text,
+    textAlign: "center",
+    marginBottom: 32,
+    paddingHorizontal: 16,
+    lineHeight: 24,
+  },
+  walletContainer: {
+    width: "100%",
+  },
+  walletCard: {
+    backgroundColor: AppColors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 12,
+    color: AppColors.gray,
+    marginBottom: 8,
+    textTransform: "uppercase",
   },
   address: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    color: COLORS.textSecondary,
-    fontFamily: "monospace",
+    fontSize: 16,
+    color: AppColors.text,
+    fontWeight: "600",
+    marginBottom: 12,
   },
-  copyIcon: {
+  infoText: {
     fontSize: 14,
+    color: AppColors.gray,
   },
-  logoutButton: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-  },
-  logoutText: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    color: COLORS.error,
-    fontWeight: TYPOGRAPHY.weights.medium,
-  },
-  balanceCard: {
-    backgroundColor: COLORS.card,
-    marginHorizontal: SPACING.lg,
-    padding: SPACING.xl,
-    borderRadius: RADIUS.lg,
+  button: {
+    backgroundColor: AppColors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
     alignItems: "center",
-    marginBottom: SPACING.lg,
+    marginBottom: 16,
   },
-  balanceLabel: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
+  buttonDisabled: {
+    opacity: 0.5,
   },
-  balanceAmount: {
-    fontSize: TYPOGRAPHY.sizes["4xl"],
-    fontWeight: TYPOGRAPHY.weights.bold,
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
+  buttonSecondary: {
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.gray,
   },
-  solBalance: {
-    fontSize: TYPOGRAPHY.sizes.base,
-    color: COLORS.textSecondary,
+  buttonText: {
+    color: AppColors.background,
+    fontSize: 16,
+    fontWeight: "bold",
   },
-  actionsContainer: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.xl,
+  features: {
+    marginTop: 32,
+    width: "100%",
   },
-  actionButton: {
-    flex: 1,
-    backgroundColor: COLORS.card,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    gap: SPACING.sm,
+  featureItem: {
+    paddingVertical: 12,
   },
-  actionButtonPressed: {
-    opacity: 0.7,
-  },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionIconText: {
-    fontSize: 24,
-  },
-  actionLabel: {
-    fontSize: TYPOGRAPHY.sizes.base,
-    fontWeight: TYPOGRAPHY.weights.medium,
-    color: COLORS.text,
-  },
-  activitySection: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  sectionTitle: {
-    fontSize: TYPOGRAPHY.sizes.lg,
-    fontWeight: TYPOGRAPHY.weights.semibold,
-    color: COLORS.text,
-    marginBottom: SPACING.md,
-  },
-  emptyActivity: {
-    backgroundColor: COLORS.card,
-    padding: SPACING.xl,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-  },
-  emptyActivityText: {
-    fontSize: TYPOGRAPHY.sizes.base,
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  emptyActivitySubtext: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    color: COLORS.textSecondary,
-  },
-  transactionsList: {
-    gap: SPACING.sm,
-  },
-  transactionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.card,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    gap: SPACING.md,
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  transactionIconText: {
-    fontSize: 20,
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionType: {
-    fontSize: TYPOGRAPHY.sizes.base,
-    fontWeight: TYPOGRAPHY.weights.medium,
-    color: COLORS.text,
-    marginBottom: 2,
-  },
-  transactionAddress: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    color: COLORS.textSecondary,
-    fontFamily: "monospace",
-  },
-  transactionAmount: {
-    fontSize: TYPOGRAPHY.sizes.lg,
-    fontWeight: TYPOGRAPHY.weights.semibold,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: TYPOGRAPHY.sizes.lg,
-    color: COLORS.textSecondary,
+  featureText: {
+    fontSize: 16,
+    color: AppColors.text,
+    textAlign: "center",
   },
 });

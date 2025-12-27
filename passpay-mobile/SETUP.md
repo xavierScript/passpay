@@ -1,378 +1,262 @@
-# PassPay Mobile - Complete Setup Guide
+# PassPay Setup Guide
 
-## Table of Contents
+## 📋 Prerequisites
 
-1. [Prerequisites](#prerequisites)
-2. [Installation](#installation)
-3. [Configuration](#configuration)
-4. [Running the App](#running-the-app)
-5. [Development](#development)
-6. [Building for Production](#building-for-production)
-7. [Troubleshooting](#troubleshooting)
+Before you begin, ensure you have:
 
-## Prerequisites
+- **Node.js 16+** installed ([Download](https://nodejs.org/))
+- **Expo CLI** installed globally: `npm install -g expo-cli`
+- **iOS Simulator** (Mac only) or **Android Emulator** set up
+- **Git** for version control
 
-### Required Software
+## 🛠️ Installation Steps
 
-- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
-- **npm** 8.0.0 or higher (comes with Node.js)
-- **Expo CLI** (will be installed globally)
-- **Git** ([Download](https://git-scm.com/))
+### 1. Install Dependencies
 
-### For iOS Development
-
-- **macOS** (required for iOS development)
-- **Xcode** 14.0 or higher ([App Store](https://apps.apple.com/us/app/xcode/id497799835))
-- **CocoaPods** (`sudo gem install cocoapods`)
-
-### For Android Development
-
-- **Android Studio** ([Download](https://developer.android.com/studio))
-- **Android SDK** (API level 31 or higher)
-- **Java Development Kit (JDK)** 11 or higher
-
-## Installation
-
-### Step 1: Clone or Navigate to Project
+All dependencies are already listed in `package.json`. Simply run:
 
 ```bash
-cd passpay-mobile
-```
-
-### Step 2: Install Dependencies
-
-```bash
-# Install npm packages
-npm install
-
-# Install Expo CLI globally (if not already installed)
-npm install -g expo-cli
-
-# Verify installation
-npx expo --version
-```
-
-### Step 3: Install iOS Dependencies (macOS only)
-
-```bash
-cd ios
-pod install
-cd ..
-```
-
-## Configuration
-
-### Step 1: Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-
-```env
-# Solana Configuration
-EXPO_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
-EXPO_PUBLIC_CLUSTER=devnet
-
-# Lazorkit Configuration
-EXPO_PUBLIC_LAZORKIT_PORTAL_URL=https://portal.lazor.sh
-EXPO_PUBLIC_LAZORKIT_PAYMASTER_URL=https://kora.devnet.lazorkit.com
-EXPO_PUBLIC_LAZORKIT_API_KEY=your_api_key_here
-
-# USDC Token Mint (Devnet)
-EXPO_PUBLIC_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-
-# App Configuration
-EXPO_PUBLIC_APP_SCHEME=passpay
-```
-
-### Step 2: Get Lazorkit API Key (Optional)
-
-1. Visit [Lazorkit Dashboard](https://portal.lazor.sh)
-2. Create an account
-3. Generate an API key
-4. Add to `.env` file
-
-### Step 3: Configure App Scheme
-
-The app scheme is used for deep linking. Default is `passpay://`.
-
-To customize:
-
-1. Edit `.env`: Change `EXPO_PUBLIC_APP_SCHEME`
-2. Edit `app.json`: Change `scheme` field
-3. Rebuild the app
-
-## Running the App
-
-### Development Server
-
-Start the Expo development server:
-
-```bash
-npx expo start
-```
-
-You'll see a QR code and options to run on:
-
-- **Press `i`** - Open in iOS Simulator
-- **Press `a`** - Open in Android Emulator
-- **Press `w`** - Open in web browser (limited functionality)
-
-### Run on Physical Device
-
-#### iOS (Requires Mac)
-
-1. Install **Expo Go** from App Store
-2. Start dev server: `npx expo start`
-3. Scan QR code with Camera app
-4. App opens in Expo Go
-
-**Note**: For full biometric features, use a development build (see below)
-
-#### Android
-
-1. Install **Expo Go** from Play Store
-2. Start dev server: `npx expo start`
-3. Scan QR code with Expo Go app
-4. App opens in Expo Go
-
-### Development Build (Recommended for Biometrics)
-
-For full biometric authentication support:
-
-```bash
-# Install expo-dev-client
-npx expo install expo-dev-client
-
-# iOS
-npx expo run:ios
-
-# Android
-npx expo run:android
-```
-
-This creates a custom development build with native modules.
-
-## Development
-
-### Project Structure
-
-```
-passpay-mobile/
-├── app/                    # Expo Router screens
-│   ├── (onboarding)/       # Onboarding flow
-│   ├── (tabs)/             # Main app tabs
-│   └── *.tsx               # Other screens
-├── components/             # Reusable components
-├── lib/                    # Core utilities
-│   ├── lazorkit.ts         # Lazorkit integration
-│   ├── biometric.ts        # Biometric helpers
-│   ├── storage.ts          # Secure storage
-│   └── constants.ts        # App constants
-├── types/                  # TypeScript definitions
-├── docs/                   # Documentation
-└── assets/                 # Images, fonts, etc.
-```
-
-### Key Files
-
-- `app/_layout.tsx` - Root layout with providers
-- `lib/constants.ts` - Configuration and constants
-- `app.json` - Expo configuration
-- `.env` - Environment variables
-
-### Making Changes
-
-1. Edit files in `app/`, `components/`, or `lib/`
-2. Changes reload automatically in development
-3. Shake device or press `Cmd+D` (iOS) / `Cmd+M` (Android) for dev menu
-
-### TypeScript
-
-The project uses TypeScript strict mode. Type errors will show in your editor and during build.
-
-## Building for Production
-
-### Create Production Build
-
-#### iOS
-
-```bash
-# Create production build
-eas build --platform ios
-
-# Or local build
-npx expo run:ios --configuration Release
-```
-
-Requirements:
-
-- Apple Developer Account ($99/year)
-- Provisioning profiles configured
-- App Store Connect app created
-
-#### Android
-
-```bash
-# Create production build
-eas build --platform android
-
-# Or local build
-npx expo run:android --variant release
-```
-
-Requirements:
-
-- Keystore for signing
-- Google Play Developer account ($25 one-time)
-
-### Submit to App Stores
-
-```bash
-# iOS
-eas submit --platform ios
-
-# Android
-eas submit --platform android
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### "Cannot find module" Errors
-
-```bash
-# Clear cache and reinstall
-rm -rf node_modules
-npm install
-npx expo start --clear
-```
-
-#### Biometric Not Working
-
-1. **Simulator**: Enable Face ID in Settings → Face ID
-2. **Android Emulator**: Configure fingerprint in settings
-3. **Physical Device**: Ensure biometrics are enrolled
-
-#### Metro Bundler Issues
-
-```bash
-# Clear Metro cache
-npx expo start --clear
-
-# Or reset entirely
-watchman watch-del-all
-rm -rf node_modules
 npm install
 ```
 
-#### iOS Pod Install Fails
+This will install:
+
+- LazorKit wallet adapter
+- Solana Web3.js and SPL Token
+- Raydium SDK
+- React Native polyfills (buffer, get-random-values, url-polyfill)
+- Expo and React Native dependencies
+
+### 2. Verify Installation
+
+Check that all packages are installed:
 
 ```bash
-cd ios
-pod deintegrate
-pod install
-cd ..
+npm list --depth=0
 ```
 
-#### Android Build Fails
+You should see all dependencies including:
+
+- `@lazorkit/wallet-mobile-adapter`
+- `@raydium-io/raydium-sdk`
+- `@solana/web3.js`
+- `@solana/spl-token`
+
+### 3. Start Development Server
 
 ```bash
-cd android
-./gradlew clean
-cd ..
+npm start
 ```
 
-### Debugging
+This will open Expo DevTools in your browser.
 
-#### Enable Debug Mode
+### 4. Run on Device/Simulator
 
-In `app/_layout.tsx`:
+**For iOS (Mac only):**
+
+```bash
+npm run ios
+```
+
+**For Android:**
+
+```bash
+npm run android
+```
+
+**Using Expo Go (Mobile Device):**
+
+1. Install Expo Go from App Store/Play Store
+2. Scan the QR code from the terminal
+3. App will load on your device
+
+## 🔧 Configuration
+
+### Deep Linking Setup
+
+The app uses the custom URL scheme `passpaymobile://` which is already configured in:
+
+**app.json:**
+
+```json
+{
+  "expo": {
+    "scheme": "passpaymobile"
+  }
+}
+```
+
+### LazorKit Configuration (Devnet)
+
+Located in `app/_layout.tsx`:
 
 ```typescript
-<LazorKitProvider
-  isDebug={true}  // Enable debug logs
-  ...
->
+const LAZORKIT_CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  configPaymaster: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  },
+};
 ```
 
-#### View Logs
+### For Production (Mainnet):
+
+1. Update RPC URL:
+
+```typescript
+rpcUrl: "https://api.mainnet-beta.solana.com";
+// Or use a premium RPC like QuickNode, Helius, etc.
+```
+
+2. Update cluster simulation in transactions:
+
+```typescript
+transactionOptions: {
+  clusterSimulation: 'mainnet',
+  // ...
+}
+```
+
+3. Add paymaster API key (if required):
+
+```typescript
+configPaymaster: {
+  paymasterUrl: 'YOUR_MAINNET_PAYMASTER_URL',
+  apiKey: 'YOUR_API_KEY', // Optional
+}
+```
+
+## 📱 Testing the App
+
+### 1. Wallet Creation Flow
+
+1. Launch the app
+2. You'll see the PassPay home screen
+3. Tap "Connect with Passkey"
+4. The LazorKit portal will open in a browser
+5. Follow the biometric authentication prompts
+6. You'll be redirected back to the app
+7. Your wallet address will be displayed
+
+### 2. SOL Transfer Flow
+
+1. Navigate to "Transfer" tab
+2. Enter a recipient Solana address
+3. Enter amount in SOL (e.g., 0.01)
+4. Tap "Send SOL"
+5. Confirm with passkey authentication
+6. Transaction signature will be displayed
+
+**Test Recipient Address (Devnet):**
+You can use any valid Solana address. For testing, use:
+
+```
+4Ujf5fXfLx2PAwRqcECCLtgDxHKPznoJpa43jUBxFfMz
+```
+
+### 3. Token Swap Flow
+
+1. Navigate to "Swap" tab
+2. Select tokens (SOL ↔ USDC)
+3. Enter amount to swap
+4. Tap "Swap Tokens"
+5. Review the demo flow
+
+**Note:** The swap screen currently shows a demonstration flow. For production, you need to implement the full Raydium integration (see PRODUCTION_NOTES.md).
+
+## 🐛 Troubleshooting
+
+### "Cannot resolve module" errors
+
+Ensure all polyfills are correctly imported at the top of `app/_layout.tsx`:
+
+```typescript
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
+import { Buffer } from "buffer";
+global.Buffer = global.Buffer || Buffer;
+```
+
+### Deep linking not working
+
+1. Make sure the app scheme matches in all files
+2. Clear Expo cache: `expo start -c`
+3. Rebuild the app
+
+### Biometric authentication fails
+
+1. Ensure device/simulator has biometric authentication enabled
+2. On iOS Simulator: Hardware → Touch ID/Face ID → Enrolled
+3. On Android Emulator: Settings → Security → Fingerprint
+
+### Transaction fails
+
+1. Verify you're on Devnet
+2. Check wallet has sufficient balance (request devnet SOL from faucet)
+3. Enable debug mode: `isDebug={true}` in LazorKitProvider
+4. Check console logs for detailed errors
+
+### Expo/React Native issues
 
 ```bash
-# iOS
-npx expo run:ios
+# Clear cache
+expo start -c
 
-# Android
-npx expo run:android
+# Reset Metro bundler
+rm -rf node_modules
+npm install
+expo start -c
 
-# Or use React Native Debugger
+# iOS-specific
+cd ios && pod install && cd ..
 ```
 
-#### Check Expo Diagnostics
+## 🎯 Next Steps
+
+1. **Test thoroughly** - Try all three features
+2. **Request Devnet SOL** - Use Solana faucet to fund your wallet
+3. **Implement production Raydium** - See PRODUCTION_NOTES.md
+4. **Add error handling** - Improve user feedback
+5. **Deploy** - Build for production with EAS Build
+
+## 📚 Resources
+
+- [LazorKit Docs](https://docs.lazorkit.com)
+- [Solana Web3.js Docs](https://solana-labs.github.io/solana-web3.js/)
+- [Raydium SDK](https://github.com/raydium-io/raydium-sdk)
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Native Docs](https://reactnative.dev/)
+
+## 💰 Get Devnet SOL
+
+To test transfers, you need devnet SOL:
 
 ```bash
-npx expo-doctor
+# Using Solana CLI
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+
+# Or use web faucets:
+# - https://faucet.solana.com/
+# - https://solfaucet.com/
 ```
 
-### Getting Help
+## 🚀 Building for Production
 
-- **Expo Forums**: https://forums.expo.dev/
-- **Lazorkit Discord**: Check docs for invite link
-- **GitHub Issues**: Create an issue in your repo
-- **Stack Overflow**: Tag with `expo`, `react-native`, `solana`
+```bash
+# Install EAS CLI
+npm install -g eas-cli
 
-## Testing
+# Configure EAS
+eas build:configure
 
-### Run on Devices
+# Build for iOS
+eas build --platform ios
 
-Minimum requirements:
+# Build for Android
+eas build --platform android
+```
 
-- iOS 13.0+ for Face ID
-- Android 6.0+ for Fingerprint
+---
 
-### Test Accounts
-
-Use Solana devnet for testing:
-
-1. Create wallet in app
-2. Visit [Sol Faucet](https://solfaucet.com/)
-3. Request devnet SOL airdrop
-4. Get devnet USDC from test faucet
-
-### Test Scenarios
-
-- [ ] Create new wallet
-- [ ] Authenticate with biometrics
-- [ ] Send USDC transaction
-- [ ] Scan QR code
-- [ ] View transaction history
-- [ ] Logout and restore session
-
-## Next Steps
-
-1. Read the [README.md](./README.md) for feature overview
-2. Follow [Tutorial 1](./docs/01-mobile-passkey.md) for passkey integration
-3. Follow [Tutorial 2](./docs/02-gasless-mobile.md) for gasless transactions
-4. Customize colors and branding in `lib/constants.ts`
-5. Add your own features!
-
-## Support
-
-For issues specific to this starter:
-
-- Check [docs/](./docs/) for tutorials
-- Review [troubleshooting](#troubleshooting) section
-
-For Lazorkit SDK issues:
-
-- Visit [Lazorkit Docs](https://docs.lazorkit.com/)
-- Check their support channels
-
-## License
-
-MIT - See LICENSE file for details
+Need help? Check the README.md or create an issue in the repository.
