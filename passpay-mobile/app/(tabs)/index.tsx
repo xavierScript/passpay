@@ -3,13 +3,14 @@ import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-const APP_SCHEME = "passpaymobile://home";
+const APP_SCHEME = "passpaymobile://";
 
 export default function HomeScreen() {
   const {
@@ -27,16 +28,19 @@ export default function HomeScreen() {
     signedPayload: string;
   } | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
+
   const handleSignMessage = async () => {
     setSignature(null);
     setSignError(null);
     setSigning(true);
     try {
       const sig = await signMessage("Welcome to PassPay!", {
-        redirectUrl: "myapp://callback",
+        redirectUrl: APP_SCHEME,
       });
+      console.log("Verified Signature:", sig); // Log as per docs
       setSignature(sig);
     } catch (e: any) {
+      console.error("Sign error:", e);
       setSignError(e?.message || "Failed to sign message");
     } finally {
       setSigning(false);
@@ -44,7 +48,7 @@ export default function HomeScreen() {
   };
 
   const handleConnect = async () => {
-    if (isConnecting || isLoading) return; // Prevent multiple calls
+    if (isConnecting || isLoading) return;
 
     try {
       setIsLoading(true);
@@ -56,11 +60,13 @@ export default function HomeScreen() {
         },
         onFail: (error) => {
           console.error("Connection failed:", error);
+          Alert.alert("Connection Failed", error?.message || "Unknown error");
           setIsLoading(false);
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error connecting:", error);
+      Alert.alert("Error", error?.message || "Failed to connect");
       setIsLoading(false);
     }
   };
@@ -68,11 +74,18 @@ export default function HomeScreen() {
   const handleDisconnect = async () => {
     try {
       await disconnect({
-        onSuccess: () => console.log("Disconnected"),
-        onFail: (error) => console.error("Disconnect failed:", error),
+        onSuccess: () => {
+          console.log("Disconnected");
+          setSignature(null); // Clear signature on disconnect
+        },
+        onFail: (error) => {
+          console.error("Disconnect failed:", error);
+          Alert.alert("Error", "Failed to disconnect");
+        },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error disconnecting:", error);
+      Alert.alert("Error", error?.message || "Failed to disconnect");
     }
   };
 
@@ -84,6 +97,7 @@ export default function HomeScreen() {
 
         {isConnected && smartWalletPubkey ? (
           <View style={styles.walletContainer}>
+            {/* Wallet Info Card */}
             <View style={styles.walletCard}>
               <Text style={styles.label}>Wallet Address</Text>
               <Text
@@ -93,71 +107,60 @@ export default function HomeScreen() {
               >
                 {smartWalletPubkey.toBase58()}
               </Text>
-              <Text style={styles.infoText}>Connected with Passkey</Text>
+              <Text style={styles.infoText}>✓ Connected with Passkey</Text>
             </View>
 
+            {/* Sign Message Button */}
+            <TouchableOpacity
+              style={[styles.button, signing && styles.buttonDisabled]}
+              onPress={handleSignMessage}
+              disabled={signing}
+            >
+              {signing ? (
+                <ActivityIndicator color={AppColors.background} />
+              ) : (
+                <Text style={styles.buttonText}>Sign Message</Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Display Signature */}
+            {signature && (
+              <View style={styles.signatureCard}>
+                <Text style={styles.label}>Verified Signature</Text>
+                <Text
+                  style={styles.signatureText}
+                  numberOfLines={2}
+                  ellipsizeMode="middle"
+                >
+                  {signature.signature}
+                </Text>
+                <Text style={styles.label}>Signed Payload</Text>
+                <Text
+                  style={styles.payloadText}
+                  numberOfLines={2}
+                  ellipsizeMode="middle"
+                >
+                  {signature.signedPayload}
+                </Text>
+              </View>
+            )}
+
+            {/* Display Error */}
+            {signError && (
+              <View style={styles.errorCard}>
+                <Text style={styles.errorText}>❌ {signError}</Text>
+              </View>
+            )}
+
+            {/* Disconnect Button */}
             <TouchableOpacity
               style={[styles.button, styles.buttonSecondary]}
               onPress={handleDisconnect}
             >
-              <Text style={styles.buttonText}>Disconnect</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, { marginTop: 12 }]}
-              onPress={handleSignMessage}
-              disabled={signing}
-            >
-              <Text style={styles.buttonText}>
-                {signing ? "Signing..." : "Sign Message"}
+              <Text style={[styles.buttonText, styles.buttonSecondaryText]}>
+                Disconnect
               </Text>
             </TouchableOpacity>
-
-            {signature && (
-              <View style={{ marginTop: 10 }}>
-                <Text style={styles.label}>Signature:</Text>
-                <Text
-                  style={{ fontSize: 12, color: AppColors.text, marginTop: 2 }}
-                  numberOfLines={2}
-                  ellipsizeMode="middle"
-                >
-                  {/* Check later */}
-                  {signature?.signature.length > 40
-                    ? signature.signature.slice(0, 20) +
-                      "..." +
-                      signature.signature.slice(-20)
-                    : signature.signature}
-                </Text>
-                ) : (
-                <>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: AppColors.text,
-                      marginTop: 2,
-                    }}
-                    numberOfLines={2}
-                    ellipsizeMode="middle"
-                  >
-                    {signature.signature}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: AppColors.gray,
-                      marginTop: 6,
-                    }}
-                    numberOfLines={2}
-                    ellipsizeMode="middle"
-                  >
-                    Payload: {signature.signedPayload}
-                  </Text>
-                </>
-              </View>
-            )}
-            {signError && (
-              <Text style={{ color: "red", marginTop: 8 }}>{signError}</Text>
-            )}
           </View>
         ) : (
           <View style={styles.connectContainer}>
@@ -248,7 +251,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: AppColors.gray,
     marginBottom: 8,
+    marginTop: 12,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   address: {
     fontSize: 16,
@@ -258,7 +263,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: AppColors.gray,
+    color: AppColors.primary,
+    fontWeight: "500",
   },
   button: {
     backgroundColor: AppColors.primary,
@@ -275,11 +281,47 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: AppColors.gray,
+    marginTop: 12,
   },
   buttonText: {
     color: AppColors.background,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  buttonSecondaryText: {
+    color: AppColors.text,
+  },
+  signatureCard: {
+    backgroundColor: AppColors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: AppColors.primary,
+  },
+  signatureText: {
+    fontSize: 12,
+    color: AppColors.text,
+    fontFamily: "monospace",
+    lineHeight: 18,
+  },
+  payloadText: {
+    fontSize: 12,
+    color: AppColors.gray,
+    fontFamily: "monospace",
+    lineHeight: 18,
+  },
+  errorCard: {
+    backgroundColor: "#2A1A1A",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: "#EF4444",
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#EF4444",
   },
   features: {
     marginTop: 32,
