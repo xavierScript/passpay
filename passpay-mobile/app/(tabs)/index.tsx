@@ -1,5 +1,6 @@
 import { AppColors } from "@/constants/theme";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
+import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +29,7 @@ export default function HomeScreen() {
     signedPayload: string;
   } | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleSignMessage = async () => {
     setSignature(null);
@@ -89,6 +91,19 @@ export default function HomeScreen() {
     }
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      const address = smartWalletPubkey?.toBase58();
+      if (!address) return;
+      await Clipboard.setStringAsync(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e: any) {
+      console.error("Copy failed:", e);
+      Alert.alert("Copy Failed", e?.message || "Failed to copy address");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -100,14 +115,18 @@ export default function HomeScreen() {
             {/* Wallet Info Card */}
             <View style={styles.walletCard}>
               <Text style={styles.label}>Wallet Address</Text>
-              <Text
-                style={styles.address}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {smartWalletPubkey.toBase58()}
+              <TouchableOpacity onPress={handleCopyAddress} activeOpacity={0.7}>
+                <Text
+                  style={styles.address}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {smartWalletPubkey.toBase58()}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.infoText}>
+                {copied ? "✓ Copied to clipboard" : "✓ Connected with Passkey"}
               </Text>
-              <Text style={styles.infoText}>✓ Connected with Passkey</Text>
             </View>
 
             {/* Sign Message Button */}
@@ -124,7 +143,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             {/* Display Signature */}
-            {signature && (
+            {/* {signature && (
               <View style={styles.signatureCard}>
                 <Text style={styles.label}>Verified Signature</Text>
                 <Text
@@ -143,7 +162,7 @@ export default function HomeScreen() {
                   {signature.signedPayload}
                 </Text>
               </View>
-            )}
+            )} */}
 
             {/* Display Error */}
             {signError && (

@@ -1,6 +1,7 @@
 import { AppColors } from "@/constants/theme";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -22,6 +23,7 @@ export default function TransferScreen() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [txSignature, setTxSignature] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const handleTransfer = async () => {
     if (!isConnected || !smartWalletPubkey) {
@@ -99,6 +101,19 @@ export default function TransferScreen() {
     }
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      const address = smartWalletPubkey?.toBase58();
+      if (!address) return;
+      await Clipboard.setStringAsync(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e: any) {
+      console.error("Copy failed:", e);
+      Alert.alert("Copy Failed", e?.message || "Failed to copy address");
+    }
+  };
+
   if (!isConnected) {
     return (
       <View style={styles.container}>
@@ -122,9 +137,16 @@ export default function TransferScreen() {
 
         <View style={styles.walletInfo}>
           <Text style={styles.label}>Your Wallet</Text>
-          <Text style={styles.address} numberOfLines={1} ellipsizeMode="middle">
-            {smartWalletPubkey?.toBase58()}
-          </Text>
+          <TouchableOpacity onPress={handleCopyAddress} activeOpacity={0.7}>
+            <Text
+              style={styles.address}
+              numberOfLines={1}
+              ellipsizeMode="middle"
+            >
+              {smartWalletPubkey?.toBase58()}
+            </Text>
+          </TouchableOpacity>
+          {copied && <Text style={styles.infoText}>✓ Copied to clipboard</Text>}
         </View>
 
         <View style={styles.form}>
