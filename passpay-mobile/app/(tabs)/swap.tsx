@@ -28,7 +28,7 @@ const TOKENS = {
   },
   USDC: {
     symbol: "USDC",
-    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     decimals: 6,
     name: "USD Coin",
   },
