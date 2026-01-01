@@ -11,7 +11,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-neutral-800 bg-neutral-900",
+        "rounded-xl border border-[#1a1a1a] bg-[#0a0a0a]",
         className
       )}
     >
@@ -27,7 +27,7 @@ export function CardHeader({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("p-4 border-b border-neutral-800", className)}>
+    <div className={cn("p-4 border-b border-[#1a1a1a]", className)}>
       {children}
     </div>
   );
@@ -49,7 +49,7 @@ export function CardFooter({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("p-4 border-t border-neutral-800", className)}>
+    <div className={cn("p-4 border-t border-[#1a1a1a]", className)}>
       {children}
     </div>
   );

@@ -17,7 +17,7 @@ export function Dialog({
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-4"
+          "relative z-10 w-full max-w-md rounded-xl border border-[#1a1a1a] bg-[#0a0a0a] p-4"
         )}
       >
         {children}

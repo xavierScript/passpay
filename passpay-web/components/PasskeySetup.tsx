@@ -12,16 +12,7 @@ export function PasskeySetup({
   onConnected: (walletAddress: string) => void;
 }) {
   const { connect, isConnected, isConnecting, wallet } = useWallet();
-  const [supported, setSupported] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const isSupported =
-      typeof window !== "undefined" &&
-      !!(window as any).PublicKeyCredential &&
-      !!navigator.credentials;
-    setSupported(isSupported);
-  }, []);
 
   useEffect(() => {
     if (isConnected && wallet?.smartWallet) {
@@ -54,38 +45,31 @@ export function PasskeySetup({
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg font-semibold">🔐 Create Passkey Wallet</h2>
-        <p className="text-sm text-neutral-400 mt-1">
+        <h2 className="text-lg font-semibold">🔐 Passkey Wallet</h2>
+        <p className="text-sm text-[#8f8f8f] mt-1">
           No seed phrases. Just your biometrics.
         </p>
       </CardHeader>
       <CardContent>
-        {supported === false && (
-          <div className="mb-4 rounded-md border border-red-500/40 bg-red-900/20 p-3 text-red-200">
-            Your device doesn't support biometric login. Use PIN instead.
-          </div>
-        )}
         <div className="space-y-3">
           <Button
             onClick={handleConnect}
             disabled={isConnecting}
             className="w-full"
           >
-            {isConnecting
-              ? "Creating Wallet..."
-              : "✨ Create Wallet with Passkey"}
+            {isConnecting ? "Connecting..." : "✨ Continue with Passkey"}
           </Button>
-          <p className="text-xs text-neutral-400 text-center">
+          <p className="text-xs text-[#8f8f8f] text-center">
             Powered by LazorKit - Your device is your wallet
           </p>
         </div>
         {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
         {wallet?.smartWallet && (
-          <div className="mt-4 p-3 rounded bg-green-900/20 border border-green-500/40">
-            <p className="text-sm text-green-200 font-semibold">
+          <div className="mt-4 p-3 rounded bg-[#14F195]/10 border border-[#14F195]/20">
+            <p className="text-sm text-[#14F195] font-semibold">
               ✓ Wallet Created!
             </p>
-            <p className="text-xs text-neutral-300 mt-1 font-mono break-all">
+            <p className="text-xs text-[#8f8f8f] mt-1 font-mono break-all">
               {wallet.smartWallet}
             </p>
           </div>

@@ -1,237 +1,216 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useWallet } from "@lazorkit/wallet";
+import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import toast from "react-hot-toast";
-import type { SubscriptionMetadata } from "@/types";
+import { getSolBalance } from "@/lib/services/rpc";
+import { PasskeySetup } from "@/components/PasskeySetup";
+
+const quickActions = [
+  {
+    href: "/transfer",
+    icon: "💸",
+    title: "Transfer SOL",
+    description: "Send SOL gaslessly to any address",
+    color:
+      "border-[#1a1a1a] hover:border-[#14F195]/30 bg-[#0a0a0a] hover:bg-[#14F195]/5",
+  },
+  {
+    href: "/memo",
+    icon: "📝",
+    title: "Write Memo",
+    description: "Store messages permanently on-chain",
+    color:
+      "border-[#1a1a1a] hover:border-amber-500/30 bg-[#0a0a0a] hover:bg-amber-500/5",
+  },
+  {
+    href: "/staking",
+    icon: "🥩",
+    title: "Stake SOL",
+    description: "Delegate to validators and earn rewards",
+    color:
+      "border-[#1a1a1a] hover:border-purple-500/30 bg-[#0a0a0a] hover:bg-purple-500/5",
+  },
+  {
+    href: "/subscribe",
+    icon: "💳",
+    title: "Subscribe",
+    description: "Subscribe to plans with SOL payments",
+    color:
+      "border-[#1a1a1a] hover:border-blue-500/30 bg-[#0a0a0a] hover:bg-blue-500/5",
+  },
+];
 
 export default function ManagePage() {
-  const { smartWalletPubkey, wallet } = useWallet();
-  const [subscription, setSubscription] = useState<SubscriptionMetadata | null>(
-    null
-  );
-  const [balance, setBalance] = useState<number | null>(null);
+  const { smartWalletPubkey, wallet, isConnected } = useWallet();
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const hasFetchedRef = useRef(false);
 
-  useEffect(() => {
-    if (!smartWalletPubkey || hasFetchedRef.current) return;
-
-    hasFetchedRef.current = true;
-    let isMounted = true;
-
-    (async () => {
-      try {
-        const walletAddress = smartWalletPubkey.toBase58();
-
-        // Fetch both in parallel
-        const [subRes, balRes] = await Promise.all([
-          fetch(`/api/subscription/status?wallet=${walletAddress}`),
-          fetch(`/api/wallet/balance?wallet=${walletAddress}`),
-        ]);
-
-        const [subData, balData] = await Promise.all([
-          subRes.json(),
-          balRes.json(),
-        ]);
-
-        if (isMounted) {
-          if (subData.ok) setSubscription(subData.data);
-          if (balData.ok) {
-            setBalance(balData.data.usdcBalance);
-            setSolBalance(balData.data.solBalance);
-          }
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        if (isMounted) setLoading(false);
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
+  const fetchBalance = useCallback(async () => {
+    if (!smartWalletPubkey) return;
+    setLoading(true);
+    try {
+      const balance = await getSolBalance(smartWalletPubkey);
+      setSolBalance(balance);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [smartWalletPubkey]);
 
-  async function handleCancel() {
-    if (!subscription) return;
-    const confirmed = confirm("Are you sure you want to cancel?");
-    if (!confirmed) return;
-    const res = await fetch("/api/subscription/cancel", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ walletAddress: subscription.walletAddress }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      toast.success("Subscription cancelled.");
-      setSubscription({ ...subscription, status: "cancelled" });
-    } else {
-      toast.error(data.error || "Cancellation failed.");
+  useEffect(() => {
+    if (isConnected && smartWalletPubkey && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchBalance();
     }
+  }, [isConnected, smartWalletPubkey, fetchBalance]);
+
+  // Not connected state
+  if (!isConnected || !wallet?.smartWallet) {
+    return (
+      <div className="min-h-screen bg-black p-8 text-white">
+        <div className="mx-auto max-w-md">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold tracking-tight">
+              Welcome to PassPay
+            </h1>
+            <p className="mt-2 text-[#8f8f8f]">
+              Connect your wallet to get started
+            </p>
+          </div>
+          <PasskeySetup onConnected={() => {}} />
+        </div>
+      </div>
+    );
   }
 
-  if (loading)
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        Loading...
-      </div>
-    );
-
-  if (!smartWalletPubkey || !wallet?.smartWallet)
-    return (
-      <div className="flex h-screen items-center justify-center text-white">
-        Please connect your wallet.
-      </div>
-    );
-
   return (
-    <div className="min-h-screen bg-neutral-950 p-8 text-white">
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="mt-2 text-sm text-neutral-400">
-          Your passkey-protected Solana wallet on Devnet
-        </p>
-      </div>
+    <div className="min-h-screen bg-black p-4 sm:p-8 text-white">
+      <div className="mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">🏠 Dashboard</h1>
+          <p className="mt-2 text-[#8f8f8f]">
+            Your passkey-protected Solana wallet on Devnet
+          </p>
+        </div>
 
-      <div className="mx-auto max-w-3xl space-y-6">
-        {/* Wallet Details Card */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold">💼 Wallet Details</h2>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-neutral-400">Wallet Address</p>
-              <p className="font-mono text-sm break-all">
-                {wallet.smartWallet}
-              </p>
+        {/* Wallet Overview */}
+        <Card className="mb-6 border-[#14F195]/20 bg-gradient-to-br from-[#14F195]/5 to-[#14F195]/10">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <p className="text-sm text-[#8f8f8f] mb-1">Wallet Address</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm md:text-base">
+                    {wallet.smartWallet.slice(0, 8)}...
+                    {wallet.smartWallet.slice(-8)}
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(wallet.smartWallet);
+                    }}
+                    className="text-xs text-[#14F195] hover:text-[#14F195]/80"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-[#8f8f8f]">Balance</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <span className="text-[#8f8f8f]">...</span>
+                    ) : (
+                      <span className="text-[#14F195]">
+                        {solBalance?.toFixed(4) ?? "0"} SOL
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={fetchBalance}
+                  disabled={loading}
+                >
+                  ↻
+                </Button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-neutral-400">SOL Balance</p>
-                <p className="text-xl font-bold">
-                  {solBalance !== null
-                    ? `${solBalance.toFixed(4)} SOL`
-                    : "Loading..."}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-neutral-400">USDC Balance</p>
-                <p className="text-xl font-bold">
-                  {balance !== null
-                    ? `$${balance.toFixed(2)} USDC`
-                    : "Loading..."}
-                </p>
-              </div>
-            </div>
 
-            {balance === 0 && (
-              <div className="mt-3 rounded-lg border border-yellow-500/40 bg-yellow-900/20 p-3">
-                <p className="text-sm text-yellow-200">
-                  💡 <strong>Need USDC?</strong> Send devnet USDC to your wallet
-                  address above to test subscriptions!
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div>
-                <p className="text-sm text-neutral-400">Network</p>
-                <Badge className="bg-purple-600">Devnet</Badge>
-              </div>
-              <div>
-                <p className="text-sm text-neutral-400">Fee Mode</p>
-                <Badge className="bg-indigo-600">Gasless (Paymaster)</Badge>
-              </div>
+            {/* Status Badges */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge className="bg-[#14F195]/10 border border-[#14F195]/20 text-[#14F195]">
+                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#14F195] inline-block animate-pulse"></span>
+                Connected
+              </Badge>
+              <Badge className="bg-[#1a1a1a] border border-[#2a2a2a] text-[#8f8f8f]">
+                Devnet
+              </Badge>
+              <Badge className="bg-[#1a1a1a] border border-[#2a2a2a] text-[#8f8f8f]">
+                ⚡ Gasless Mode
+              </Badge>
             </div>
           </CardContent>
         </Card>
 
-        {/* Subscription Card */}
-        {subscription && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Current Plan</h2>
-                <Badge
-                  className={
-                    subscription.status === "active"
-                      ? "bg-green-700"
-                      : "bg-red-700"
-                  }
+        {/* Quick Actions */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-[#8f8f8f]">
+            Quick Actions
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {quickActions.map((action) => (
+              <Link key={action.href} href={action.href}>
+                <Card
+                  className={`${action.color} transition-all cursor-pointer`}
                 >
-                  {subscription.status}
-                </Badge>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl">{action.icon}</span>
+                      <div>
+                        <h3 className="font-semibold">{action.title}</h3>
+                        <p className="text-sm text-[#8f8f8f]">
+                          {action.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Faucet Info */}
+        <Card className="mt-6 border-amber-500/20 bg-amber-500/5">
+          <CardContent className="pt-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💧</span>
+              <div>
+                <p className="font-medium text-amber-400">Need Devnet SOL?</p>
+                <p className="text-sm text-[#8f8f8f] mt-1">
+                  Get free devnet SOL from the{" "}
+                  <a
+                    href="https://faucet.solana.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-400 underline hover:text-amber-300"
+                  >
+                    Solana Faucet ↗
+                  </a>
+                  . Just paste your wallet address above!
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg">
-                Tier:{" "}
-                <span className="font-semibold capitalize">
-                  {subscription.tier}
-                </span>
-              </p>
-              <p className="text-sm text-neutral-300">
-                Next billing:{" "}
-                {new Date(subscription.nextBilling).toLocaleDateString()}
-              </p>
-              <Button variant="outline" className="mt-4" onClick={handleCancel}>
-                Cancel Subscription
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {!subscription && (
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-semibold">No Active Subscription</h2>
-            </CardHeader>
-            <CardContent>
-              <p className="text-neutral-300 mb-4">
-                You don't have an active subscription yet.
-              </p>
-              <Button onClick={() => (window.location.href = "/subscribe")}>
-                Browse Plans
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment History */}
-        {subscription && (
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-semibold">Payment History</h2>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <THead>
-                  <TR>
-                    <TH>Date</TH>
-                    <TH>Amount</TH>
-                    <TH>Status</TH>
-                  </TR>
-                </THead>
-                <TBody>
-                  <TR>
-                    <TD>
-                      {new Date(subscription.startDate).toLocaleDateString()}
-                    </TD>
-                    <TD>$0.05 USDC</TD>
-                    <TD>Paid</TD>
-                  </TR>
-                </TBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
