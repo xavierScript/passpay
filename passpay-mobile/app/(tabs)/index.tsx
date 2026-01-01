@@ -275,7 +275,7 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* Sign Message Button */}
+            {/* Sign Message Button - Commented out as it's a demo/testing feature
             <TouchableOpacity
               style={[styles.button, signing && styles.buttonDisabled]}
               onPress={handleSignMessage}
@@ -287,6 +287,7 @@ export default function HomeScreen() {
                 <Text style={styles.buttonText}>Sign Message</Text>
               )}
             </TouchableOpacity>
+            */}
 
             {/* Display Signature */}
             {/* {signature && (
