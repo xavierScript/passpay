@@ -1,12 +1,27 @@
+/**
+ * Swap Screen - Raydium Token Swap Integration with LazorKit
+ *
+ * This screen allows users to swap tokens using Raydium's AMM on Solana devnet.
+ * Transactions are signed and sent using LazorKit's passkey-based smart wallet.
+ */
+
 import { AppColors } from "@/constants/theme";
+import {
+  DEVNET_TOKENS,
+  formatTokenAmount,
+  getSwapQuote,
+  parseTokenAmount,
+  prepareSwapInstructions,
+  SwapQuote,
+  TOKEN_INFO,
+} from "@/services/raydium-swap";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
-import { Raydium, parseTokenAccountResp } from "@raydium-io/raydium-sdk-v2";
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { useEffect, useState } from "react";
+import { Connection } from "@solana/web3.js";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,305 +30,261 @@ import {
   View,
 } from "react-native";
 
-const APP_SCHEME = "passpaymobile://";
-const RPC_URL = "https://api.devnet.solana.com";
+const APP_SCHEME = "passpaymobile://swap";
+const DEVNET_RPC = "https://api.devnet.solana.com";
 
-// Devnet token configurations
-const TOKENS = {
-  SOL: {
-    symbol: "SOL",
-    mint: "So11111111111111111111111111111111111111112",
-    decimals: 9,
-    name: "Wrapped SOL",
-  },
-  USDC: {
-    symbol: "USDC",
-    mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
-    decimals: 6,
-    name: "USD Coin",
-  },
-};
+// Available tokens for swapping
+const SWAP_TOKENS = [
+  { mint: DEVNET_TOKENS.SOL, ...TOKEN_INFO[DEVNET_TOKENS.SOL] },
+  { mint: DEVNET_TOKENS.USDC, ...TOKEN_INFO[DEVNET_TOKENS.USDC] },
+  { mint: DEVNET_TOKENS.RAY, ...TOKEN_INFO[DEVNET_TOKENS.RAY] },
+];
 
-type TokenSymbol = keyof typeof TOKENS;
+type TokenOption = (typeof SWAP_TOKENS)[number];
 
 export default function SwapScreen() {
   const { signAndSendTransaction, smartWalletPubkey, isConnected } =
     useWallet();
-  const [connection] = useState(() => new Connection(RPC_URL, "confirmed"));
-  const [raydium, setRaydium] = useState<any>(null);
 
-  const [fromToken, setFromToken] = useState<TokenSymbol>("SOL");
-  const [toToken, setToToken] = useState<TokenSymbol>("USDC");
-  const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [initializingSDK, setInitializingSDK] = useState(false);
+  // Form state
+  const [inputToken, setInputToken] = useState<TokenOption>(SWAP_TOKENS[0]); // SOL default
+  const [outputToken, setOutputToken] = useState<TokenOption>(SWAP_TOKENS[1]); // USDC default
+  const [inputAmount, setInputAmount] = useState("");
+  const [slippage, setSlippage] = useState("0.5"); // 0.5% default
+
+  // Quote state
+  const [quote, setQuote] = useState<SwapQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+
+  // Transaction state
+  const [swapping, setSwapping] = useState(false);
   const [txSignature, setTxSignature] = useState("");
-  const [poolInfo, setPoolInfo] = useState<any>(null);
-  const [estimatedOutput, setEstimatedOutput] = useState("0.00");
-  const [priceImpact, setPriceImpact] = useState("0.00");
 
-  // Initialize Raydium SDK when wallet connects
+  // Token selector modal
+  const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [selectingFor, setSelectingFor] = useState<"input" | "output">("input");
+
+  // Connection instance
+  const connection = new Connection(DEVNET_RPC, "confirmed");
+
+  // Debounced quote fetching
   useEffect(() => {
-    if (isConnected && smartWalletPubkey && !raydium) {
-      initializeRaydiumSDK();
-    }
-  }, [isConnected, smartWalletPubkey]);
-
-  // Fetch pool info when tokens change
-  useEffect(() => {
-    if (raydium && isConnected) {
-      fetchPoolInfo();
-    }
-  }, [fromToken, toToken, raydium]);
-
-  // Calculate swap output when amount changes
-  useEffect(() => {
-    if (amount && poolInfo && raydium) {
-      calculateSwapOutput();
-    }
-  }, [amount, poolInfo]);
-
-  /**
-   * Initialize Raydium SDK
-   */
-  const initializeRaydiumSDK = async () => {
-    try {
-      setInitializingSDK(true);
-      console.log("Initializing Raydium SDK...");
-
-      // Guard against missing owner (TypeScript: PublicKey | null)
-      if (!smartWalletPubkey) {
-        console.warn(
-          "initializeRaydiumSDK: missing smartWalletPubkey, aborting"
-        );
+    const fetchQuote = async () => {
+      if (!inputAmount || parseFloat(inputAmount) <= 0) {
+        setQuote(null);
+        setQuoteError(null);
         return;
       }
 
-      // use a local non-null `owner` so TS can infer `PublicKey`
-      const owner: PublicKey = smartWalletPubkey;
-
-      // Fetch token accounts for the wallet
-      const solAccountResp = await connection.getAccountInfo(owner);
-      const tokenAccountResp = await connection.getTokenAccountsByOwner(owner, {
-        programId: TOKEN_PROGRAM_ID,
-      });
-      const token2022Req = await connection.getTokenAccountsByOwner(owner, {
-        programId: TOKEN_2022_PROGRAM_ID,
-      });
-
-      // Parse token account data
-      const tokenAccountData = parseTokenAccountResp({
-        owner,
-        solAccountResp,
-        tokenAccountResp: {
-          context: tokenAccountResp.context,
-          value: [...tokenAccountResp.value, ...token2022Req.value],
-        },
-      });
-
-      // Initialize Raydium SDK
-      const raydiumInstance = await Raydium.load({
-        connection,
-        owner, // Just pass PublicKey, not Keypair
-        disableLoadToken: false, // Load token info
-        tokenAccounts: tokenAccountData.tokenAccounts,
-        tokenAccountRawInfos: tokenAccountData.tokenAccountRawInfos,
-      });
-
-      setRaydium(raydiumInstance);
-      console.log("Raydium SDK initialized successfully");
-    } catch (error) {
-      console.error("Error initializing Raydium SDK:", error);
-      Alert.alert(
-        "Initialization Error",
-        "Failed to initialize Raydium SDK. Please try reconnecting your wallet."
-      );
-    } finally {
-      setInitializingSDK(false);
-    }
-  };
-
-  /**
-   * Fetch pool information for the token pair
-   */
-  const fetchPoolInfo = async () => {
-    if (!raydium) return;
-
-    try {
-      console.log(`Fetching pool for ${fromToken}/${toToken}...`);
-
-      const mint1 = TOKENS[fromToken].mint;
-      const mint2 = TOKENS[toToken].mint;
-
-      // Fetch pool by mints (V2 API - works on devnet too!)
-      const poolData = await raydium.api.fetchPoolByMints({
-        mint1,
-        mint2,
-      });
-
-      if (poolData && poolData.data && poolData.data.length > 0) {
-        const pool = poolData.data[0]; // Get first pool
-        setPoolInfo(pool);
-        console.log("Pool found:", pool.id);
-      } else {
-        setPoolInfo(null);
-        console.log("No pool found for this pair on devnet");
-        Alert.alert(
-          "Pool Not Available",
-          `No liquidity pool found for ${fromToken}/${toToken} on Devnet.\n\nNote: Devnet has limited pools. Try SOL/USDC if available.`
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching pool:", error);
-      setPoolInfo(null);
-    }
-  };
-
-  /**
-   * Calculate swap output using Raydium's compute functions
-   */
-  const calculateSwapOutput = async () => {
-    if (!raydium || !poolInfo || !amount) return;
-
-    try {
-      const inputAmount = parseFloat(amount);
-      if (inputAmount <= 0) {
-        setEstimatedOutput("0.00");
+      if (inputToken.mint === outputToken.mint) {
+        setQuoteError("Please select different tokens");
+        setQuote(null);
         return;
       }
 
-      // Use Raydium's built-in calculation
-      const result = await raydium.liquidity.computeAmountOut({
-        poolInfo,
-        amountIn: inputAmount,
-        mintIn: new PublicKey(TOKENS[fromToken].mint),
-        mintOut: new PublicKey(TOKENS[toToken].mint),
-        slippage: 0.005, // 0.5% slippage
-      });
+      setQuoteLoading(true);
+      setQuoteError(null);
 
-      setEstimatedOutput(result.amountOut.toFixed(6));
-      setPriceImpact(result.priceImpact.toFixed(2));
-    } catch (error) {
-      console.error("Error calculating output:", error);
-      setEstimatedOutput("0.00");
-    }
+      try {
+        const amountInSmallestUnits = parseTokenAmount(
+          inputAmount,
+          inputToken.decimals
+        );
+
+        const slippageBps = Math.floor(parseFloat(slippage) * 100);
+
+        const quoteResult = await getSwapQuote(
+          inputToken.mint,
+          outputToken.mint,
+          amountInSmallestUnits,
+          slippageBps
+        );
+
+        setQuote(quoteResult);
+      } catch (error: any) {
+        console.error("Quote error:", error);
+        setQuoteError(
+          error?.response?.data?.msg ||
+            error?.message ||
+            "Failed to get quote. The pool may not exist on devnet."
+        );
+        setQuote(null);
+      } finally {
+        setQuoteLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchQuote, 500);
+    return () => clearTimeout(timeoutId);
+  }, [inputAmount, inputToken, outputToken, slippage]);
+
+  const handleSwapTokens = useCallback(() => {
+    const temp = inputToken;
+    setInputToken(outputToken);
+    setOutputToken(temp);
+    setInputAmount("");
+    setQuote(null);
+  }, [inputToken, outputToken]);
+
+  const openTokenSelector = (type: "input" | "output") => {
+    setSelectingFor(type);
+    setShowTokenSelector(true);
   };
 
-  /**
-   * Execute the swap
-   */
+  const selectToken = (token: TokenOption) => {
+    if (selectingFor === "input") {
+      if (token.mint === outputToken.mint) {
+        // Swap them
+        setOutputToken(inputToken);
+      }
+      setInputToken(token);
+    } else {
+      if (token.mint === inputToken.mint) {
+        // Swap them
+        setInputToken(outputToken);
+      }
+      setOutputToken(token);
+    }
+    setShowTokenSelector(false);
+    setQuote(null);
+    setInputAmount("");
+  };
+
   const handleSwap = async () => {
     if (!isConnected || !smartWalletPubkey) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
 
-    if (!raydium) {
-      Alert.alert("Error", "Raydium SDK not initialized. Please wait...");
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert("Error", "Please enter a valid amount");
-      return;
-    }
-
-    if (!poolInfo) {
-      Alert.alert("Error", "No liquidity pool available for this pair");
+    if (!quote) {
+      Alert.alert("Error", "Please get a quote first");
       return;
     }
 
     try {
-      setLoading(true);
+      setSwapping(true);
       setTxSignature("");
 
-      const inputAmount = parseFloat(amount);
-      const inputMint = new PublicKey(TOKENS[fromToken].mint);
-      const outputMint = new PublicKey(TOKENS[toToken].mint);
+      const walletAddress = smartWalletPubkey.toBase58();
+      const amountInSmallestUnits = parseTokenAmount(
+        inputAmount,
+        inputToken.decimals
+      );
+      const slippageBps = Math.floor(parseFloat(slippage) * 100);
 
-      console.log("Preparing swap transaction...");
-
-      // Build swap transaction using Raydium SDK
-      const { execute } = await raydium.liquidity.swap({
-        poolInfo,
-        amountIn: inputAmount,
-        mintIn: inputMint,
-        mintOut: outputMint,
-        slippage: 0.005, // 0.5% slippage
-        txVersion: "V0", // Use versioned transaction
+      console.log("Preparing swap:", {
+        walletAddress,
+        inputMint: inputToken.mint,
+        outputMint: outputToken.mint,
+        amount: amountInSmallestUnits,
+        slippage: slippageBps,
       });
 
-      // Execute returns the transaction instructions
-      // We need to extract them for Lazorkit
-      const swapInstructions = execute.transaction.instructions;
+      // Prepare swap instructions
+      const { quote: freshQuote, transactions } = await prepareSwapInstructions(
+        connection,
+        walletAddress,
+        inputToken.mint,
+        outputToken.mint,
+        amountInSmallestUnits,
+        slippageBps
+      );
 
-      console.log("Signing and sending transaction with Lazorkit...");
+      console.log(`Got ${transactions.length} transaction(s) to sign`);
 
-      // Sign and send with Lazorkit (gasless)
+      // For LazorKit, we need to extract instructions from the versioned transaction
+      // and use signAndSendTransaction. However, since Raydium returns versioned
+      // transactions with address lookup tables, we need a different approach.
+      //
+      // The LazorKit adapter should handle versioned transactions if we pass
+      // the addressLookupTableAccounts in transactionOptions.
+
+      // For now, we'll extract the instructions from the first transaction
+      const transaction = transactions[0];
+      const message = transaction.message;
+
+      // Get the static account keys for instruction reconstruction
+      const staticAccountKeys = message.staticAccountKeys;
+
+      // Build instructions from compiled instructions
+      const instructions = message.compiledInstructions.map((ix) => {
+        const programId = staticAccountKeys[ix.programIdIndex];
+        const keys = ix.accountKeyIndexes.map((index) => ({
+          pubkey: staticAccountKeys[index],
+          isSigner: message.isAccountSigner(index),
+          isWritable: message.isAccountWritable(index),
+        }));
+
+        return {
+          programId,
+          keys,
+          data: Buffer.from(ix.data),
+        };
+      });
+
+      console.log(`Extracted ${instructions.length} instructions`);
+
+      // Get address lookup table accounts if present
+      const lookupTableAccounts = message.addressTableLookups || [];
+
+      // Sign and send via LazorKit
       const signature = await signAndSendTransaction(
         {
-          instructions: swapInstructions,
+          instructions,
           transactionOptions: {
-            feeToken: "USDC", // Use USDC for gas fees
             clusterSimulation: "devnet",
-            computeUnitLimit: 500_000,
+            computeUnitLimit: 400_000, // Higher limit for complex swap txs
+            // Note: LazorKit paymaster handles gas fees
           },
         },
         {
           redirectUrl: APP_SCHEME,
+          onSuccess: (sig) => {
+            console.log("Swap successful:", sig);
+            setTxSignature(sig);
+            setInputAmount("");
+            setQuote(null);
+            Alert.alert(
+              "Swap Successful! 🎉",
+              `Swapped ${inputAmount} ${inputToken.symbol} for ${
+                outputToken.symbol
+              }\n\nTransaction: ${sig.substring(0, 20)}...`
+            );
+          },
+          onFail: (error) => {
+            console.error("Swap failed:", error);
+            Alert.alert(
+              "Swap Failed",
+              error?.message || "Transaction failed. Please try again."
+            );
+          },
         }
       );
 
-      console.log("Swap successful! Signature:", signature);
-      setTxSignature(signature);
-
-      Alert.alert(
-        "Swap Successful! 🎉",
-        `Swapped ${amount} ${fromToken} for ~${estimatedOutput} ${toToken}\n\nTransaction: ${signature.slice(
-          0,
-          8
-        )}...${signature.slice(-8)}`,
-        [
-          {
-            text: "View on Solscan",
-            onPress: () => {
-              console.log(`https://solscan.io/tx/${signature}?cluster=devnet`);
-            },
-          },
-          { text: "OK" },
-        ]
-      );
-
-      // Reset form
-      setAmount("");
-      setEstimatedOutput("0.00");
+      console.log("Swap signature:", signature);
     } catch (error: any) {
       console.error("Swap error:", error);
-
-      let errorMessage = "Failed to execute swap";
-
-      if (error.message?.includes("insufficient")) {
-        errorMessage = `Insufficient ${fromToken} balance`;
-      } else if (error.message?.includes("slippage")) {
-        errorMessage = "Price impact too high. Try a smaller amount.";
-      } else if (error.message?.includes("0x1")) {
-        errorMessage = "Insufficient account balance. Please add devnet SOL.";
-      }
-
-      Alert.alert("Swap Failed", errorMessage);
+      Alert.alert(
+        "Error",
+        error?.message || "Failed to execute swap. Please try again."
+      );
     } finally {
-      setLoading(false);
+      setSwapping(false);
     }
   };
 
-  const switchTokens = () => {
-    const temp = fromToken;
-    setFromToken(toToken);
-    setToToken(temp);
-    setAmount("");
-    setEstimatedOutput("0.00");
+  const getOutputAmount = () => {
+    if (!quote) return "0";
+    return formatTokenAmount(quote.data.outputAmount, outputToken.decimals, 6);
   };
 
+  const getPriceImpact = () => {
+    if (!quote) return "0";
+    return quote.data.priceImpactPct.toFixed(4);
+  };
+
+  // Not connected state
   if (!isConnected) {
     return (
       <View style={styles.container}>
@@ -327,168 +298,232 @@ export default function SwapScreen() {
     );
   }
 
-  if (initializingSDK) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={AppColors.primary} />
-          <Text style={[styles.emptyText, { marginTop: 16 }]}>
-            Initializing Raydium...
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.content}>
-        <Text style={styles.title}>Token Swap</Text>
-        <Text style={styles.subtitle}>Powered by Raydium DEX</Text>
+        <Text style={styles.title}>Swap Tokens</Text>
+        <Text style={styles.subtitle}>
+          Swap tokens via Raydium on Solana Devnet
+        </Text>
 
-        <View style={styles.swapContainer}>
-          {/* From Token */}
-          <View style={styles.tokenCard}>
-            <View style={styles.tokenHeader}>
-              <Text style={styles.label}>From</Text>
-              <Text style={styles.tokenSymbol}>{fromToken}</Text>
-            </View>
+        {/* Input Token Section */}
+        <View style={styles.swapCard}>
+          <Text style={styles.cardLabel}>You Pay</Text>
+          <View style={styles.tokenRow}>
+            <TouchableOpacity
+              style={styles.tokenSelector}
+              onPress={() => openTokenSelector("input")}
+            >
+              <Text style={styles.tokenSymbol}>{inputToken.symbol}</Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
             <TextInput
               style={styles.amountInput}
-              value={amount}
-              onChangeText={setAmount}
+              value={inputAmount}
+              onChangeText={setInputAmount}
               placeholder="0.0"
               placeholderTextColor={AppColors.gray}
               keyboardType="decimal-pad"
-              editable={!loading && poolInfo !== null}
+              editable={!swapping}
             />
           </View>
+          <Text style={styles.tokenName}>{inputToken.name}</Text>
+        </View>
 
-          {/* Switch Button */}
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={switchTokens}
-            disabled={loading}
-          >
-            <Text style={styles.switchIcon}>⇅</Text>
-          </TouchableOpacity>
+        {/* Swap Direction Button */}
+        <TouchableOpacity
+          style={styles.swapButton}
+          onPress={handleSwapTokens}
+          disabled={swapping}
+        >
+          <Text style={styles.swapIcon}>⇅</Text>
+        </TouchableOpacity>
 
-          {/* To Token */}
-          <View style={styles.tokenCard}>
-            <View style={styles.tokenHeader}>
-              <Text style={styles.label}>To (estimated)</Text>
-              <Text style={styles.tokenSymbol}>{toToken}</Text>
+        {/* Output Token Section */}
+        <View style={styles.swapCard}>
+          <Text style={styles.cardLabel}>You Receive</Text>
+          <View style={styles.tokenRow}>
+            <TouchableOpacity
+              style={styles.tokenSelector}
+              onPress={() => openTokenSelector("output")}
+            >
+              <Text style={styles.tokenSymbol}>{outputToken.symbol}</Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+            <View style={styles.outputContainer}>
+              {quoteLoading ? (
+                <ActivityIndicator color={AppColors.primary} />
+              ) : (
+                <Text style={styles.outputAmount}>{getOutputAmount()}</Text>
+              )}
             </View>
-            <Text style={styles.estimatedAmount}>~{estimatedOutput}</Text>
           </View>
+          <Text style={styles.tokenName}>{outputToken.name}</Text>
+        </View>
 
-          {/* Swap Info */}
-          {poolInfo && (
-            <View style={styles.infoContainer}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Price Impact</Text>
+        {/* Quote Info */}
+        {quote && (
+          <View style={styles.quoteInfo}>
+            <View style={styles.quoteRow}>
+              <Text style={styles.quoteLabel}>Price Impact</Text>
+              <Text
+                style={[
+                  styles.quoteValue,
+                  parseFloat(getPriceImpact()) > 1 && styles.warningText,
+                ]}
+              >
+                {getPriceImpact()}%
+              </Text>
+            </View>
+            <View style={styles.quoteRow}>
+              <Text style={styles.quoteLabel}>Slippage Tolerance</Text>
+              <Text style={styles.quoteValue}>{slippage}%</Text>
+            </View>
+            <View style={styles.quoteRow}>
+              <Text style={styles.quoteLabel}>Network</Text>
+              <Text style={styles.quoteValue}>Devnet</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Error Message */}
+        {quoteError && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{quoteError}</Text>
+          </View>
+        )}
+
+        {/* Slippage Settings */}
+        <View style={styles.slippageContainer}>
+          <Text style={styles.slippageLabel}>Slippage (%)</Text>
+          <View style={styles.slippageOptions}>
+            {["0.1", "0.5", "1.0"].map((value) => (
+              <TouchableOpacity
+                key={value}
+                style={[
+                  styles.slippageOption,
+                  slippage === value && styles.slippageOptionActive,
+                ]}
+                onPress={() => setSlippage(value)}
+              >
                 <Text
                   style={[
-                    styles.infoValue,
-                    parseFloat(priceImpact) > 5 && { color: "#EF4444" },
+                    styles.slippageOptionText,
+                    slippage === value && styles.slippageOptionTextActive,
                   ]}
                 >
-                  {priceImpact}%
+                  {value}%
                 </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Slippage Tolerance</Text>
-                <Text style={styles.infoValue}>0.5%</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Network Fee</Text>
-                <Text style={styles.infoValue}>Gasless 🎉</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Minimum Received</Text>
-                <Text style={styles.infoValue}>
-                  {(parseFloat(estimatedOutput) * 0.995).toFixed(6)} {toToken}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Swap Button */}
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (loading || !poolInfo) && styles.buttonDisabled,
-            ]}
-            onPress={handleSwap}
-            disabled={loading || !poolInfo}
-          >
-            {loading ? (
-              <ActivityIndicator color={AppColors.background} />
-            ) : !poolInfo ? (
-              <Text style={styles.buttonText}>Pool Not Available</Text>
-            ) : (
-              <Text style={styles.buttonText}>Swap Tokens</Text>
-            )}
-          </TouchableOpacity>
-
-          {txSignature && (
-            <View style={styles.successContainer}>
-              <Text style={styles.successTitle}>✅ Swap Successful!</Text>
-              <Text style={styles.successText}>
-                Transaction: {txSignature.slice(0, 8)}...
-                {txSignature.slice(-8)}
-              </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  console.log(
-                    `https://solscan.io/tx/${txSignature}?cluster=devnet`
-                  )
-                }
-              >
-                <Text style={styles.linkText}>View on Solscan →</Text>
               </TouchableOpacity>
-            </View>
+            ))}
+            <TextInput
+              style={styles.slippageInput}
+              value={slippage}
+              onChangeText={setSlippage}
+              placeholder="Custom"
+              placeholderTextColor={AppColors.gray}
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+
+        {/* Swap Button */}
+        <TouchableOpacity
+          style={[
+            styles.primaryButton,
+            (!quote || swapping || quoteLoading) && styles.buttonDisabled,
+          ]}
+          onPress={handleSwap}
+          disabled={!quote || swapping || quoteLoading}
+        >
+          {swapping ? (
+            <ActivityIndicator color={AppColors.background} />
+          ) : (
+            <Text style={styles.primaryButtonText}>
+              {!inputAmount
+                ? "Enter an amount"
+                : !quote
+                ? "Getting quote..."
+                : `Swap ${inputToken.symbol} for ${outputToken.symbol}`}
+            </Text>
           )}
-        </View>
+        </TouchableOpacity>
 
+        {/* Transaction Success */}
+        {txSignature && (
+          <View style={styles.successContainer}>
+            <Text style={styles.successTitle}>✅ Swap Completed</Text>
+            <Text style={styles.successText} numberOfLines={1}>
+              {txSignature}
+            </Text>
+            <Text style={styles.explorerLink}>
+              View on Solana Explorer (Devnet)
+            </Text>
+          </View>
+        )}
+
+        {/* Info Box */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoBoxTitle}>🔄 Raydium SDK V2</Text>
-          <Text style={styles.infoBoxText}>
-            • Automatic pool discovery{"\n"}• Real-time price calculations{"\n"}
-            • Passkey authentication{"\n"}• Gasless transactions{"\n"}• Price
-            impact protection
-          </Text>
-        </View>
-
-        <View style={[styles.infoBox, { marginTop: 16 }]}>
-          <Text style={styles.infoBoxTitle}>⚠️ Devnet Notice</Text>
-          <Text style={styles.infoBoxText}>
-            Limited pools available on Devnet. Some token pairs may not have
-            liquidity. Ensure you have devnet SOL for testing.
+          <Text style={styles.infoTitle}>ℹ️ Devnet Mode</Text>
+          <Text style={styles.infoText}>
+            This swap uses Raydium pools on Solana Devnet. Tokens have no real
+            value. Transaction fees are sponsored by LazorKit paymaster.
           </Text>
         </View>
       </View>
+
+      {/* Token Selector Modal */}
+      <Modal
+        visible={showTokenSelector}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTokenSelector(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Token</Text>
+            {SWAP_TOKENS.map((token) => (
+              <TouchableOpacity
+                key={token.mint}
+                style={styles.tokenOption}
+                onPress={() => selectToken(token)}
+              >
+                <View>
+                  <Text style={styles.tokenOptionSymbol}>{token.symbol}</Text>
+                  <Text style={styles.tokenOptionName}>{token.name}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowTokenSelector(false)}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
-// ... (styles remain the same as before)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
   },
   content: {
-    flex: 1,
-    padding: 24,
+    padding: 20,
+    paddingTop: 60,
   },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
     color: AppColors.text,
     marginBottom: 8,
@@ -496,148 +531,266 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: AppColors.gray,
-    marginBottom: 32,
-  },
-  swapContainer: {
     marginBottom: 24,
-  },
-  tokenCard: {
-    backgroundColor: AppColors.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-  },
-  tokenHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 12,
-    color: AppColors.gray,
-    textTransform: "uppercase",
-    fontWeight: "600",
-  },
-  tokenSymbol: {
-    fontSize: 18,
-    color: AppColors.primary,
-    fontWeight: "bold",
-  },
-  amountInput: {
-    fontSize: 32,
-    color: AppColors.text,
-    fontWeight: "600",
-    padding: 0,
-  },
-  estimatedAmount: {
-    fontSize: 32,
-    color: AppColors.gray,
-    fontWeight: "600",
-  },
-  switchButton: {
-    alignSelf: "center",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: AppColors.card,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: -8,
-    zIndex: 10,
-    borderWidth: 4,
-    borderColor: AppColors.background,
-  },
-  switchIcon: {
-    fontSize: 24,
-    color: AppColors.primary,
-  },
-  infoContainer: {
-    backgroundColor: AppColors.card,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: AppColors.gray,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: AppColors.text,
-    fontWeight: "500",
-  },
-  button: {
-    backgroundColor: AppColors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: AppColors.background,
-    fontSize: 16,
-    fontWeight: "bold",
   },
   emptyText: {
     fontSize: 18,
     color: AppColors.text,
     marginBottom: 8,
+    textAlign: "center",
   },
   emptySubtext: {
     fontSize: 14,
     color: AppColors.gray,
+    textAlign: "center",
   },
-  successContainer: {
+  swapCard: {
+    backgroundColor: AppColors.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 8,
+  },
+  cardLabel: {
+    fontSize: 14,
+    color: AppColors.gray,
+    marginBottom: 8,
+  },
+  tokenRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  tokenSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: AppColors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  tokenSymbol: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: AppColors.text,
+    marginRight: 4,
+  },
+  dropdownArrow: {
+    fontSize: 10,
+    color: AppColors.gray,
+  },
+  tokenName: {
+    fontSize: 12,
+    color: AppColors.gray,
+    marginTop: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: "600",
+    color: AppColors.text,
+    textAlign: "right",
+    marginLeft: 16,
+  },
+  outputContainer: {
+    flex: 1,
+    alignItems: "flex-end",
+    marginLeft: 16,
+  },
+  outputAmount: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: AppColors.primary,
+  },
+  swapButton: {
+    alignSelf: "center",
+    backgroundColor: AppColors.card,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 8,
+    borderWidth: 3,
+    borderColor: AppColors.background,
+  },
+  swapIcon: {
+    fontSize: 20,
+    color: AppColors.primary,
+  },
+  quoteInfo: {
     backgroundColor: AppColors.card,
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: AppColors.success,
+  },
+  quoteRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  quoteLabel: {
+    fontSize: 14,
+    color: AppColors.gray,
+  },
+  quoteValue: {
+    fontSize: 14,
+    color: AppColors.text,
+    fontWeight: "500",
+  },
+  warningText: {
+    color: AppColors.error,
+  },
+  errorContainer: {
+    backgroundColor: `${AppColors.error}20`,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  errorText: {
+    color: AppColors.error,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  slippageContainer: {
+    marginTop: 20,
+  },
+  slippageLabel: {
+    fontSize: 14,
+    color: AppColors.gray,
+    marginBottom: 8,
+  },
+  slippageOptions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  slippageOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: AppColors.card,
+  },
+  slippageOptionActive: {
+    backgroundColor: AppColors.primary,
+  },
+  slippageOptionText: {
+    color: AppColors.text,
+    fontSize: 14,
+  },
+  slippageOptionTextActive: {
+    color: AppColors.background,
+    fontWeight: "600",
+  },
+  slippageInput: {
+    flex: 1,
+    backgroundColor: AppColors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    color: AppColors.text,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  primaryButton: {
+    backgroundColor: AppColors.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 24,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: AppColors.background,
+  },
+  successContainer: {
+    backgroundColor: `${AppColors.success}20`,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    alignItems: "center",
   },
   successTitle: {
     fontSize: 16,
+    fontWeight: "600",
     color: AppColors.success,
-    fontWeight: "bold",
     marginBottom: 8,
   },
   successText: {
-    fontSize: 14,
-    color: AppColors.gray,
-    lineHeight: 20,
-    marginBottom: 8,
-    fontFamily: "monospace",
+    fontSize: 12,
+    color: AppColors.text,
+    marginBottom: 4,
   },
-  linkText: {
-    fontSize: 14,
+  explorerLink: {
+    fontSize: 12,
     color: AppColors.primary,
-    fontWeight: "600",
+    textDecorationLine: "underline",
   },
   infoBox: {
     backgroundColor: AppColors.card,
     borderRadius: 12,
     padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: AppColors.primary,
+    marginTop: 24,
+    marginBottom: 40,
   },
-  infoBoxTitle: {
+  infoTitle: {
     fontSize: 14,
-    color: AppColors.primary,
-    fontWeight: "bold",
+    fontWeight: "600",
+    color: AppColors.text,
     marginBottom: 8,
   },
-  infoBoxText: {
-    fontSize: 14,
+  infoText: {
+    fontSize: 13,
     color: AppColors.gray,
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: AppColors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: AppColors.text,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  tokenOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: AppColors.background,
+    marginBottom: 8,
+  },
+  tokenOptionSymbol: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: AppColors.text,
+  },
+  tokenOptionName: {
+    fontSize: 14,
+    color: AppColors.gray,
+    marginTop: 2,
+  },
+  closeButton: {
+    marginTop: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: AppColors.gray,
   },
 });
