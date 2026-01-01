@@ -1,8 +1,30 @@
 /**
- * Memo Screen - Write permanent messages on Solana blockchain
+ * Memo Screen - On-Chain Messages
  *
- * Uses the Memo Program to store text on-chain. Simple, guaranteed to work,
- * and a great way to prove LazorKit integration is working correctly.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 📚 TUTORIAL: Writing Permanent Messages on Solana
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * This screen demonstrates using Solana's Memo Program with LazorKit:
+ * - Store arbitrary text permanently on the blockchain
+ * - Simple transaction that proves LazorKit integration works
+ * - Great for: proof of existence, timestamps, on-chain notes
+ *
+ * WHAT IS THE MEMO PROGRAM?
+ * -------------------------
+ * The Memo Program (MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr) is one of
+ * Solana's simplest programs. It just stores UTF-8 text data in a transaction.
+ * The data is permanently recorded on-chain and can be verified forever.
+ *
+ * KEY CONCEPTS:
+ * - `createMemoInstruction()`: Creates instruction with message data
+ * - Messages are stored in the transaction log, not an account
+ * - Max ~566 bytes per memo (varies with transaction size)
+ *
+ * This is a great "hello world" for LazorKit - if this works, your
+ * integration is set up correctly!
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { AppColors } from "@/constants/theme";

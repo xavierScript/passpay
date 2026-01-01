@@ -1,8 +1,33 @@
 /**
- * Staking Screen - Stake SOL to earn rewards
+ * Staking Screen - Native SOL Staking
  *
- * Uses Solana's native Stake Program to delegate SOL to validators.
- * Uses createAccountWithSeed to avoid needing additional signers.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 📚 TUTORIAL: Staking SOL with Passkey Authentication
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * This screen demonstrates complex multi-instruction transactions:
+ * - Create a stake account (using createAccountWithSeed)
+ * - Delegate stake to a validator
+ * - View existing stake accounts and their status
+ *
+ * WHY USE createAccountWithSeed?
+ * ------------------------------
+ * Normally, creating a stake account requires a NEW keypair that must
+ * sign the transaction. But LazorKit only provides the smart wallet signer.
+ *
+ * Solution: Use `createAccountWithSeed()` which derives the account address
+ * from the wallet's public key + a seed string. This means:
+ * - No additional signers needed!
+ * - The stake account address is deterministic
+ * - Works perfectly with LazorKit's passkey-only signing
+ *
+ * TRANSACTION STRUCTURE:
+ * 1. StakeProgram.createAccountWithSeed() - Creates the stake account
+ * 2. StakeProgram.delegate() - Delegates to chosen validator
+ *
+ * Both instructions are bundled into a single atomic transaction.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { AppColors } from "@/constants/theme";

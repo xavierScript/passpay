@@ -1,42 +1,51 @@
-# PassPay - Passkey-Powered Solana Wallet
+# PassPay - Passkey-Powered Solana Mobile Wallet
 
-A minimal React Native dApp demonstrating LazorKit SDK integration with Raydium swap functionality for passkey-based Solana transactions.
+A React Native (Expo) starter template demonstrating **LazorKit SDK** integration for passkey-based Solana wallets with gasless transactions.
 
-## 🎯 Features
+> 🎯 **Built for developers** - Clear examples, well-commented code, and step-by-step tutorials to help you integrate LazorKit into your own mobile apps.
 
-1. **Passkey Wallet Creation** - Create wallets using biometric authentication (FaceID, TouchID, Fingerprint)
-2. **SOL Transfer** - Send SOL with gasless transactions via paymaster
-3. **Raydium Token Swap** - Swap tokens on Raydium DEX with passkey verification
+## ✨ Features
+
+| Feature                  | Description                                                            |
+| ------------------------ | ---------------------------------------------------------------------- |
+| 🔐 **Passkey Wallet**    | Create/connect wallets using biometrics (FaceID, TouchID, Fingerprint) |
+| 💸 **Gasless Transfers** | Send SOL without paying gas fees (paymaster sponsored)                 |
+| 📝 **On-Chain Memos**    | Write permanent messages on Solana blockchain                          |
+| 🥩 **SOL Staking**       | Stake SOL to validators with passkey authentication                    |
 
 ## 🏗️ Tech Stack
 
-- **React Native** with Expo
+- **React Native** with Expo (SDK 52)
 - **LazorKit SDK** - Passkey wallet adapter for mobile
-- **Solana Web3.js** - Solana blockchain interactions
-- **Raydium SDK** - DEX swap functionality
-- **TypeScript** - Type safety
+- **Solana Web3.js** - Blockchain interactions
+- **TypeScript** - Type safety throughout
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 16+ installed
+- Node.js 18+ installed
 - Expo CLI (`npm install -g expo-cli`)
 - iOS Simulator (Mac) or Android Emulator
+- Expo Go app on physical device (optional)
 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/passpay-mobile.git
+cd passpay-mobile
+
 # Install dependencies
 npm install
 
 # Start the development server
-npm start
+npx expo start
 
-# Run on iOS
+# Run on iOS Simulator
 npm run ios
 
-# Run on Android
+# Run on Android Emulator
 npm run android
 ```
 
@@ -46,33 +55,58 @@ npm run android
 app/
 ├── _layout.tsx          # Root layout with LazorKit provider
 ├── (tabs)/
-│   ├── _layout.tsx      # Tab navigation
-│   ├── index.tsx        # Wallet creation/connection
-│   ├── transfer.tsx     # SOL transfer
-│   └── swap.tsx         # Raydium swap
+│   ├── _layout.tsx      # Tab navigation configuration
+│   ├── index.tsx        # 🏠 Wallet connection & overview
+│   ├── transfer.tsx     # 💸 Gasless SOL transfers
+│   ├── memo.tsx         # 📝 On-chain memos
+│   └── stake.tsx        # 🥩 SOL staking
+services/
+├── rpc.ts               # Solana RPC with caching
+├── memo.ts              # Memo program utilities
+├── staking.ts           # Staking program utilities
+└── transfer.ts          # Transfer utilities
+utils/
+├── helpers.ts           # Common utility functions
+└── redirect-url.ts      # Deep link URL builder
 constants/
-└── theme.ts             # App colors (Solana green theme)
+└── theme.ts             # Solana-inspired dark theme
 ```
 
 ## 🔐 Deep Linking
 
 The app uses the scheme `passpaymobile://` for LazorKit redirects:
 
-- Wallet connection: `passpaymobile://home`
-- Transfer: `passpaymobile://transfer`
-- Swap: `passpaymobile://callback`
+| Route                      | Purpose                    |
+| -------------------------- | -------------------------- |
+| `passpaymobile://home`     | Wallet connection callback |
+| `passpaymobile://transfer` | Transfer confirmation      |
+| `passpaymobile://memo`     | Memo confirmation          |
+| `passpaymobile://stake`    | Staking confirmation       |
 
-## 🎨 Design
+Configure in `app.json`:
 
-Clean dark theme with Solana branding:
+```json
+{
+  "expo": {
+    "scheme": "passpaymobile"
+  }
+}
+```
+
+## 🎨 Theme
+
+Solana-inspired dark theme optimized for OLED screens:
 
 ```typescript
-const colors = {
-  background: "#000000",
-  card: "#1A1A1A",
+export const AppColors = {
+  background: "#000000", // Pure black
+  card: "#1A1A1A", // Card surfaces
   primary: "#14F195", // Solana green
   text: "#FFFFFF",
   gray: "#8F8F8F",
+  error: "#FF4444",
+  success: "#14F195",
+  warning: "#FFB800",
 };
 ```
 
@@ -101,116 +135,226 @@ import { Buffer } from "buffer";
 global.Buffer = global.Buffer || Buffer;
 ```
 
-## 📖 Key Implementation Details
+## 📖 Tutorials
 
-### 1. Wallet Creation
+Each screen includes detailed inline comments explaining the LazorKit integration.
+Open the source files to see step-by-step explanations.
 
-Uses LazorKit's `connect()` method with biometric authentication:
+---
+
+### 📚 Tutorial 1: Creating a Passkey Wallet
+
+**File:** `app/(tabs)/index.tsx`
+
+LazorKit enables wallet creation using device biometrics instead of seed phrases:
 
 ```typescript
-const { connect, wallet, isConnected } = useWallet();
+import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 
+const { connect, isConnected, smartWalletPubkey } = useWallet();
+
+// Initiate passkey authentication
 await connect({
-  redirectUrl: "passpaymobile://home",
-  onSuccess: (wallet) => console.log(wallet.smartWallet),
+  redirectUrl: "passpaymobile://home", // Deep link back to app
+  onSuccess: (wallet) => {
+    console.log("Wallet address:", wallet.smartWallet);
+    // wallet.smartWallet is your on-chain Solana address
+  },
+  onFail: (error) => {
+    console.error("Connection failed:", error);
+  },
 });
 ```
 
-### 2. SOL Transfer (Gasless)
+**How it works:**
 
-Creates system transfer instruction and signs with passkey:
+1. `connect()` opens LazorKit's web portal in the device browser
+2. User creates or selects an existing passkey
+3. Biometric authentication (FaceID/TouchID) is performed
+4. Portal redirects back to your app via the `redirectUrl`
+5. `smartWalletPubkey` is now available for transactions
+
+---
+
+### 📚 Tutorial 2: Sending Gasless Transactions
+
+**File:** `app/(tabs)/transfer.tsx`
+
+Send SOL without users needing to pay gas fees:
 
 ```typescript
-const ix = SystemProgram.transfer({
-  fromPubkey: new PublicKey(wallet.smartWallet),
-  toPubkey: recipientPubkey,
-  lamports: amount * LAMPORTS_PER_SOL,
+import { useWallet } from "@lazorkit/wallet-mobile-adapter";
+import { SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
+
+const { signAndSendTransaction, smartWalletPubkey } = useWallet();
+
+// 1. Create the transfer instruction
+const transferInstruction = SystemProgram.transfer({
+  fromPubkey: smartWalletPubkey,
+  toPubkey: recipientPublicKey,
+  lamports: 0.1 * LAMPORTS_PER_SOL, // 0.1 SOL
 });
 
+// 2. Sign and send with paymaster (gasless)
 await signAndSendTransaction(
   {
-    instructions: [ix],
+    instructions: [transferInstruction],
     transactionOptions: {
-      feeToken: "USDC",
+      feeToken: "USDC", // 👈 Enables gasless! Paymaster pays in USDC
       clusterSimulation: "devnet",
     },
   },
   {
     redirectUrl: "passpaymobile://transfer",
+    onSuccess: (signature) => {
+      console.log("Transaction sent:", signature);
+      // View on explorer: https://explorer.solana.com/tx/{signature}
+    },
+    onFail: (error) => {
+      console.error("Transaction failed:", error);
+    },
   }
 );
 ```
 
-### 3. Raydium Swap
+**Key points:**
 
-Production implementation would:
+- `feeToken: "USDC"` tells LazorKit to use the paymaster
+- The paymaster pays SOL fees on behalf of the user
+- Equivalent USDC is deducted from the user's balance
+- Perfect for onboarding users who don't have SOL yet!
 
-1. Fetch pool keys from Raydium API
-2. Calculate swap amounts with slippage
-3. Create swap instruction
-4. Sign with passkey
-5. Send gasless transaction
+---
+
+### 📚 Tutorial 3: Staking SOL with Passkeys
+
+**File:** `app/(tabs)/stake.tsx`
+
+Create stake accounts without needing additional keypairs:
 
 ```typescript
-// Production code (commented in swap.tsx)
-const { innerTransaction } = await Liquidity.makeSwapInstruction({
-  poolKeys,
-  userKeys: { owner, tokenAccountIn, tokenAccountOut },
-  amountIn,
-  amountOut: minimumAmountOut,
-  fixedSide: "in",
+import { StakeProgram, PublicKey } from "@solana/web3.js";
+
+// Use createAccountWithSeed to avoid needing extra signers
+const seed = `stake:${Date.now()}`;
+const stakeAccountPubkey = await PublicKey.createWithSeed(
+  smartWalletPubkey,
+  seed,
+  StakeProgram.programId
+);
+
+// Create stake account + delegate in one transaction
+const createInstruction = StakeProgram.createAccountWithSeed({
+  fromPubkey: smartWalletPubkey,
+  stakePubkey: stakeAccountPubkey,
+  basePubkey: smartWalletPubkey,
+  seed,
+  authorized: new Authorized(smartWalletPubkey, smartWalletPubkey),
+  lockup: new Lockup(0, 0, smartWalletPubkey),
+  lamports: stakeAmount + rentExempt,
+});
+
+const delegateInstruction = StakeProgram.delegate({
+  stakePubkey: stakeAccountPubkey,
+  authorizedPubkey: smartWalletPubkey,
+  votePubkey: validatorVoteAccount,
+});
+
+// Send both instructions atomically
+await signAndSendTransaction({
+  instructions: [
+    ...createInstruction.instructions,
+    ...delegateInstruction.instructions,
+  ],
+  // ... options
 });
 ```
 
-## 🔍 Testing
+**Why `createAccountWithSeed`?**
 
-1. **Connect Wallet** - Tap "Connect with Passkey" → Use biometric auth
-2. **Transfer SOL** - Navigate to Transfer tab → Enter recipient & amount → Confirm with passkey
-3. **Swap Tokens** - Navigate to Swap tab → Select tokens & amount → Execute swap
+- LazorKit only provides the smart wallet signer
+- Normal stake accounts need a NEW keypair to sign
+- Seed-based accounts derive from existing pubkey, no extra signer needed!
 
-## 📦 Dependencies
+## 🔍 Testing the App
 
-Key packages:
+1. **Connect Wallet**
+
+   - Tap "Connect with Passkey"
+   - Complete biometric authentication
+   - See your wallet address displayed
+
+2. **Send SOL (Gasless)**
+
+   - Navigate to Transfer tab
+   - Enter recipient address and amount
+   - Confirm with passkey → No gas needed!
+
+3. **Write Memo**
+
+   - Navigate to Memo tab
+   - Type a message (up to 500 chars)
+   - Submit → Message stored on-chain forever
+
+4. **Stake SOL**
+   - Navigate to Stake tab
+   - Select validator and amount
+   - Confirm → Stake account created
+
+## 📦 Key Dependencies
 
 ```json
 {
-  "@lazorkit/wallet-mobile-adapter": "^1.0.0",
-  "@raydium-io/raydium-sdk": "^1.3.1-beta.58",
+  "@lazorkit/wallet-mobile-adapter": "latest",
   "@solana/web3.js": "^1.98.0",
-  "@solana/spl-token": "^0.4.9",
+  "expo": "~52.0.0",
   "react-native-get-random-values": "^1.11.0",
   "react-native-url-polyfill": "^2.0.0",
   "buffer": "^6.0.3"
 }
 ```
 
-## 🌐 Network
+## 🌐 Network Configuration
 
-Currently configured for **Solana Devnet**. For mainnet:
+Currently configured for **Solana Devnet**.
 
-1. Update RPC URL in `app/_layout.tsx`
-2. Change `clusterSimulation` to `'mainnet'`
-3. Update paymaster URL (if available)
+For **Mainnet**, update in `app/_layout.tsx`:
+
+```typescript
+<LazorKitWalletProvider
+  config={{
+    rpcUrl: "https://api.mainnet-beta.solana.com",  // Mainnet RPC
+    portalUrl: "https://portal.lazor.sh",
+    configPaymaster: {
+      paymasterUrl: "https://kora.mainnet.lazorkit.com",  // Mainnet paymaster
+    },
+  }}
+>
+```
+
+Also update `clusterSimulation` in transaction options to `"mainnet-beta"`.
 
 ## 🎥 Demo Flow
 
-1. Launch app → See PassPay branding
-2. Tap "Connect with Passkey" → Portal opens
-3. Complete biometric auth → Wallet created
-4. View wallet address on home screen
-5. Navigate to Transfer → Send SOL gaslessly
-6. Navigate to Swap → Demo Raydium integration
+1. 📱 Launch app → See PassPay branding
+2. 🔐 Tap "Connect with Passkey" → LazorKit portal opens
+3. 👆 Complete biometric auth → Wallet created instantly
+4. 💰 View wallet address and SOL balance on home screen
+5. 💸 Navigate to Transfer → Send SOL gaslessly
+6. 📝 Navigate to Memo → Write permanent on-chain message
+7. 🥩 Navigate to Stake → Stake SOL to validators
 
 ## 📄 License
 
 MIT
 
-## 🙏 Acknowledgments
+## 🔗 Resources
 
-- [LazorKit](https://lazorkit.com) - Passkey wallet infrastructure
-- [Raydium](https://raydium.io) - Solana DEX
-- [Solana](https://solana.com) - Blockchain platform
+- [LazorKit Documentation](https://docs.lazorkit.com/)
+- [LazorKit GitHub](https://github.com/lazor-kit/lazor-kit)
+- [LazorKit Telegram](https://t.me/lazorkit)
+- [Solana Web3.js Docs](https://solana-labs.github.io/solana-web3.js/)
 
 ---
 
-Built with ❤️ for the LazorKit bounty submission
+Built with ❤️ for the LazorKit Bounty | January 2026

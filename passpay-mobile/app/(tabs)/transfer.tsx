@@ -1,8 +1,35 @@
 /**
- * Transfer Screen - Send SOL with gasless transactions
+ * Transfer Screen - Gasless SOL Transfers
  *
- * Uses LazorKit's paymaster for sponsored transactions, allowing users
- * to send SOL without needing to pay gas fees themselves.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 📚 TUTORIAL: Sending Gasless Transactions with LazorKit
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * This screen demonstrates LazorKit's gasless transaction feature:
+ * - Users send SOL without paying gas fees themselves
+ * - A paymaster sponsors the transaction fees (paid in USDC)
+ * - Perfect for onboarding users who don't have SOL for fees
+ *
+ * WHAT IS A GASLESS TRANSACTION?
+ * ------------------------------
+ * On Solana, every transaction requires a small SOL fee (~0.000005 SOL).
+ * LazorKit's paymaster service pays these fees on behalf of users,
+ * deducting the equivalent value from their USDC balance instead.
+ *
+ * KEY CONCEPTS:
+ * - `signAndSendTransaction()`: Signs with passkey and broadcasts to network
+ * - `transactionOptions.feeToken`: Specify "USDC" for gasless (paymaster pays)
+ * - `instructions`: Array of Solana instructions to execute
+ * - `clusterSimulation`: "devnet" or "mainnet-beta"
+ *
+ * FLOW:
+ * 1. Create transfer instruction using SystemProgram.transfer()
+ * 2. Call signAndSendTransaction() with instructions + paymaster config
+ * 3. User authenticates with biometrics in LazorKit portal
+ * 4. Transaction is submitted to Solana network
+ * 5. onSuccess callback receives the transaction signature
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { AppColors } from "@/constants/theme";
@@ -40,6 +67,34 @@ export default function TransferScreen() {
   >([]);
   const [copied, setCopied] = useState(false);
 
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 📚 TUTORIAL: Creating & Sending a Gasless Transfer
+   * ═══════════════════════════════════════════════════════════════════════════
+   *
+   * STEP 1: Validate inputs (address and amount)
+   * STEP 2: Create a SystemProgram.transfer() instruction
+   * STEP 3: Call signAndSendTransaction() with paymaster config:
+   *
+   * ```typescript
+   * await signAndSendTransaction(
+   *   {
+   *     instructions: [transferInstruction],
+   *     transactionOptions: {
+   *       feeToken: "USDC",           // 👈 This enables gasless!
+   *       clusterSimulation: "devnet", // Network to use
+   *     },
+   *   },
+   *   {
+   *     redirectUrl: "yourapp://callback", // Deep link back
+   *     onSuccess: (signature) => { ... },
+   *     onFail: (error) => { ... },
+   *   }
+   * );
+   * ```
+   *
+   * The paymaster will deduct USDC equivalent of gas from user's balance.
+   */
   const handleTransfer = async () => {
     if (!isConnected || !smartWalletPubkey) {
       Alert.alert("Error", "Please connect your wallet first");

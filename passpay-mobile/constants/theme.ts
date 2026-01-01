@@ -1,13 +1,24 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Theme Configuration for PassPay
+ *
+ * Defines the app's color palette using Solana's brand colors.
+ * The dark theme provides a modern, crypto-native aesthetic.
+ *
+ * @example
+ * import { AppColors } from "@/constants/theme";
+ * <View style={{ backgroundColor: AppColors.background }} />
  */
 
-import { Platform } from "react-native";
-
-const tintColorLight = "#0a7ea4";
-const tintColorDark = "#fff";
-
+/**
+ * Main app color palette - Solana-inspired dark theme
+ *
+ * - background: Pure black for OLED-friendly dark mode
+ * - card: Slightly lighter for card components
+ * - primary: Solana's signature green (#14F195)
+ * - text: White for readability
+ * - gray: Muted text and borders
+ * - error/success/warning: Status indicators
+ */
 export const AppColors = {
   background: "#000000",
   card: "#1A1A1A",
@@ -19,47 +30,25 @@ export const AppColors = {
   warning: "#FFB800",
 };
 
+/**
+ * Tab bar theme colors for navigation
+ * Used by the bottom tab navigator
+ */
 export const Colors = {
   light: {
     text: "#11181C",
     background: "#fff",
-    tint: tintColorLight,
+    tint: "#0a7ea4",
     icon: "#687076",
     tabIconDefault: "#687076",
-    tabIconSelected: tintColorLight,
+    tabIconSelected: "#0a7ea4",
   },
   dark: {
     text: "#ECEDEE",
     background: "#151718",
-    tint: tintColorDark,
+    tint: "#fff",
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",
-    tabIconSelected: tintColorDark,
+    tabIconSelected: "#fff",
   },
 };
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: "ui-monospace",
-  },
-  default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});

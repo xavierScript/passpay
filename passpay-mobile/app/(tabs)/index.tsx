@@ -1,8 +1,35 @@
 /**
- * Home Screen - Wallet connection and overview
+ * Home Screen - Wallet Connection & Overview
  *
- * The main entry point for PassPay. Handles passkey-based wallet
- * connection, displays SOL balance, and provides message signing.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 📚 TUTORIAL: Creating a Passkey-Based Wallet with LazorKit
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * This screen demonstrates the core LazorKit integration for:
+ * 1. Creating/connecting a passkey-based smart wallet
+ * 2. Displaying wallet information and SOL balance
+ * 3. Signing messages with biometric authentication
+ *
+ * WHAT IS A PASSKEY WALLET?
+ * -------------------------
+ * Unlike traditional wallets that use seed phrases, LazorKit creates
+ * wallets secured by your device's biometrics (FaceID/TouchID/Fingerprint).
+ * The private key never leaves your device's secure enclave.
+ *
+ * KEY CONCEPTS:
+ * - `connect()`: Opens LazorKit portal for passkey authentication
+ * - `smartWalletPubkey`: Your on-chain wallet address (PublicKey)
+ * - `signMessage()`: Signs arbitrary messages with your passkey
+ * - `redirectUrl`: Deep link back to your app after portal interaction
+ *
+ * FLOW:
+ * 1. User taps "Connect with Passkey"
+ * 2. LazorKit portal opens in browser
+ * 3. User authenticates with biometrics
+ * 4. Portal redirects back with wallet info
+ * 5. App receives `smartWalletPubkey` via the adapter
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { AppColors } from "@/constants/theme";
@@ -78,6 +105,20 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [fetchBalances]);
 
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 📚 TUTORIAL: Signing Messages with Passkey
+   * ═══════════════════════════════════════════════════════════════════════════
+   *
+   * The `signMessage()` function allows signing arbitrary messages:
+   *
+   * - Opens LazorKit portal for biometric authentication
+   * - Returns a cryptographic signature of the message
+   * - Useful for: login verification, off-chain attestations, proving ownership
+   *
+   * The returned signature can be verified on-chain or off-chain using
+   * the wallet's public key.
+   */
   const handleSignMessage = async () => {
     setSignature(null);
     setSignError(null);
@@ -96,6 +137,26 @@ export default function HomeScreen() {
     }
   };
 
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 📚 TUTORIAL: Connecting a Passkey Wallet
+   * ═══════════════════════════════════════════════════════════════════════════
+   *
+   * The `connect()` function from useWallet() initiates the passkey flow:
+   *
+   * 1. Opens LazorKit's web portal in the device browser
+   * 2. User creates or selects an existing passkey
+   * 3. Biometric authentication (FaceID/TouchID) is performed
+   * 4. Portal redirects back to app via `redirectUrl` deep link
+   * 5. `onSuccess` callback receives the wallet object
+   *
+   * The `redirectUrl` must match your app's URL scheme configured in app.json:
+   * ```json
+   * "scheme": "passpaymobile"
+   * ```
+   *
+   * After connection, `smartWalletPubkey` contains your on-chain address.
+   */
   const handleConnect = async () => {
     if (isConnecting || isLoading) return;
 
