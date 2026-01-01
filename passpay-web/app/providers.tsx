@@ -19,7 +19,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       rpcUrl={DEFAULT_CONFIG.rpcUrl}
       portalUrl={DEFAULT_CONFIG.portalUrl}
       paymasterConfig={DEFAULT_CONFIG.paymasterConfig}
-      isDebug={true}
     >
       {children}
       <Toaster position="top-right" />
