@@ -7,6 +7,7 @@
 
 import { AppColors } from "@/constants/theme";
 import { createMemoInstruction } from "@/services/memo";
+import { getExplorerUrl } from "@/utils/helpers";
 import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { useState } from "react";
@@ -114,8 +115,7 @@ export default function MemoScreen() {
   };
 
   const openExplorer = (signature: string) => {
-    const url = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-    Linking.openURL(url);
+    Linking.openURL(getExplorerUrl(signature));
   };
 
   // Not connected state

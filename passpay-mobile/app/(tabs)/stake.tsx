@@ -13,6 +13,7 @@ import {
   MIN_STAKE_AMOUNT,
   StakeAccountInfo,
 } from "@/services/staking";
+import { getAddressExplorerUrl } from "@/utils/helpers";
 import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
@@ -204,8 +205,7 @@ export default function StakeScreen() {
   };
 
   const openExplorer = (address: string) => {
-    const url = `https://explorer.solana.com/address/${address}?cluster=devnet`;
-    Linking.openURL(url);
+    Linking.openURL(getAddressExplorerUrl(address));
   };
 
   const getStateColor = (state: StakeAccountInfo["state"]) => {

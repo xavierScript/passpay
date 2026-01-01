@@ -1,3 +1,10 @@
+/**
+ * Home Screen - Wallet connection and overview
+ *
+ * The main entry point for PassPay. Handles passkey-based wallet
+ * connection, displays SOL balance, and provides message signing.
+ */
+
 import { AppColors } from "@/constants/theme";
 import { clearCache, getSolBalance } from "@/services/rpc";
 import { getRedirectUrl } from "@/utils/redirect-url";
