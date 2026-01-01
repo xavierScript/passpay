@@ -1,11 +1,15 @@
 import { AppColors } from "@/constants/theme";
+import { clearCache, getSolBalance } from "@/services/rpc";
 import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import * as Clipboard from "expo-clipboard";
-import { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +33,43 @@ export default function HomeScreen() {
   } | null>(null);
   const [signError, setSignError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Balance state - just SOL to avoid expensive RPC calls
+  const [solBalance, setSolBalance] = useState(0);
+  const [balancesLoading, setBalancesLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch SOL balance only (stake accounts are too expensive for public RPC)
+  const fetchBalances = useCallback(async () => {
+    if (!smartWalletPubkey) return;
+
+    try {
+      const balance = await getSolBalance(smartWalletPubkey);
+      setSolBalance(balance);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  }, [smartWalletPubkey]);
+
+  // Fetch balances only when tab is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (isConnected && smartWalletPubkey) {
+        setBalancesLoading(true);
+        fetchBalances().finally(() => setBalancesLoading(false));
+      } else {
+        setSolBalance(0);
+      }
+    }, [isConnected, smartWalletPubkey])
+  );
+
+  // Pull to refresh - clears cache
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    clearCache();
+    await fetchBalances();
+    setRefreshing(false);
+  }, [fetchBalances]);
 
   const handleSignMessage = async () => {
     setSignature(null);
@@ -104,7 +145,20 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        isConnected ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={AppColors.primary}
+            colors={[AppColors.primary]}
+          />
+        ) : undefined
+      }
+    >
       <View style={styles.content}>
         <Text style={styles.title}>PassPay</Text>
         <Text style={styles.subtitle}>Passkey-Powered Solana Wallet</Text>
@@ -125,6 +179,31 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <Text style={styles.infoText}>
                 {copied ? "✓ Copied to clipboard" : "✓ Connected with Passkey"}
+              </Text>
+            </View>
+
+            {/* SOL Balance Card */}
+            <View style={styles.balancesCard}>
+              <View style={styles.balancesHeader}>
+                <Text style={styles.balancesTitle}>💰 Balance</Text>
+                {balancesLoading && (
+                  <ActivityIndicator size="small" color={AppColors.primary} />
+                )}
+              </View>
+
+              {/* SOL Balance */}
+              <View style={styles.mainBalanceRow}>
+                <Text style={styles.mainBalanceValue}>
+                  {solBalance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 4,
+                  })}
+                </Text>
+                <Text style={styles.mainBalanceSymbol}>SOL</Text>
+              </View>
+
+              <Text style={styles.refreshHint}>
+                Pull down to refresh • View staked SOL in Stake tab
               </Text>
             </View>
 
@@ -205,12 +284,12 @@ export default function HomeScreen() {
             <View style={styles.features}>
               <FeatureItem text="🔐 Biometric Security" />
               <FeatureItem text="⚡ Gasless Transactions" />
-              <FeatureItem text="🔄 Token Swaps" />
+              <FeatureItem text="🥩 SOL Staking" />
             </View>
           </View>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -226,6 +305,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
@@ -263,7 +345,102 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.card,
     borderRadius: 16,
     padding: 20,
+    marginBottom: 16,
+  },
+  balancesCard: {
+    backgroundColor: AppColors.card,
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 24,
+  },
+  balancesHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  balancesTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: AppColors.text,
+  },
+  mainBalanceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    paddingVertical: 20,
+  },
+  mainBalanceValue: {
+    fontSize: 42,
+    fontWeight: "bold",
+    color: AppColors.primary,
+  },
+  mainBalanceSymbol: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: AppColors.text,
+    marginLeft: 8,
+  },
+  balanceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+  tokenInfo: {
+    flexDirection: "column",
+  },
+  tokenSymbol: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: AppColors.text,
+  },
+  tokenName: {
+    fontSize: 12,
+    color: AppColors.gray,
+    marginTop: 2,
+  },
+  tokenBalance: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: AppColors.primary,
+  },
+  stakedBalance: {
+    color: AppColors.warning,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 12,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: AppColors.background,
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: AppColors.text,
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: AppColors.text,
+  },
+  noBalancesText: {
+    fontSize: 14,
+    color: AppColors.gray,
+    textAlign: "center",
+    paddingVertical: 16,
+  },
+  refreshHint: {
+    fontSize: 11,
+    color: AppColors.gray,
+    textAlign: "center",
+    marginTop: 12,
+    fontStyle: "italic",
   },
   label: {
     fontSize: 12,

@@ -16,6 +16,7 @@ export const AppColors = {
   gray: "#8F8F8F",
   error: "#FF4444",
   success: "#14F195",
+  warning: "#FFB800",
 };
 
 export const Colors = {

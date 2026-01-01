@@ -1,8 +1,5 @@
-// Polyfills for React Native
-import { Buffer } from "buffer";
-import "react-native-get-random-values";
-import "react-native-url-polyfill/auto";
-global.Buffer = global.Buffer || Buffer;
+// Polyfills MUST be imported first, before any other imports
+import "../polyfills";
 
 import { LazorKitProvider } from "@lazorkit/wallet-mobile-adapter";
 import {

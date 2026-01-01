@@ -41,11 +41,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="swap"
+        name="memo"
         options={{
-          title: "Swap",
+          title: "Memo",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="arrow.2.squarepath" color={color} />
+            <IconSymbol size={28} name="note.text" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="stake"
+        options={{
+          title: "Stake",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol
+              size={28}
+              name="chart.line.uptrend.xyaxis"
+              color={color}
+            />
           ),
         }}
       />
