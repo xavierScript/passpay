@@ -15,6 +15,7 @@ import {
   SwapQuote,
   TOKEN_INFO,
 } from "@/services/raydium-swap";
+import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { Connection } from "@solana/web3.js";
 import { useCallback, useEffect, useState } from "react";
@@ -30,7 +31,6 @@ import {
   View,
 } from "react-native";
 
-const APP_SCHEME = "passpaymobile://swap";
 const DEVNET_RPC = "https://api.devnet.solana.com";
 
 // Available tokens for swapping
@@ -239,7 +239,7 @@ export default function SwapScreen() {
           },
         },
         {
-          redirectUrl: APP_SCHEME,
+          redirectUrl: getRedirectUrl("swap"),
           onSuccess: (sig) => {
             console.log("Swap successful:", sig);
             setTxSignature(sig);

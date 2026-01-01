@@ -1,4 +1,5 @@
 import { AppColors } from "@/constants/theme";
+import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
@@ -10,8 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const APP_SCHEME = "passpaymobile://";
 
 export default function HomeScreen() {
   const {
@@ -37,7 +36,7 @@ export default function HomeScreen() {
     setSigning(true);
     try {
       const sig = await signMessage("Welcome to PassPay!", {
-        redirectUrl: APP_SCHEME,
+        redirectUrl: getRedirectUrl(),
       });
       console.log("Verified Signature:", sig); // Log as per docs
       setSignature(sig);
@@ -55,7 +54,7 @@ export default function HomeScreen() {
     try {
       setIsLoading(true);
       await connect({
-        redirectUrl: APP_SCHEME,
+        redirectUrl: getRedirectUrl(),
         onSuccess: (wallet) => {
           console.log("Connected successfully:", wallet.smartWallet);
           setIsLoading(false);

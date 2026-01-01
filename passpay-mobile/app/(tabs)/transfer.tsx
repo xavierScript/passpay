@@ -1,4 +1,5 @@
 import { AppColors } from "@/constants/theme";
+import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import * as Clipboard from "expo-clipboard";
@@ -13,8 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const APP_SCHEME = "passpaymobile://transfer";
 
 export default function TransferScreen() {
   const { signAndSendTransaction, smartWalletPubkey, isConnected } =
@@ -74,7 +73,7 @@ export default function TransferScreen() {
           },
         },
         {
-          redirectUrl: APP_SCHEME,
+          redirectUrl: getRedirectUrl("transfer"),
           onSuccess: (sig) => {
             console.log("Transaction successful:", sig);
             setTxSignature(sig);
