@@ -15,6 +15,7 @@
 export { WalletConnect } from "./WalletConnect";
 export { MobileNav } from "./MobileNav";
 export { PasskeySetup } from "./PasskeySetup";
+export { SubscriptionGate } from "./SubscriptionGate";
 
 // Re-export dashboard components
 export * from "./dashboard";

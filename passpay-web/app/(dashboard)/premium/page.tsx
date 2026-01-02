@@ -3,6 +3,8 @@
 import { useWallet } from "@lazorkit/wallet";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader, NotConnectedState } from "@/components/dashboard";
+import { SubscriptionGate } from "@/components/SubscriptionGate";
+import { getActiveSubscription, getDaysRemaining } from "@/lib/services";
 
 const premiumContent = [
   {
@@ -20,7 +22,7 @@ const premiumContent = [
 ];
 
 export default function PremiumPage() {
-  const { isConnected } = useWallet();
+  const { isConnected, smartWalletPubkey } = useWallet();
 
   if (!isConnected) {
     return (
@@ -31,26 +33,57 @@ export default function PremiumPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black p-8 text-white">
-      <div className="mx-auto max-w-2xl">
-        <PageHeader
-          icon="⭐"
-          title="Premium Content"
-          description="Exclusive content for subscribed users"
-        />
+  // Get subscription details
+  const wallet = smartWalletPubkey?.toBase58() || "";
+  const subscription = getActiveSubscription(wallet);
+  const daysRemaining = getDaysRemaining(wallet);
 
-        <div className="space-y-4">
-          {premiumContent.map((item) => (
-            <Card key={item.title} className="border-[#1a1a1a] bg-[#0a0a0a]">
+  return (
+    <SubscriptionGate>
+      <div className="min-h-screen bg-black p-8 text-white">
+        <div className="mx-auto max-w-2xl">
+          <PageHeader
+            icon="⭐"
+            title="Premium Content"
+            description="Exclusive content for subscribed users"
+          />
+
+          {/* Subscription Status Banner */}
+          {subscription && (
+            <Card className="mb-6 border-[#14F195]/30 bg-[#14F195]/10">
               <CardContent className="pt-4">
-                <h2 className="text-xl font-semibold">{item.title}</h2>
-                <p className="text-sm text-[#8f8f8f]">{item.description}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-[#14F195]">
+                      {subscription.plan} Plan Active
+                    </h3>
+                    <p className="text-sm text-[#8f8f8f]">
+                      {daysRemaining} days remaining
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-[#8f8f8f]">Subscribed on</p>
+                    <p className="text-sm font-medium">
+                      {new Date(subscription.subscribedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          <div className="space-y-4">
+            {premiumContent.map((item) => (
+              <Card key={item.title} className="border-[#1a1a1a] bg-[#0a0a0a]">
+                <CardContent className="pt-4">
+                  <h2 className="text-xl font-semibold">{item.title}</h2>
+                  <p className="text-sm text-[#8f8f8f]">{item.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </SubscriptionGate>
   );
 }

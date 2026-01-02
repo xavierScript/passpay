@@ -3,12 +3,14 @@
  *
  * Custom hook for subscription payments with LazorKit.
  * Handles SOL payment to merchant wallet for subscription plans.
+ * Stores subscription data in localStorage for demo purposes.
  */
 
 import { useCallback } from "react";
 import { useWallet } from "@lazorkit/wallet";
 import { SystemProgram, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { RECIPIENT_WALLET } from "@/lib/constants";
+import { saveSubscription } from "@/lib/services";
 import { useTransaction } from "./useTransaction";
 import toast from "react-hot-toast";
 
@@ -67,6 +69,9 @@ export function useSubscription(): UseSubscriptionReturn {
         toast.dismiss(toastId);
 
         if (sig) {
+          // Save subscription to localStorage
+          saveSubscription(smartWalletPubkey.toBase58(), planName, amount, sig);
+
           toast.success(`${planName} subscription activated! 🎉`);
         }
 

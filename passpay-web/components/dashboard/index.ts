@@ -20,3 +20,4 @@ export { NotConnectedState } from "./NotConnectedState";
 export { BalanceCard } from "./BalanceCard";
 export { InfoBanner } from "./InfoBanner";
 export { HistoryList } from "./HistoryList";
+export { SubscriptionStatus } from "./SubscriptionStatus";

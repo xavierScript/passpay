@@ -11,6 +11,7 @@ const navItems = [
   { href: "/memo", label: "Memo", icon: "📝" },
   { href: "/staking", label: "Staking", icon: "🥩" },
   { href: "/subscribe", label: "Subscribe", icon: "💳" },
+  { href: "/premium", label: "Premium", icon: "⭐" },
 ];
 
 export default function DashboardLayout({

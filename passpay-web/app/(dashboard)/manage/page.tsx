@@ -10,7 +10,9 @@ import {
   PageHeader,
   NotConnectedState,
   InfoBanner,
+  SubscriptionStatus,
 } from "@/components/dashboard";
+import toast from "react-hot-toast";
 
 const quickActions = [
   {
@@ -82,8 +84,13 @@ export default function ManagePage() {
                     {wallet.smartWallet.slice(-8)}
                   </p>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(wallet.smartWallet);
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(wallet.smartWallet);
+                        toast.success("Address copied to clipboard");
+                      } catch (err) {
+                        toast.error("Failed to copy address");
+                      }
                     }}
                     className="text-xs text-[#14F195] hover:text-[#14F195]/80"
                   >
@@ -131,8 +138,14 @@ export default function ManagePage() {
           </CardContent>
         </Card>
 
+        {/* Subscription Status */}
+        <div className="mb-6">
+          <SubscriptionStatus />
+        </div>
+
         {/* Quick Actions */}
         <div className="mb-6">
+          \n{" "}
           <h2 className="text-lg font-semibold mb-4 text-[#8f8f8f]">
             Quick Actions
           </h2>

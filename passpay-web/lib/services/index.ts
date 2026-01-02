@@ -11,3 +11,4 @@ export * from "./transfer";
 export * from "./memo";
 export * from "./staking";
 export * from "./rpc";
+export * from "./subscription";

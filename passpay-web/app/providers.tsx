@@ -4,6 +4,7 @@ import { LazorkitProvider } from "@lazorkit/wallet";
 import { DEFAULT_CONFIG } from "@/lib/constants";
 import { Toaster } from "react-hot-toast";
 import { Buffer } from "buffer";
+import "@/lib/debug"; // Import debug utilities
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
