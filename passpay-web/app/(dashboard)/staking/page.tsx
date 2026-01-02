@@ -9,211 +9,73 @@
  * - Create a stake account (using createAccountWithSeed)
  * - Delegate stake to a validator
  * - View existing stake accounts and their status
- *
- * WHY USE createAccountWithSeed?
- * ------------------------------
- * Normally, creating a stake account requires a NEW keypair that must
- * sign the transaction. But LazorKit only provides the smart wallet signer.
- *
- * Solution: Use `createAccountWithSeed()` which derives the account address
- * from the wallet's public key + a seed string. No additional signers needed!
  */
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 import { useWallet } from "@lazorkit/wallet";
-import { PublicKey, Connection } from "@solana/web3.js";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import toast from "react-hot-toast";
+import { useStaking } from "@/hooks";
 import {
-  createStakeAccountInstructions,
-  getStakeAccounts,
+  PageHeader,
+  NotConnectedState,
+  BalanceCard,
+  InfoBanner,
+} from "@/components/dashboard";
+import {
   DEVNET_VALIDATORS,
   MIN_STAKE_AMOUNT,
   formatSol,
   getStateBadgeColor,
-  StakeAccountInfo,
 } from "@/lib/services/staking";
-import { getSolBalance } from "@/lib/services/rpc";
 import {
   getAddressExplorerUrl,
   truncateAddress,
 } from "@/lib/services/transfer";
-import { DEFAULT_CONFIG } from "@/lib/constants";
 
 export default function StakingPage() {
-  const { signAndSendTransaction, smartWalletPubkey, isConnected } =
-    useWallet();
+  const { isConnected } = useWallet();
+  const { stake, staking, balance, stakeAccounts, loading, refresh } =
+    useStaking();
 
   const [amount, setAmount] = useState("");
   const [selectedValidator, setSelectedValidator] = useState<string>(
     DEVNET_VALIDATORS[0].voteAccount
   );
-  const [stakeAccounts, setStakeAccounts] = useState<StakeAccountInfo[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [staking, setStaking] = useState(false);
-  const [solBalance, setSolBalance] = useState<number | null>(null);
-  const hasFetchedRef = useRef(false);
 
-  // Create connection instance
-  const getConnection = useCallback(() => {
-    return new Connection(DEFAULT_CONFIG.rpcUrl, "confirmed");
-  }, []);
-
-  // Fetch balance and stake accounts
-  const fetchData = useCallback(async () => {
-    if (!smartWalletPubkey) return;
-
-    setLoading(true);
-    try {
-      const connection = getConnection();
-
-      // Fetch in parallel
-      const [balance, accounts] = await Promise.all([
-        getSolBalance(smartWalletPubkey),
-        getStakeAccounts(connection, smartWalletPubkey),
-      ]);
-
-      setSolBalance(balance);
-      setStakeAccounts(accounts);
-    } catch (error) {
-      console.error("Error fetching staking data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [smartWalletPubkey, getConnection]);
-
-  useEffect(() => {
-    if (isConnected && smartWalletPubkey && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchData();
-    }
-  }, [isConnected, smartWalletPubkey, fetchData]);
-
-  /**
-   * ═══════════════════════════════════════════════════════════════════════════
-   * 📚 TUTORIAL: Creating a Stake Account with LazorKit
-   * ═══════════════════════════════════════════════════════════════════════════
-   *
-   * STEP 1: Validate inputs and check balance
-   * STEP 2: Create stake instructions using createAccountWithSeed
-   * STEP 3: Sign and send the bundled transaction with paymaster
-   */
   const handleStake = async () => {
-    if (!isConnected || !smartWalletPubkey) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
-
-    const amountValue = parseFloat(amount);
-    if (isNaN(amountValue) || amountValue < MIN_STAKE_AMOUNT) {
-      toast.error(`Minimum stake is ${MIN_STAKE_AMOUNT} SOL`);
-      return;
-    }
-
-    if (solBalance !== null && amountValue > solBalance - 0.01) {
-      toast.error("Insufficient balance (keep some for rent)");
-      return;
-    }
-
-    if (!selectedValidator) {
-      toast.error("Please select a validator");
-      return;
-    }
-
-    setStaking(true);
-    const toastId = toast.loading("Creating stake account...");
-
-    try {
-      const connection = getConnection();
-      const validatorPubkey = new PublicKey(selectedValidator);
-
-      // Create stake instructions (uses seed - no additional signer needed!)
-      const { instructions, stakeAccountPubkey } =
-        await createStakeAccountInstructions(
-          connection,
-          smartWalletPubkey,
-          amountValue,
-          validatorPubkey
-        );
-
-      toast.loading("Approve with your passkey...", { id: toastId });
-
-      // Sign and send with paymaster
-      const signature = await signAndSendTransaction({
-        instructions,
-        transactionOptions: {
-          feeToken: "USDC",
-        },
-      });
-
-      toast.dismiss(toastId);
-      toast.success("Stake delegated successfully! 🎉");
-
-      // Clear form and refresh
+    const signature = await stake(amount, selectedValidator);
+    if (signature) {
       setAmount("");
-      fetchData();
-    } catch (error: unknown) {
-      toast.dismiss(toastId);
-      const message = error instanceof Error ? error.message : "Staking failed";
-      toast.error(message);
-      console.error("Staking failed:", error);
-    } finally {
-      setStaking(false);
     }
   };
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-black p-8 text-white">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-3xl font-bold">SOL Staking</h1>
-          <p className="mt-4 text-[#8f8f8f]">
-            Please connect your wallet to stake SOL.
-          </p>
-        </div>
-      </div>
+      <NotConnectedState
+        title="SOL Staking"
+        message="Please connect your wallet to stake SOL."
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-black p-8 text-white">
       <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">🥩 SOL Staking</h1>
-          <p className="mt-2 text-[#8f8f8f]">
-            Stake SOL to validators and earn rewards
-          </p>
-        </div>
+        <PageHeader
+          icon="🥩"
+          title="SOL Staking"
+          description="Stake SOL to validators and earn rewards"
+        />
 
-        {/* Balance Card */}
-        <Card className="mb-6 border-[#14F195]/30 bg-[#14F195]/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[#8f8f8f]">Available to Stake</p>
-                <p className="text-2xl font-bold">
-                  {loading ? (
-                    <span className="text-[#8f8f8f]">Loading...</span>
-                  ) : (
-                    <>{solBalance?.toFixed(4) ?? "0"} SOL</>
-                  )}
-                </p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={fetchData}
-                disabled={loading}
-              >
-                Refresh
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <BalanceCard
+          label="Available to Stake"
+          balance={balance}
+          loading={loading}
+          onRefresh={refresh}
+        />
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Stake Form */}
@@ -278,14 +140,11 @@ export default function StakingPage() {
                 {staking ? "Staking..." : "Stake SOL 🥩"}
               </Button>
 
-              {/* Info */}
-              <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-3">
-                <p className="text-xs text-[#8f8f8f]">
-                  📝 <strong>Note:</strong> Staking uses createAccountWithSeed
-                  to avoid needing additional signers - perfect for
-                  LazorKit&apos;s passkey-only signing.
-                </p>
-              </div>
+              <InfoBanner icon="📝">
+                <strong>Note:</strong> Staking uses createAccountWithSeed to
+                avoid needing additional signers - perfect for LazorKit&apos;s
+                passkey-only signing.
+              </InfoBanner>
             </CardContent>
           </Card>
 

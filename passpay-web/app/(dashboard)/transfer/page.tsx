@@ -18,19 +18,19 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 import { useWallet } from "@lazorkit/wallet";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import toast from "react-hot-toast";
+import { useTransfer } from "@/hooks";
 import {
-  createTransferInstruction,
-  validateAddress,
-  validateAmount,
-  truncateAddress,
-  getExplorerUrl,
-} from "@/lib/services/transfer";
-import { getSolBalance } from "@/lib/services/rpc";
+  PageHeader,
+  NotConnectedState,
+  BalanceCard,
+  InfoBanner,
+  HistoryList,
+} from "@/components/dashboard";
+import { truncateAddress } from "@/lib/services/transfer";
 
 interface TransferHistory {
   recipient: string;
@@ -40,199 +40,59 @@ interface TransferHistory {
 }
 
 export default function TransferPage() {
-  const { signAndSendTransaction, smartWalletPubkey, isConnected } =
-    useWallet();
+  const { isConnected } = useWallet();
+  const { transfer, loading, balance, balanceLoading, refreshBalance } =
+    useTransfer();
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<TransferHistory[]>([]);
-  const [solBalance, setSolBalance] = useState<number | null>(null);
-  const [balanceLoading, setBalanceLoading] = useState(false);
-  const hasFetchedRef = useRef(false);
-
-  // Fetch balance on mount
-  const fetchBalance = useCallback(async () => {
-    if (!smartWalletPubkey) return;
-    setBalanceLoading(true);
-    try {
-      const balance = await getSolBalance(smartWalletPubkey);
-      setSolBalance(balance);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-    } finally {
-      setBalanceLoading(false);
-    }
-  }, [smartWalletPubkey]);
-
-  useEffect(() => {
-    if (isConnected && smartWalletPubkey && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchBalance();
-    }
-  }, [isConnected, smartWalletPubkey, fetchBalance]);
 
   /**
    * ═══════════════════════════════════════════════════════════════════════════
    * 📚 TUTORIAL: Creating & Sending a Gasless Transfer
    * ═══════════════════════════════════════════════════════════════════════════
    *
-   * STEP 1: Validate inputs (address and amount)
-   * STEP 2: Create a SystemProgram.transfer() instruction
-   * STEP 3: Call signAndSendTransaction() with paymaster config
+   * With the useTransfer hook, all of this is handled automatically!
    */
   const handleTransfer = async () => {
-    if (!isConnected || !smartWalletPubkey) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
+    const signature = await transfer(recipient, amount);
 
-    // Validate recipient address
-    const recipientPubkey = validateAddress(recipient);
-    if (!recipientPubkey) {
-      toast.error("Invalid recipient address");
-      return;
-    }
-
-    // Validate amount
-    const amountValue = validateAmount(amount, 0);
-    if (!amountValue) {
-      toast.error("Invalid amount. Must be greater than 0");
-      return;
-    }
-
-    // Check balance
-    if (solBalance !== null && amountValue > solBalance) {
-      toast.error(
-        `Insufficient balance. You have ${solBalance.toFixed(4)} SOL`
-      );
-      return;
-    }
-
-    setLoading(true);
-    const toastId = toast.loading("Approve with your passkey...");
-
-    try {
-      // Create transfer instruction
-      const instruction = createTransferInstruction(
-        smartWalletPubkey,
-        recipientPubkey,
-        amountValue
-      );
-
-      // Sign and send with paymaster (gasless!)
-      const signature = await signAndSendTransaction({
-        instructions: [instruction],
-        transactionOptions: {
-          feeToken: "USDC", // 👈 This enables gasless transactions!
-        },
-      });
-
-      toast.dismiss(toastId);
-      toast.success("Transfer successful! 🎉");
-
-      // Add to history
+    if (signature) {
       setHistory((prev) => [
-        {
-          recipient,
-          amount,
-          signature,
-          timestamp: new Date(),
-        },
+        { recipient, amount, signature, timestamp: new Date() },
         ...prev,
       ]);
-
-      // Clear form and refresh balance
       setRecipient("");
       setAmount("");
-      fetchBalance();
-    } catch (error: unknown) {
-      toast.dismiss(toastId);
-      console.error("Transfer failed:", error);
-
-      // Handle specific error types
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (
-        errorMessage.includes("NotAllowedError") ||
-        errorMessage.includes("cancelled") ||
-        errorMessage.includes("canceled")
-      ) {
-        toast.error("You cancelled the passkey prompt. Please try again.");
-      } else if (errorMessage.includes("Signing failed")) {
-        toast.error(
-          "Signing failed. Please ensure you're using HTTPS and try again."
-        );
-      } else if (
-        errorMessage.includes("insufficient") ||
-        errorMessage.includes("Insufficient")
-      ) {
-        toast.error("Insufficient balance for this transaction.");
-      } else if (
-        errorMessage.includes("timeout") ||
-        errorMessage.includes("Timeout")
-      ) {
-        toast.error("Request timed out. Please try again.");
-      } else {
-        toast.error(errorMessage || "Transfer failed. Please try again.");
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-black p-8 text-white">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-bold">Transfer SOL</h1>
-          <p className="mt-4 text-[#8f8f8f]">
-            Please connect your wallet to send SOL.
-          </p>
-        </div>
-      </div>
+      <NotConnectedState
+        title="Transfer SOL"
+        message="Please connect your wallet to send SOL."
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-black p-8 text-white">
       <div className="mx-auto max-w-2xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">💸 Transfer SOL</h1>
-          <p className="mt-2 text-[#8f8f8f]">
-            Send SOL gaslessly - paymaster covers the fees ⚡
-          </p>
-        </div>
+        <PageHeader
+          icon="💸"
+          title="Transfer SOL"
+          description="Send SOL gaslessly - paymaster covers the fees ⚡"
+        />
 
-        {/* Balance Card */}
-        <Card className="mb-6 border-[#14F195]/20 bg-[#14F195]/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-[#8f8f8f]">Available Balance</p>
-                <p className="text-2xl font-bold">
-                  {balanceLoading ? (
-                    <span className="text-[#8f8f8f]">Loading...</span>
-                  ) : (
-                    <span className="text-[#14F195]">
-                      {solBalance?.toFixed(4) ?? "0"} SOL
-                    </span>
-                  )}
-                </p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={fetchBalance}
-                disabled={balanceLoading}
-              >
-                Refresh
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <BalanceCard
+          label="Available Balance"
+          balance={balance}
+          loading={balanceLoading}
+          onRefresh={refreshBalance}
+          variant="highlight"
+        />
 
         {/* Transfer Form */}
         <Card>
@@ -283,53 +143,23 @@ export default function TransferPage() {
               {loading ? "Sending..." : "Send SOL ⚡"}
             </Button>
 
-            {/* Info */}
-            <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-3">
-              <p className="text-xs text-[#8f8f8f]">
-                💡 <strong>Gasless Transaction:</strong> You don&apos;t need SOL
-                for gas fees. LazorKit&apos;s paymaster will cover the
-                transaction fee, deducting the equivalent from your USDC
-                balance.
-              </p>
-            </div>
+            <InfoBanner icon="💡">
+              <strong>Gasless Transaction:</strong> You don&apos;t need SOL for
+              gas fees. LazorKit&apos;s paymaster will cover the transaction
+              fee, deducting the equivalent from your USDC balance.
+            </InfoBanner>
           </CardContent>
         </Card>
 
         {/* Transaction History */}
-        {history.length > 0 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <h2 className="text-lg font-semibold">Recent Transfers</h2>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {history.map((tx, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between rounded-lg border border-[#1a1a1a] bg-[#1a1a1a]/50 p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {tx.amount} SOL → {truncateAddress(tx.recipient)}
-                      </p>
-                      <p className="text-xs text-[#8f8f8f]">
-                        {tx.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <a
-                      href={getExplorerUrl(tx.signature)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-[#14F195] hover:text-[#14F195]/80"
-                    >
-                      View ↗
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <HistoryList
+          title="Recent Transfers"
+          items={history.map((tx) => ({
+            primary: `${tx.amount} SOL → ${truncateAddress(tx.recipient)}`,
+            signature: tx.signature,
+            timestamp: tx.timestamp,
+          }))}
+        />
       </div>
     </div>
   );

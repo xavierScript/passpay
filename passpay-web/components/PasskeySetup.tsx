@@ -29,8 +29,9 @@ export function PasskeySetup({
         localStorage.setItem("lk_credential", encrypted);
       }
       toast.success("Wallet connected!");
-    } catch (e: any) {
-      const msg = e?.message || "Passkey connection failed";
+    } catch (e: unknown) {
+      const err = e as Error;
+      const msg = err?.message || "Passkey connection failed";
       setError(msg);
       if (msg.includes("NotAllowedError")) {
         toast.error("You cancelled the passkey prompt.");

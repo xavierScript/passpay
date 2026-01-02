@@ -1,12 +1,16 @@
 "use client";
-import { useEffect, useState, useRef, useCallback } from "react";
+
 import { useWallet } from "@lazorkit/wallet";
 import Link from "next/link";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getSolBalance } from "@/lib/services/rpc";
-import { PasskeySetup } from "@/components/PasskeySetup";
+import { useSolBalance } from "@/hooks";
+import {
+  PageHeader,
+  NotConnectedState,
+  InfoBanner,
+} from "@/components/dashboard";
 
 const quickActions = [
   {
@@ -44,60 +48,27 @@ const quickActions = [
 ];
 
 export default function ManagePage() {
-  const { smartWalletPubkey, wallet, isConnected } = useWallet();
-  const [solBalance, setSolBalance] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const hasFetchedRef = useRef(false);
+  const { wallet, isConnected } = useWallet();
+  const { balance, loading, refresh } = useSolBalance();
 
-  const fetchBalance = useCallback(async () => {
-    if (!smartWalletPubkey) return;
-    setLoading(true);
-    try {
-      const balance = await getSolBalance(smartWalletPubkey);
-      setSolBalance(balance);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [smartWalletPubkey]);
-
-  useEffect(() => {
-    if (isConnected && smartWalletPubkey && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchBalance();
-    }
-  }, [isConnected, smartWalletPubkey, fetchBalance]);
-
-  // Not connected state
   if (!isConnected || !wallet?.smartWallet) {
     return (
-      <div className="min-h-screen bg-black p-8 text-white">
-        <div className="mx-auto max-w-md">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Welcome to PassPay
-            </h1>
-            <p className="mt-2 text-[#8f8f8f]">
-              Connect your wallet to get started
-            </p>
-          </div>
-          <PasskeySetup onConnected={() => {}} />
-        </div>
-      </div>
+      <NotConnectedState
+        title="Welcome to PassPay"
+        message="Connect your wallet to get started"
+        showSetup
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-black p-4 sm:p-8 text-white">
       <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">🏠 Dashboard</h1>
-          <p className="mt-2 text-[#8f8f8f]">
-            Your passkey-protected Solana wallet on Devnet
-          </p>
-        </div>
+        <PageHeader
+          icon="🏠"
+          title="Dashboard"
+          description="Your passkey-protected Solana wallet on Devnet"
+        />
 
         {/* Wallet Overview */}
         <Card className="mb-6 border-[#14F195]/20 bg-gradient-to-br from-[#14F195]/5 to-[#14F195]/10">
@@ -128,7 +99,7 @@ export default function ManagePage() {
                       <span className="text-[#8f8f8f]">...</span>
                     ) : (
                       <span className="text-[#14F195]">
-                        {solBalance?.toFixed(4) ?? "0"} SOL
+                        {balance?.toFixed(4) ?? "0"} SOL
                       </span>
                     )}
                   </p>
@@ -136,7 +107,7 @@ export default function ManagePage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={fetchBalance}
+                  onClick={refresh}
                   disabled={loading}
                 >
                   ↻
@@ -189,28 +160,18 @@ export default function ManagePage() {
         </div>
 
         {/* Faucet Info */}
-        <Card className="mt-6 border-amber-500/20 bg-amber-500/5">
-          <CardContent className="pt-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">💧</span>
-              <div>
-                <p className="font-medium text-amber-400">Need Devnet SOL?</p>
-                <p className="text-sm text-[#8f8f8f] mt-1">
-                  Get free devnet SOL from the{" "}
-                  <a
-                    href="https://faucet.solana.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-amber-400 underline hover:text-amber-300"
-                  >
-                    Solana Faucet ↗
-                  </a>
-                  . Just paste your wallet address above!
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <InfoBanner icon="💧" title="Need Devnet SOL?" variant="warning">
+          Get free devnet SOL from the{" "}
+          <a
+            href="https://faucet.solana.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-amber-400 underline hover:text-amber-300"
+          >
+            Solana Faucet ↗
+          </a>
+          . Just paste your wallet address above!
+        </InfoBanner>
       </div>
     </div>
   );

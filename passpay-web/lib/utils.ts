@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// @ts-nocheck - Crypto API has strict generic types that conflict with BufferSource
-
-/** AES-GCM encryption helpers for storing passkey credentialId locally. */
+/**
+ * AES-GCM encryption helpers for storing passkey credentialId locally.
+ * Note: Uses type assertions due to strict ArrayBuffer types in TypeScript 5.7+
+ */
 export async function encryptLocal(data: string): Promise<string> {
   const enc = new TextEncoder();
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -24,6 +24,7 @@ export async function decryptLocal(payload: string): Promise<string | null> {
     const data = base64ToBuffer(dataB64);
     const key = await subtleKeyFromDeviceInfo(salt);
     const plain = await crypto.subtle.decrypt(
+      // @ts-expect-error - Uint8Array is valid BufferSource in Web Crypto API
       { name: "AES-GCM", iv },
       key,
       data
@@ -44,6 +45,7 @@ async function subtleKeyFromDeviceInfo(salt: Uint8Array): Promise<CryptoKey> {
     ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
+    // @ts-expect-error - Uint8Array is valid BufferSource in Web Crypto API
     { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
     baseKey,
     { name: "AES-GCM", length: 256 },
@@ -69,8 +71,7 @@ export async function withRetry<T>(
   delayMs = 2000
 ): Promise<T> {
   let attempt = 0;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  for (;;) {
     try {
       return await fn();
     } catch (e) {
