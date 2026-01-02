@@ -15,7 +15,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  initialRouteName: "welcome",
 };
 
 const LAZORKIT_CONFIG = {
@@ -40,6 +40,7 @@ export default function RootLayout() {
     >
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
+          <Stack.Screen name="welcome" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"

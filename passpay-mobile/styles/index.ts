@@ -10,3 +10,4 @@ export { memoStyles } from "./memo.styles";
 export { sharedStyles } from "./shared.styles";
 export { stakeStyles } from "./stake.styles";
 export { transferStyles } from "./transfer.styles";
+export { welcomeStyles } from "./welcome.styles";
