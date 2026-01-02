@@ -87,8 +87,10 @@ export function validateMemo(message: string): string | null {
   if (!message.trim()) {
     return "Please enter a message";
   }
-  if (message.length > 500) {
-    return "Message too long. Maximum 500 characters.";
+  // Reduced limit to account for LazorKit paymaster overhead
+  // Total transaction must be < 1232 bytes
+  if (message.length > 200) {
+    return "Message too long. Maximum 200 characters.";
   }
   return null;
 }

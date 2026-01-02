@@ -53,6 +53,10 @@ function parseTransactionError(error: unknown): string {
     return "Insufficient balance for this transaction.";
   }
 
+  if (errorMessage.includes("Transaction too large")) {
+    return "Transaction exceeds size limit. This is a known LazorKit paymaster issue - try again or contact support.";
+  }
+
   if (errorMessage.includes("timeout") || errorMessage.includes("Timeout")) {
     return "Request timed out. Please try again.";
   }

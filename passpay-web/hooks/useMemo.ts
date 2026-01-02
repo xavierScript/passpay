@@ -7,7 +7,10 @@
 
 import { useCallback } from "react";
 import { useWallet } from "@lazorkit/wallet";
-import { createMemoInstruction, validateMemo } from "@/lib/services/memo";
+import {
+  createUnsignedMemoInstruction,
+  validateMemo,
+} from "@/lib/services/memo";
 import { useTransaction } from "./useTransaction";
 import toast from "react-hot-toast";
 
@@ -55,10 +58,9 @@ export function useMemoHook(): UseMemoReturn {
         return null;
       }
 
-      const instruction = createMemoInstruction(
-        message.trim(),
-        smartWalletPubkey
-      );
+      // Use unsigned memo to reduce transaction size
+      // (saves ~32 bytes by not requiring explicit signer)
+      const instruction = createUnsignedMemoInstruction(message.trim());
       return execute([instruction]);
     },
     [isConnected, smartWalletPubkey, execute]

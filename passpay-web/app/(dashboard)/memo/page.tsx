@@ -72,8 +72,8 @@ export default function MemoPage() {
         <InfoBanner icon="💡" title="What is a Memo?" variant="warning">
           Memos are text messages stored permanently in Solana transactions.
           They&apos;re perfect for proof of existence, timestamps, or on-chain
-          notes. This is also a great way to verify your LazorKit integration
-          works!
+          notes. Limited to 200 characters to fit within transaction size
+          limits.
         </InfoBanner>
 
         {/* Memo Form */}
@@ -89,13 +89,16 @@ export default function MemoPage() {
             <div>
               <label className="mb-2 block text-sm font-medium text-[#8f8f8f]">
                 Your Message
+                <span className="ml-2 text-xs">
+                  ({message.length}/200 characters)
+                </span>
               </label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Hello, Solana! This message will live forever on-chain..."
                 rows={4}
-                maxLength={500}
+                maxLength={200}
                 className="w-full resize-none rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3 text-white placeholder-[#8f8f8f] focus:border-[#14F195] focus:outline-none focus:ring-1 focus:ring-[#14F195]"
               />
               <p className="mt-1 text-right text-xs text-[#8f8f8f]">
