@@ -33,17 +33,14 @@
  */
 
 import { AppColors } from "@/constants/theme";
-import { clearCache, getSolBalance } from "@/services/rpc";
+import { useClipboard, useSolBalance } from "@/hooks";
 import { homeStyles as styles } from "@/styles";
 import { getRedirectUrl } from "@/utils/redirect-url";
 import { useWallet } from "@lazorkit/wallet-mobile-adapter";
-import * as Clipboard from "expo-clipboard";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -51,91 +48,17 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
-  const {
-    connect,
-    isConnected,
-    smartWalletPubkey,
-    disconnect,
-    isConnecting,
-    signMessage,
-  } = useWallet();
+  const { connect, isConnected, smartWalletPubkey, disconnect, isConnecting } =
+    useWallet();
   const [isLoading, setIsLoading] = useState(false);
-  const [signing, setSigning] = useState(false);
-  const [signature, setSignature] = useState<{
-    signature: string;
-    signedPayload: string;
-  } | null>(null);
-  const [signError, setSignError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
-  // Balance state - just SOL to avoid expensive RPC calls
-  const [solBalance, setSolBalance] = useState(0);
-  const [balancesLoading, setBalancesLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Fetch SOL balance only (stake accounts are too expensive for public RPC)
-  const fetchBalances = useCallback(async () => {
-    if (!smartWalletPubkey) return;
-
-    try {
-      const balance = await getSolBalance(smartWalletPubkey);
-      setSolBalance(balance);
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-    }
-  }, [smartWalletPubkey]);
-
-  // Fetch balances only when tab is focused
-  useFocusEffect(
-    useCallback(() => {
-      if (isConnected && smartWalletPubkey) {
-        setBalancesLoading(true);
-        fetchBalances().finally(() => setBalancesLoading(false));
-      } else {
-        setSolBalance(0);
-      }
-    }, [isConnected, smartWalletPubkey])
-  );
-
-  // Pull to refresh - clears cache
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    clearCache();
-    await fetchBalances();
-    setRefreshing(false);
-  }, [fetchBalances]);
-
-  /**
-   * ═══════════════════════════════════════════════════════════════════════════
-   * 📚 TUTORIAL: Signing Messages with Passkey
-   * ═══════════════════════════════════════════════════════════════════════════
-   *
-   * The `signMessage()` function allows signing arbitrary messages:
-   *
-   * - Opens LazorKit portal for biometric authentication
-   * - Returns a cryptographic signature of the message
-   * - Useful for: login verification, off-chain attestations, proving ownership
-   *
-   * The returned signature can be verified on-chain or off-chain using
-   * the wallet's public key.
-   */
-  const handleSignMessage = async () => {
-    setSignature(null);
-    setSignError(null);
-    setSigning(true);
-    try {
-      const sig = await signMessage("Welcome to PassPay!", {
-        redirectUrl: getRedirectUrl(),
-      });
-      console.log("Verified Signature:", sig); // Log as per docs
-      setSignature(sig);
-    } catch (e: any) {
-      console.error("Sign error:", e);
-      setSignError(e?.message || "Failed to sign message");
-    } finally {
-      setSigning(false);
-    }
-  };
+  // ✨ Using custom hooks for cleaner code
+  const { copy, copied } = useClipboard();
+  const {
+    loading: balancesLoading,
+    refreshControl,
+    formattedBalance,
+  } = useSolBalance();
 
   /**
    * ═══════════════════════════════════════════════════════════════════════════
@@ -186,7 +109,6 @@ export default function HomeScreen() {
       await disconnect({
         onSuccess: () => {
           console.log("Disconnected");
-          setSignature(null); // Clear signature on disconnect
         },
         onFail: (error) => {
           console.error("Disconnect failed:", error);
@@ -199,16 +121,11 @@ export default function HomeScreen() {
     }
   };
 
-  const handleCopyAddress = async () => {
-    try {
-      const address = smartWalletPubkey?.toBase58();
-      if (!address) return;
-      await Clipboard.setStringAsync(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (e: any) {
-      console.error("Copy failed:", e);
-      Alert.alert("Copy Failed", e?.message || "Failed to copy address");
+  // ✨ Using useClipboard hook - much simpler!
+  const handleCopyAddress = () => {
+    const address = smartWalletPubkey?.toBase58();
+    if (address) {
+      copy(address);
     }
   };
 
@@ -216,16 +133,7 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
-      refreshControl={
-        isConnected ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={AppColors.primary}
-            colors={[AppColors.primary]}
-          />
-        ) : undefined
-      }
+      refreshControl={refreshControl}
     >
       <View style={styles.content}>
         <Text style={styles.title}>PassPay</Text>
@@ -259,14 +167,9 @@ export default function HomeScreen() {
                 )}
               </View>
 
-              {/* SOL Balance */}
+              {/* SOL Balance - using formattedBalance from hook */}
               <View style={styles.mainBalanceRow}>
-                <Text style={styles.mainBalanceValue}>
-                  {solBalance.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4,
-                  })}
-                </Text>
+                <Text style={styles.mainBalanceValue}>{formattedBalance}</Text>
                 <Text style={styles.mainBalanceSymbol}>SOL</Text>
               </View>
 
@@ -274,49 +177,6 @@ export default function HomeScreen() {
                 Pull down to refresh • View staked SOL in Stake tab
               </Text>
             </View>
-
-            {/* Sign Message Button - Commented out as it's a demo/testing feature
-            <TouchableOpacity
-              style={[styles.button, signing && styles.buttonDisabled]}
-              onPress={handleSignMessage}
-              disabled={signing}
-            >
-              {signing ? (
-                <ActivityIndicator color={AppColors.background} />
-              ) : (
-                <Text style={styles.buttonText}>Sign Message</Text>
-              )}
-            </TouchableOpacity>
-            */}
-
-            {/* Display Signature */}
-            {/* {signature && (
-              <View style={styles.signatureCard}>
-                <Text style={styles.label}>Verified Signature</Text>
-                <Text
-                  style={styles.signatureText}
-                  numberOfLines={2}
-                  ellipsizeMode="middle"
-                >
-                  {signature.signature}
-                </Text>
-                <Text style={styles.label}>Signed Payload</Text>
-                <Text
-                  style={styles.payloadText}
-                  numberOfLines={2}
-                  ellipsizeMode="middle"
-                >
-                  {signature.signedPayload}
-                </Text>
-              </View>
-            )} */}
-
-            {/* Display Error */}
-            {signError && (
-              <View style={styles.errorCard}>
-                <Text style={styles.errorText}>❌ {signError}</Text>
-              </View>
-            )}
 
             {/* Disconnect Button */}
             <TouchableOpacity

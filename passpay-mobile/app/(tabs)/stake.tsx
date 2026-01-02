@@ -31,7 +31,8 @@
  */
 
 import { AppColors } from "@/constants/theme";
-import { clearCache, getConnection, getSolBalance } from "@/services/rpc";
+import { useLazorkitTransaction, useSolBalance, useWalletGuard } from "@/hooks";
+import { getConnection } from "@/services/rpc";
 import {
   createStakeAccountInstructions,
   getStakeAccounts,
@@ -40,17 +41,13 @@ import {
 } from "@/services/staking";
 import { stakeStyles as styles } from "@/styles";
 import { getAddressExplorerUrl } from "@/utils/helpers";
-import { getRedirectUrl } from "@/utils/redirect-url";
-import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Keyboard,
   Linking,
-  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -84,8 +81,28 @@ interface Validator {
 }
 
 export default function StakeScreen() {
-  const { signAndSendTransaction, smartWalletPubkey, isConnected } =
-    useWallet();
+  // ✨ Using custom hooks for cleaner, reusable code
+  const { isConnected, publicKey, NotConnectedView } = useWalletGuard({
+    icon: "🥩",
+    message: "Connect wallet to stake SOL",
+  });
+
+  const {
+    balance: solBalance,
+    loading: balanceLoading,
+    refresh: refreshBalance,
+    refreshControl,
+  } = useSolBalance();
+
+  const { execute, loading: staking } = useLazorkitTransaction({
+    successAlertTitle: "Staked Successfully! 🎉",
+    onSuccess: () => {
+      setAmount("");
+      // Refresh data after staking
+      refreshBalance();
+      fetchStakeAccounts();
+    },
+  });
 
   const [amount, setAmount] = useState("");
   const [selectedValidator, setSelectedValidator] = useState<string | null>(
@@ -94,52 +111,34 @@ export default function StakeScreen() {
   const [validators] = useState<Validator[]>(STATIC_VALIDATORS);
   const [stakeAccounts, setStakeAccounts] = useState<StakeAccountInfo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [staking, setStaking] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [solBalance, setSolBalance] = useState<number | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
 
   const connection = getConnection();
 
-  const fetchData = useCallback(async () => {
-    if (!smartWalletPubkey) return;
+  const fetchStakeAccounts = useCallback(async () => {
+    if (!publicKey) return;
 
     try {
-      // Fetch SOL balance (cached)
-      const balance = await getSolBalance(smartWalletPubkey);
-      setSolBalance(balance);
-
-      // Only fetch stake accounts if needed (expensive call)
-      if (!hasFetched) {
-        const accounts = await getStakeAccounts(connection, smartWalletPubkey);
-        setStakeAccounts(accounts);
-        setHasFetched(true);
-      }
+      const accounts = await getStakeAccounts(connection, publicKey);
+      setStakeAccounts(accounts);
+      setHasFetched(true);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching stake accounts:", error);
     }
-  }, [smartWalletPubkey, hasFetched]);
+  }, [publicKey, connection]);
 
-  // Only fetch when tab is focused, not on mount
+  // Only fetch stake accounts when tab is focused (balance handled by useSolBalance)
   useFocusEffect(
     useCallback(() => {
-      if (isConnected && smartWalletPubkey) {
+      if (isConnected && publicKey && !hasFetched) {
         setLoading(true);
-        fetchData().finally(() => setLoading(false));
+        fetchStakeAccounts().finally(() => setLoading(false));
       }
-    }, [isConnected, smartWalletPubkey])
+    }, [isConnected, publicKey, hasFetched, fetchStakeAccounts])
   );
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    clearCache();
-    setHasFetched(false);
-    await fetchData();
-    setRefreshing(false);
-  };
-
   const handleStake = async () => {
-    if (!isConnected || !smartWalletPubkey) {
+    if (!isConnected || !publicKey) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -164,20 +163,17 @@ export default function StakeScreen() {
       return;
     }
 
+    console.log("Creating stake account:", {
+      amount: stakeAmount,
+      validator: selectedValidator,
+    });
+
     try {
-      Keyboard.dismiss();
-      setStaking(true);
-
-      console.log("Creating stake account:", {
-        amount: stakeAmount,
-        validator: selectedValidator,
-      });
-
       // Create stake instructions using seed-based account (no additional signers!)
       const { instructions, stakeAccountPubkey, seed } =
         await createStakeAccountInstructions(
           connection,
-          smartWalletPubkey,
+          publicKey,
           stakeAmount,
           new PublicKey(selectedValidator)
         );
@@ -186,46 +182,18 @@ export default function StakeScreen() {
       console.log(`Stake account: ${stakeAccountPubkey.toBase58()}`);
       console.log(`Seed: ${seed}`);
 
-      // Sign and send via LazorKit
-      await signAndSendTransaction(
-        {
-          instructions,
-          transactionOptions: {
-            clusterSimulation: "devnet",
-            computeUnitLimit: 200_000,
-          },
-        },
-        {
-          redirectUrl: getRedirectUrl("stake"),
-          onSuccess: (sig) => {
-            console.log("Stake successful:", sig);
-            setAmount("");
-            Alert.alert(
-              "Staked Successfully! 🎉",
-              `You've staked ${stakeAmount} SOL!\n\nStake Account:\n${stakeAccountPubkey
-                .toBase58()
-                .substring(0, 24)}...`
-            );
-            // Refresh data
-            fetchData();
-          },
-          onFail: (error) => {
-            console.error("Stake failed:", error);
-            Alert.alert(
-              "Staking Failed",
-              error?.message || "Failed to stake. Please try again."
-            );
-          },
-        }
-      );
+      // ✨ Execute using the hook - handles loading, errors, alerts automatically!
+      await execute({
+        instructions,
+        redirectPath: "stake",
+        computeUnitLimit: 200_000,
+      });
     } catch (error: any) {
       console.error("Stake error:", error);
       Alert.alert(
         "Error",
         error?.message || "Failed to stake. Please try again."
       );
-    } finally {
-      setStaking(false);
     }
   };
 
@@ -246,32 +214,16 @@ export default function StakeScreen() {
     }
   };
 
-  // Not connected state
+  // Not connected state - using NotConnectedView from hook
   if (!isConnected) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.emptyIcon}>🥩</Text>
-          <Text style={styles.emptyText}>Connect wallet to stake SOL</Text>
-          <Text style={styles.emptySubtext}>
-            Go to the Wallet tab to connect
-          </Text>
-        </View>
-      </View>
-    );
+    return <NotConnectedView />;
   }
 
   return (
     <ScrollView
       style={styles.container}
       keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={AppColors.primary}
-        />
-      }
+      refreshControl={refreshControl}
     >
       <View style={styles.content}>
         <Text style={styles.title}>Stake SOL</Text>
@@ -279,13 +231,11 @@ export default function StakeScreen() {
           Earn rewards by staking with validators
         </Text>
 
-        {/* Balance Card */}
+        {/* Balance Card - using useSolBalance hook */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Available Balance</Text>
           <Text style={styles.balanceValue}>
-            {solBalance !== null
-              ? `${solBalance.toFixed(4)} SOL`
-              : "Loading..."}
+            {balanceLoading ? "Loading..." : `${solBalance.toFixed(4)} SOL`}
           </Text>
         </View>
 

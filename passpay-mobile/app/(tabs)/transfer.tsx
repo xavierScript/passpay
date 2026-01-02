@@ -34,21 +34,21 @@
 
 import { AppColors } from "@/constants/theme";
 import {
+  useClipboard,
+  useLazorkitTransaction,
+  useTransactionHistory,
+  useWalletGuard,
+} from "@/hooks";
+import {
   createTransferInstruction,
-  getExplorerUrl,
   validateAddress,
   validateAmount,
 } from "@/services/transfer";
 import { transferStyles as styles } from "@/styles";
-import { getRedirectUrl } from "@/utils/redirect-url";
-import { useWallet } from "@lazorkit/wallet-mobile-adapter";
-import * as Clipboard from "expo-clipboard";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Keyboard,
-  Linking,
   ScrollView,
   Text,
   TextInput,
@@ -56,16 +56,40 @@ import {
   View,
 } from "react-native";
 
+/**
+ * Transfer History Record Type
+ */
+interface TransferRecord {
+  recipient: string;
+  amount: string;
+}
+
 export default function TransferScreen() {
-  const { signAndSendTransaction, smartWalletPubkey, isConnected } =
-    useWallet();
+  // ✨ Using custom hooks for cleaner, reusable code
+  const { isConnected, address, publicKey, NotConnectedView } = useWalletGuard({
+    icon: "💸",
+    message: "Connect wallet to send SOL",
+  });
+
+  const { copy, copied } = useClipboard();
+
+  const { history, addTransaction, openInExplorer } =
+    useTransactionHistory<TransferRecord>();
+
+  const { execute, loading } = useLazorkitTransaction({
+    gasless: true,
+    successAlertTitle: "Transfer Sent! ✅",
+    successAlertMessage: "Successfully sent SOL!",
+    onSuccess: (signature) => {
+      // Add to history using the hook
+      addTransaction(signature, { recipient, amount });
+      setRecipient("");
+      setAmount("");
+    },
+  });
+
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<
-    { recipient: string; amount: string; signature: string; timestamp: Date }[]
-  >([]);
-  const [copied, setCopied] = useState(false);
 
   /**
    * ═══════════════════════════════════════════════════════════════════════════
@@ -74,29 +98,28 @@ export default function TransferScreen() {
    *
    * STEP 1: Validate inputs (address and amount)
    * STEP 2: Create a SystemProgram.transfer() instruction
-   * STEP 3: Call signAndSendTransaction() with paymaster config:
+   * STEP 3: Use useLazorkitTransaction hook with gasless: true
+   *
+   * The hook handles all the complexity:
+   * - Loading states
+   * - Error handling with alerts
+   * - Paymaster configuration for gasless
+   * - Success/failure callbacks
    *
    * ```typescript
-   * await signAndSendTransaction(
-   *   {
-   *     instructions: [transferInstruction],
-   *     transactionOptions: {
-   *       feeToken: "USDC",           // 👈 This enables gasless!
-   *       clusterSimulation: "devnet", // Network to use
-   *     },
-   *   },
-   *   {
-   *     redirectUrl: "yourapp://callback", // Deep link back
-   *     onSuccess: (signature) => { ... },
-   *     onFail: (error) => { ... },
-   *   }
-   * );
-   * ```
+   * const { execute, loading } = useLazorkitTransaction({
+   *   gasless: true,  // 👈 This enables paymaster!
+   *   onSuccess: (sig) => { ... },
+   * });
    *
-   * The paymaster will deduct USDC equivalent of gas from user's balance.
+   * await execute({
+   *   instructions: [transferInstruction],
+   *   redirectPath: 'transfer',
+   * });
+   * ```
    */
   const handleTransfer = async () => {
-    if (!isConnected || !smartWalletPubkey) {
+    if (!isConnected || !publicKey) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -120,107 +143,31 @@ export default function TransferScreen() {
       return;
     }
 
-    try {
-      Keyboard.dismiss();
-      setLoading(true);
+    console.log("Creating transfer:", {
+      recipient: recipient,
+      amount: transferAmount,
+    });
 
-      console.log("Creating transfer:", {
-        recipient: recipient,
-        amount: transferAmount,
-      });
+    // Create transfer instruction
+    const ix = createTransferInstruction(publicKey, recipientPubkey, transferAmount);
 
-      // Create transfer instruction
-      const ix = createTransferInstruction(
-        smartWalletPubkey,
-        recipientPubkey,
-        transferAmount
-      );
+    // ✨ Execute using the hook - handles loading, errors, alerts automatically!
+    await execute({
+      instructions: [ix],
+      redirectPath: "transfer",
+    });
+  };
 
-      // Sign and send transaction with paymaster (gasless)
-      await signAndSendTransaction(
-        {
-          instructions: [ix],
-          transactionOptions: {
-            feeToken: "USDC",
-            clusterSimulation: "devnet",
-          },
-        },
-        {
-          redirectUrl: getRedirectUrl("transfer"),
-          onSuccess: (sig) => {
-            console.log("Transfer successful:", sig);
-
-            // Add to history
-            setHistory((prev) => [
-              {
-                recipient: recipient,
-                amount: amount,
-                signature: sig,
-                timestamp: new Date(),
-              },
-              ...prev,
-            ]);
-
-            setRecipient("");
-            setAmount("");
-            Alert.alert(
-              "Transfer Sent! ✅",
-              `Successfully sent ${transferAmount} SOL!\n\nTx: ${sig.substring(
-                0,
-                20
-              )}...`
-            );
-          },
-          onFail: (error) => {
-            console.error("Transfer failed:", error);
-            Alert.alert(
-              "Failed",
-              error?.message || "Transaction failed. Please try again."
-            );
-          },
-        }
-      );
-    } catch (error: any) {
-      console.error("Transfer error:", error);
-      Alert.alert(
-        "Error",
-        error?.message || "Failed to send transaction. Please try again."
-      );
-    } finally {
-      setLoading(false);
+  // ✨ Using useClipboard hook
+  const handleCopyAddress = () => {
+    if (address) {
+      copy(address);
     }
   };
 
-  const openExplorer = (signature: string) => {
-    Linking.openURL(getExplorerUrl(signature));
-  };
-
-  const handleCopyAddress = async () => {
-    try {
-      const address = smartWalletPubkey?.toBase58();
-      if (!address) return;
-      await Clipboard.setStringAsync(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (e: any) {
-      console.error("Copy failed:", e);
-      Alert.alert("Copy Failed", e?.message || "Failed to copy address");
-    }
-  };
-
-  // Not connected state
+  // Not connected state - using NotConnectedView from hook
   if (!isConnected) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.emptyIcon}>💸</Text>
-          <Text style={styles.emptyText}>Connect wallet to send SOL</Text>
-          <Text style={styles.emptySubtext}>
-            Go to the Wallet tab to connect
-          </Text>
-        </View>
-      </View>
-    );
+    return <NotConnectedView />;
   }
 
   return (
@@ -252,7 +199,7 @@ export default function TransferScreen() {
               numberOfLines={1}
               ellipsizeMode="middle"
             >
-              {smartWalletPubkey?.toBase58()}
+              {address}
             </Text>
           </TouchableOpacity>
           {copied && (
@@ -304,28 +251,26 @@ export default function TransferScreen() {
           )}
         </TouchableOpacity>
 
-        {/* History */}
+        {/* History - using useTransactionHistory hook */}
         {history.length > 0 && (
           <View style={styles.historySection}>
             <Text style={styles.historyTitle}>Recent Transfers</Text>
-            {history.map((item, index) => (
+            {history.map((item) => (
               <TouchableOpacity
-                key={index}
+                key={item.id}
                 style={styles.historyItem}
-                onPress={() => openExplorer(item.signature)}
+                onPress={() => openInExplorer(item.signature)}
               >
                 <View style={styles.historyHeader}>
-                  <Text style={styles.historyAmount}>{item.amount} SOL</Text>
-                  <Text style={styles.historyTime}>
-                    {item.timestamp.toLocaleTimeString()}
-                  </Text>
+                  <Text style={styles.historyAmount}>{item.data.amount} SOL</Text>
+                  <Text style={styles.historyTime}>{item.formattedTime}</Text>
                 </View>
                 <Text
                   style={styles.historyRecipient}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
-                  To: {item.recipient}
+                  To: {item.data.recipient}
                 </Text>
                 <Text style={styles.historyLink}>View on Explorer →</Text>
               </TouchableOpacity>

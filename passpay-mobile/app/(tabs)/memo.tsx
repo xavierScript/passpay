@@ -28,17 +28,17 @@
  */
 
 import { AppColors } from "@/constants/theme";
+import {
+  useLazorkitTransaction,
+  useTransactionHistory,
+  useWalletGuard,
+} from "@/hooks";
 import { createMemoInstruction } from "@/services/memo";
 import { memoStyles as styles } from "@/styles";
-import { getExplorerUrl } from "@/utils/helpers";
-import { getRedirectUrl } from "@/utils/redirect-url";
-import { useWallet } from "@lazorkit/wallet-mobile-adapter";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Keyboard,
-  Linking,
   ScrollView,
   Text,
   TextInput,
@@ -46,18 +46,37 @@ import {
   View,
 } from "react-native";
 
+/**
+ * Memo History Record Type
+ */
+interface MemoRecord {
+  message: string;
+}
+
 export default function MemoScreen() {
-  const { signAndSendTransaction, smartWalletPubkey, isConnected } =
-    useWallet();
+  // ✨ Using custom hooks for cleaner, reusable code
+  const { isConnected, publicKey, NotConnectedView } = useWalletGuard({
+    icon: "📝",
+    message: "Connect wallet to write memos",
+  });
+
+  const { history, addTransaction, openInExplorer } =
+    useTransactionHistory<MemoRecord>();
 
   const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [history, setHistory] = useState<
-    { message: string; signature: string; timestamp: Date }[]
-  >([]);
+
+  const { execute, loading: sending } = useLazorkitTransaction({
+    successAlertTitle: "Memo Saved! ✅",
+    successAlertMessage:
+      "Your message is now permanently on the Solana blockchain!",
+    onSuccess: (signature) => {
+      addTransaction(signature, { message: message.trim() });
+      setMessage("");
+    },
+  });
 
   const handleSendMemo = async () => {
-    if (!isConnected || !smartWalletPubkey) {
+    if (!isConnected || !publicKey) {
       Alert.alert("Error", "Please connect your wallet first");
       return;
     }
@@ -72,87 +91,21 @@ export default function MemoScreen() {
       return;
     }
 
-    try {
-      Keyboard.dismiss();
-      setSending(true);
+    console.log("Creating memo:", message.trim());
 
-      console.log("Creating memo:", message.trim());
+    // Create memo instruction
+    const memoInstruction = createMemoInstruction(message.trim(), publicKey);
 
-      // Create memo instruction
-      const memoInstruction = createMemoInstruction(
-        message.trim(),
-        smartWalletPubkey
-      );
-
-      // Sign and send via LazorKit
-      await signAndSendTransaction(
-        {
-          instructions: [memoInstruction],
-          transactionOptions: {
-            clusterSimulation: "devnet",
-          },
-        },
-        {
-          redirectUrl: getRedirectUrl("memo"),
-          onSuccess: (sig) => {
-            console.log("Memo sent successfully:", sig);
-
-            // Add to history
-            setHistory((prev) => [
-              {
-                message: message.trim(),
-                signature: sig,
-                timestamp: new Date(),
-              },
-              ...prev,
-            ]);
-
-            setMessage("");
-            Alert.alert(
-              "Memo Saved! ✅",
-              `Your message is now permanently on the Solana blockchain!\n\nTx: ${sig.substring(
-                0,
-                20
-              )}...`
-            );
-          },
-          onFail: (error) => {
-            console.error("Memo failed:", error);
-            Alert.alert(
-              "Failed",
-              error?.message || "Failed to send memo. Please try again."
-            );
-          },
-        }
-      );
-    } catch (error: any) {
-      console.error("Memo error:", error);
-      Alert.alert(
-        "Error",
-        error?.message || "Failed to send memo. Please try again."
-      );
-    } finally {
-      setSending(false);
-    }
+    // ✨ Execute using the hook - handles loading, errors, alerts automatically!
+    await execute({
+      instructions: [memoInstruction],
+      redirectPath: "memo",
+    });
   };
 
-  const openExplorer = (signature: string) => {
-    Linking.openURL(getExplorerUrl(signature));
-  };
-
-  // Not connected state
+  // Not connected state - using NotConnectedView from hook
   if (!isConnected) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.emptyIcon}>📝</Text>
-          <Text style={styles.emptyText}>Connect wallet to write memos</Text>
-          <Text style={styles.emptySubtext}>
-            Go to the Wallet tab to connect
-          </Text>
-        </View>
-      </View>
-    );
+    return <NotConnectedView />;
   }
 
   return (
@@ -207,23 +160,21 @@ export default function MemoScreen() {
           )}
         </TouchableOpacity>
 
-        {/* History */}
+        {/* History - using useTransactionHistory hook */}
         {history.length > 0 && (
           <View style={styles.historySection}>
             <Text style={styles.historyTitle}>Recent Memos</Text>
-            {history.map((item, index) => (
+            {history.map((item) => (
               <TouchableOpacity
-                key={index}
+                key={item.id}
                 style={styles.historyItem}
-                onPress={() => openExplorer(item.signature)}
+                onPress={() => openInExplorer(item.signature)}
               >
                 <Text style={styles.historyMessage} numberOfLines={2}>
-                  "{item.message}"
+                  "{item.data.message}"
                 </Text>
                 <View style={styles.historyMeta}>
-                  <Text style={styles.historyTime}>
-                    {item.timestamp.toLocaleTimeString()}
-                  </Text>
+                  <Text style={styles.historyTime}>{item.formattedTime}</Text>
                   <Text style={styles.historyLink}>View on Explorer →</Text>
                 </View>
               </TouchableOpacity>
