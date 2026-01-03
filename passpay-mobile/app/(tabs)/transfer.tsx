@@ -43,7 +43,7 @@ import {
   createTransferInstruction,
   validateAddress,
   validateAmount,
-} from "@/services/transfer";
+} from "@/features/transfer/services";
 import { transferStyles as styles } from "@/styles";
 import { useState } from "react";
 import {
@@ -55,7 +55,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components";
 
 /**
  * Transfer History Record Type

@@ -457,7 +457,7 @@ Simplifies wallet connection checking with a pre-built "not connected" UI.
 ### Full Implementation
 
 ```typescript
-// hooks/use-wallet-guard.tsx
+// features/wallet/hooks/use-wallet-guard.tsx
 /**
  * useWalletGuard Hook
  *

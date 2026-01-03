@@ -9,6 +9,5 @@
  * ```
  */
 
-export { Logo } from "./Logo";
-export { ScreenHeader } from "./ScreenHeader";
+export * from "./common";
 export { HapticTab } from "./haptic-tab";

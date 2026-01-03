@@ -38,7 +38,7 @@ import {
   getStakeAccounts,
   MIN_STAKE_AMOUNT,
   StakeAccountInfo,
-} from "@/services/staking";
+} from "@/features/staking/services";
 import { stakeStyles as styles } from "@/styles";
 import { getAddressExplorerUrl } from "@/utils/helpers";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
@@ -54,7 +54,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components";
 
 // Hardcoded validators to avoid RPC call - getVoteAccounts is expensive
 const STATIC_VALIDATORS = [

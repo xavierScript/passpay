@@ -67,13 +67,6 @@
  * ```
  */
 
-// Balance & Data Hooks
-export {
-  useSolBalance,
-  type UseSolBalanceOptions,
-  type UseSolBalanceReturn,
-} from "./use-sol-balance";
-
 // Transaction Hooks
 export {
   useLazorkitTransaction,
@@ -98,12 +91,18 @@ export {
   type UseTransactionHistoryReturn,
 } from "./use-transaction-history";
 
-// Wallet Hooks
+// Wallet Hooks (from wallet feature)
 export {
   useWalletGuard,
   type UseWalletGuardOptions,
   type UseWalletGuardReturn,
-} from "./use-wallet-guard";
+} from "@/features/wallet/hooks/use-wallet-guard";
+
+export {
+  useSolBalance,
+  type UseSolBalanceOptions,
+  type UseSolBalanceReturn,
+} from "@/features/wallet/hooks/use-sol-balance";
 
 // Theme Hooks
 export { useColorScheme } from "./use-color-scheme";

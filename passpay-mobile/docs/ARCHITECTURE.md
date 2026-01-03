@@ -99,20 +99,49 @@ passpay-mobile/
 │       ├── memo.tsx              # On-chain memos
 │       └── stake.tsx             # Native SOL staking
 │
-├── hooks/                        # 🪝 Custom React Hooks
+├── components/                   # 🎨 UI Components
+│   ├── common/                   # Shared components
+│   │   ├── Logo.tsx              # App logo component
+│   │   └── ScreenHeader.tsx      # Reusable header
+│   ├── ui/                       # UI primitives
+│   │   └── icon-symbol.tsx       # Icon components
+│   └── haptic-tab.tsx            # Tab with haptic feedback
+│
+├── features/                     # 🎯 Feature Modules
+│   ├── wallet/                   # Wallet feature
+│   │   ├── hooks/                # Wallet-specific hooks
+│   │   │   ├── use-sol-balance.ts
+│   │   │   └── use-wallet-guard.tsx
+│   │   └── styles/               # Wallet screen styles
+│   │       └── home.styles.ts
+│   ├── transfer/                 # Transfer feature
+│   │   ├── services/             # Transfer business logic
+│   │   │   └── transfer.service.ts
+│   │   └── styles/               # Transfer screen styles
+│   │       └── transfer.styles.ts
+│   ├── staking/                  # Staking feature
+│   │   ├── services/             # Staking business logic
+│   │   │   └── staking.service.ts
+│   │   └── styles/               # Staking screen styles
+│   │       └── stake.styles.ts
+│   └── memo/                     # Memo feature
+│       ├── services/             # Memo business logic
+│       │   └── memo.service.ts
+│       └── styles/               # Memo screen styles
+│           └── memo.styles.ts
+│
+├── hooks/                        # 🪝 Shared React Hooks
 │   ├── index.ts                  # Central exports
 │   ├── use-lazorkit-transaction.ts  # Transaction handling
-│   ├── use-wallet-guard.tsx      # Connection guard
-│   ├── use-sol-balance.ts        # Balance fetching
 │   ├── use-transaction-history.ts   # History tracking
 │   ├── use-clipboard.ts          # Clipboard operations
 │   └── use-color-scheme.ts       # Theme detection
 │
-├── services/                     # ⚙️ Business Logic
-│   ├── rpc.ts                    # Solana connection singleton
-│   ├── transfer.ts               # Transfer utilities
-│   ├── staking.ts                # Staking utilities
-│   └── memo.ts                   # Memo utilities
+├── services/                     # ⚙️ Shared Services
+│   └── rpc.ts                    # Solana connection singleton
+│
+├── types/                        # 📝 TypeScript Types
+│   └── (shared type definitions)
 │
 ├── utils/                        # 🔧 Helper Functions
 │   ├── helpers.ts                # Common utilities
@@ -121,13 +150,9 @@ passpay-mobile/
 ├── constants/                    # 🎨 App Constants
 │   └── theme.ts                  # Colors and theme values
 │
-├── styles/                       # 💅 StyleSheet Definitions
+├── styles/                       # 💅 Shared Styles
 │   ├── index.ts                  # Central exports
 │   ├── shared.styles.ts          # Shared styles
-│   ├── home.styles.ts            # Wallet screen styles
-│   ├── transfer.styles.ts        # Transfer screen styles
-│   ├── memo.styles.ts            # Memo screen styles
-│   ├── stake.styles.ts           # Stake screen styles
 │   └── welcome.styles.ts         # Welcome screen styles
 │
 ├── __tests__/                    # 🧪 Test Files
@@ -450,12 +475,28 @@ useFocusEffect(
 
 ### Adding New Features
 
-1. **New Screen**: Add to `app/(tabs)/`
-2. **New Service**: Add to `services/`
-3. **New Hook**: Add to `hooks/` and export from index
-4. **New Styles**: Add to `styles/` and export from index
+1. **New Screen**: Add to `app/(tabs)/` and register in tab layout
+2. **New Feature Module**: Create in `features/<feature-name>/`
+3. **Feature Structure**:
+   - `services/` - Business logic
+   - `styles/` - Screen styles
+   - `hooks/` - Feature-specific hooks (optional)
+4. **Shared Hooks**: Add to root `hooks/` if truly shared across features
+5. **Update Docs**: Add tutorial to `docs/tutorials/`
 
 ### Example: Adding Token Transfers
+
+```
+features/token-transfer/
+├── services/
+│   └── token-transfer.service.ts    # SPL token transfer logic
+├── styles/
+│   └── token-transfer.styles.ts      # Screen styling
+└── hooks/
+    └── use-token-balance.ts          # Token balance fetching
+
+app/(tabs)/token-transfer.tsx         # Screen implementation
+```
 
 ```
 1. Create services/token-transfer.ts

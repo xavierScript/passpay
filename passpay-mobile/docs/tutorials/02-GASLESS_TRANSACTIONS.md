@@ -123,7 +123,7 @@ You'll need some SOL to test transfers. Get free Devnet SOL:
 First, create a service to handle transfer logic:
 
 ```typescript
-// services/transfer.ts
+// features/transfer/services/transfer.service.ts
 /**
  * SOL Transfer Service
  *

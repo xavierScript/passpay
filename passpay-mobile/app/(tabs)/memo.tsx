@@ -33,7 +33,7 @@ import {
   useTransactionHistory,
   useWalletGuard,
 } from "@/hooks";
-import { createMemoInstruction } from "@/services/memo";
+import { createMemoInstruction } from "@/features/memo/services";
 import { memoStyles as styles } from "@/styles";
 import { useState } from "react";
 import {
@@ -45,7 +45,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components";
 
 /**
  * Memo History Record Type

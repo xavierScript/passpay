@@ -143,7 +143,7 @@ Before starting:
 Build a comprehensive staking service:
 
 ```typescript
-// services/staking.ts
+// features/staking/services/staking.service.ts
 /**
  * Native SOL Staking Service
  *

@@ -389,7 +389,17 @@ Utilities for SOL transfer operations.
 #### Location
 
 ```
-services/transfer.ts
+features/transfer/services/transfer.service.ts
+```
+
+#### Imports
+
+```typescript
+// Direct import (recommended)
+import { createTransferInstruction } from "@/features/transfer/services";
+
+// Backward compatible import
+import { createTransferInstruction } from "@/services/transfer";
 ```
 
 #### Functions
@@ -451,7 +461,17 @@ Utilities for native SOL staking.
 #### Location
 
 ```
-services/staking.ts
+features/staking/services/staking.service.ts
+```
+
+#### Imports
+
+```typescript
+// Direct import (recommended)
+import { createStakeAccountInstructions } from "@/features/staking/services";
+
+// Backward compatible import
+import { createStakeAccountInstructions } from "@/services/staking";
 ```
 
 #### Functions
@@ -506,7 +526,17 @@ Utilities for on-chain memo operations.
 #### Location
 
 ```
-services/memo.ts
+features/memo/services/memo.service.ts
+```
+
+#### Imports
+
+```typescript
+// Direct import (recommended)
+import { createMemoInstruction } from "@/features/memo/services";
+
+// Backward compatible import
+import { createMemoInstruction } from "@/services/memo";
 ```
 
 #### Functions

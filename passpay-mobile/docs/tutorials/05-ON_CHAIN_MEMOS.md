@@ -593,14 +593,17 @@ export function validateMemo(message: string): {
 
 ## Complete Example
 
-See the full implementation in [app/(tabs)/memo.tsx](<../../app/(tabs)/memo.tsx>).
+See the full implementation in [app/(tabs)/memo.tsx](../../app/(tabs)/memo.tsx).
 
 ```
 📁 Key Files
-├── app/(tabs)/memo.tsx     ← Screen component
-├── services/memo.ts        ← Memo instruction builder
-├── hooks/index.ts          ← Custom hooks
-└── styles/memo.styles.ts   ← Styling
+├── app/(tabs)/memo.tsx                      ← Screen component
+├── features/memo/
+│   ├── services/memo.service.ts             ← Memo instruction builder
+│   └── styles/memo.styles.ts                ← Styling
+└── hooks/                                   ← Shared hooks
+    ├── use-lazorkit-transaction.ts
+    └── use-transaction-history.ts
 ```
 
 ---

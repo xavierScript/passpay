@@ -46,7 +46,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components";
 
 export default function HomeScreen() {
   const { connect, isConnected, smartWalletPubkey, disconnect, isConnecting } =

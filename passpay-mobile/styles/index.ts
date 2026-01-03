@@ -1,13 +1,18 @@
 /**
- * Styles Index - Export all screen styles
+ * Styles Index - Export shared and global styles
  *
- * This folder contains extracted styles from all screens for better
- * organization and maintainability.
+ * Feature-specific styles have been moved to their respective feature folders:
+ * - homeStyles -> @/features/wallet/styles/home.styles
+ * - transferStyles -> @/features/transfer/styles/transfer.styles
+ * - stakeStyles -> @/features/staking/styles/stake.styles
+ * - memoStyles -> @/features/memo/styles/memo.styles
  */
 
-export { homeStyles } from "./home.styles";
-export { memoStyles } from "./memo.styles";
 export { sharedStyles } from "./shared.styles";
-export { stakeStyles } from "./stake.styles";
-export { transferStyles } from "./transfer.styles";
 export { welcomeStyles } from "./welcome.styles";
+
+// Re-export feature styles for backward compatibility
+export { homeStyles } from "@/features/wallet/styles/home.styles";
+export { transferStyles } from "@/features/transfer/styles/transfer.styles";
+export { stakeStyles } from "@/features/staking/styles/stake.styles";
+export { memoStyles } from "@/features/memo/styles/memo.styles";
