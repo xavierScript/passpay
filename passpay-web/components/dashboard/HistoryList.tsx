@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getExplorerUrl } from "@/lib/services/transfer";
+import { getExplorerUrl } from "@/lib/services";
 
 interface HistoryItem {
   /** Primary display text */

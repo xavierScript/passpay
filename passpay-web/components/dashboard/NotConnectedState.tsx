@@ -1,6 +1,6 @@
 "use client";
 
-import { PasskeySetup } from "@/components/PasskeySetup";
+import { PasskeySetup } from "@/components";
 
 interface NotConnectedStateProps {
   /** Page title to display */

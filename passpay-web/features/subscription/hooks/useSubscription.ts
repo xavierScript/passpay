@@ -11,7 +11,7 @@ import { useWallet } from "@lazorkit/wallet";
 import { SystemProgram, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { RECIPIENT_WALLET } from "@/lib/constants";
 import { saveSubscription } from "@/lib/services";
-import { useTransaction } from "./useTransaction";
+import { useTransaction } from "@/features/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseSubscriptionReturn {

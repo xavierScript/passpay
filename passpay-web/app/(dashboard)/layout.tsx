@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { WalletConnect } from "@/components/WalletConnect";
-import { MobileNav } from "@/components/MobileNav";
+import { WalletConnect } from "@/components";
+import { MobileNav } from "@/components";
 import { Logo } from "@/components";
 
 const navItems = [

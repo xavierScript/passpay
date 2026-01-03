@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PasskeySetup } from "@/components/PasskeySetup";
+import { PasskeySetup } from "@/components";
 import { Logo } from "@/components";
 
 export default function LoginPage() {

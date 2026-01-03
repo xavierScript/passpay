@@ -29,11 +29,8 @@ import {
   MIN_STAKE_AMOUNT,
   formatSol,
   getStateBadgeColor,
-} from "@/lib/services/staking";
-import {
-  getAddressExplorerUrl,
-  truncateAddress,
-} from "@/lib/services/transfer";
+} from "@/lib/services";
+import { getAddressExplorerUrl, truncateAddress } from "@/lib/services";
 
 export default function StakingPage() {
   const { isConnected } = useWallet();

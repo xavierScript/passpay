@@ -3,8 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
-import { Logo } from "./Logo";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Logo } from "@/components";
 
 interface NavItem {
   href: string;

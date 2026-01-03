@@ -11,11 +11,11 @@
  * ```
  */
 
-// Shared components
-export { Logo } from "./Logo";
-export { WalletConnect } from "./WalletConnect";
-export { MobileNav } from "./MobileNav";
-export { PasskeySetup } from "./PasskeySetup";
+// Shared components from common/
+export { Logo } from "./common/Logo";
+export { WalletConnect } from "./common/WalletConnect";
+export { MobileNav } from "./common/MobileNav";
+export { PasskeySetup } from "./common/PasskeySetup";
 export { SubscriptionGate } from "./SubscriptionGate";
 
 // Re-export dashboard components

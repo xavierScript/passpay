@@ -7,8 +7,8 @@
 
 import { useCallback } from "react";
 import { useWallet } from "@lazorkit/wallet";
-import { createMemoInstruction, validateMemo } from "@/lib/services/memo";
-import { useTransaction } from "./useTransaction";
+import { createMemoInstruction, validateMemo } from "@/lib/services";
+import { useTransaction } from "@/features/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseMemoReturn {

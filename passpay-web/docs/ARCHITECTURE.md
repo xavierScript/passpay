@@ -116,12 +116,55 @@ passpay-web/
 │       └── premium/              # Gated content
 │           └── page.tsx
 │
+├── features/                     # 🎯 Feature-based organization
+│   ├── wallet/                   # Wallet feature
+│   │   └── hooks/
+│   │       ├── index.ts
+│   │       ├── useSolBalance.ts
+│   │       └── useTransaction.ts
+│   │
+│   ├── transfer/                 # Transfer feature
+│   │   ├── hooks/
+│   │   │   ├── index.ts
+│   │   │   └── useTransfer.ts
+│   │   └── services/
+│   │       ├── index.ts
+│   │       └── transfer.service.ts
+│   │
+│   ├── staking/                  # Staking feature
+│   │   ├── hooks/
+│   │   │   ├── index.ts
+│   │   │   └── useStaking.ts
+│   │   └── services/
+│   │       ├── index.ts
+│   │       └── staking.service.ts
+│   │
+│   ├── memo/                     # Memo feature
+│   │   ├── hooks/
+│   │   │   ├── index.ts
+│   │   │   └── useMemo.ts
+│   │   └── services/
+│   │       ├── index.ts
+│   │       └── memo.service.ts
+│   │
+│   └── subscription/             # Subscription feature
+│       ├── hooks/
+│       │   ├── index.ts
+│       │   └── useSubscription.ts
+│       └── services/
+│           ├── index.ts
+│           └── subscription.service.ts
+│
 ├── components/                   # 🧩 React Components
 │   ├── index.ts                  # Central exports
-│   ├── PasskeySetup.tsx          # Passkey connection flow
-│   ├── WalletConnect.tsx         # Wallet connection UI
 │   ├── SubscriptionGate.tsx      # Content gating component
-│   ├── MobileNav.tsx             # Mobile navigation
+│   │
+│   ├── common/                   # Shared components
+│   │   ├── index.ts
+│   │   ├── Logo.tsx              # PassPay logo component
+│   │   ├── PasskeySetup.tsx      # Passkey connection flow
+│   │   ├── WalletConnect.tsx     # Wallet connection UI
+│   │   └── MobileNav.tsx         # Mobile navigation
 │   │
 │   ├── dashboard/                # Dashboard-specific components
 │   │   └── ...
@@ -132,27 +175,17 @@ passpay-web/
 │       ├── input.tsx
 │       └── ...
 │
-├── hooks/                        # 🪝 Custom React Hooks
-│   ├── index.ts                  # Central exports
-│   ├── useTransaction.ts         # Transaction execution
-│   ├── useTransfer.ts            # SOL transfers
-│   ├── useSolBalance.ts          # Balance fetching
-│   ├── useStaking.ts             # Staking operations
-│   ├── useMemo.ts                # Memo writing
-│   └── useSubscription.ts        # Subscription payments
+├── hooks/                        # 🪝 Custom React Hooks (re-exports)
+│   └── index.ts                  # Re-exports from features/
 │
 ├── lib/                          # ⚙️ Utilities & Services
 │   ├── constants.ts              # Configuration constants
 │   ├── utils.ts                  # Helper functions
 │   ├── debug.ts                  # Debug utilities
 │   │
-│   └── services/                 # Solana service functions
-│       ├── index.ts              # Central exports
-│       ├── rpc.ts                # Connection singleton
-│       ├── transfer.ts           # Transfer utilities
-│       ├── staking.ts            # Staking utilities
-│       ├── memo.ts               # Memo utilities
-│       └── subscription.ts       # Subscription storage
+│   └── services/                 # Service re-exports
+│       ├── index.ts              # Re-exports from features/
+│       └── rpc.ts                # Connection singleton
 │
 ├── tests/                        # 🧪 Test Files
 │   ├── constants.test.ts
@@ -246,28 +279,58 @@ passpay-web/
 - **Purpose**: Render user interface, handle user input
 - **Location**: `app/` directory
 - **Contains**: Route components, layout files
-- **Imports from**: Components, Hooks
+- **Imports from**: Components, Hooks (via re-exports)
+
+### Features Layer
+
+- **Purpose**: Organize code by feature domains (wallet, transfer, staking, memo, subscription)
+- **Location**: `features/` directory
+- **Structure**: Each feature has `hooks/` and/or `services/` subdirectories
+- **Benefits**: Better code organization, easier to locate feature-specific logic
+- **Imports from**: Services within same feature, cross-feature imports via re-exports
 
 ### Components Layer
 
 - **Purpose**: Reusable UI building blocks
 - **Location**: `components/` directory
-- **Contains**: React components, UI primitives
-- **Imports from**: Hooks, Utils
+- **Contains**: React components in `common/`, `dashboard/`, and `ui/` subdirectories
+- **Imports from**: Hooks (via re-exports), Utils
 
-### Hooks Layer
+### Hooks Layer (Re-exports)
 
-- **Purpose**: Encapsulate stateful logic and side effects
-- **Location**: `hooks/` directory
-- **Contains**: Custom hooks for each feature
-- **Imports from**: Services, LazorKit SDK
+- **Purpose**: Provide backward-compatible imports for all hooks
+- **Location**: `hooks/index.ts` - re-exports from `features/*/hooks/`
+- **Contains**: Hook re-exports organized by feature
+- **Imports from**: Feature hooks
 
-### Services Layer
+**Example import paths:**
 
-- **Purpose**: Business logic, Solana interactions
-- **Location**: `lib/services/` directory
+```typescript
+// New feature-based import (recommended)
+import { useSolBalance } from "@/features/wallet/hooks";
+
+// Backward-compatible import (also works)
+import { useSolBalance } from "@/hooks";
+```
+
+### Services Layer (Re-exports)
+
+- **Purpose**: Business logic, Solana interactions, provide backward-compatible imports
+- **Location**:
+  - `features/*/services/*.service.ts` - actual service implementations
+  - `lib/services/index.ts` - re-exports for backward compatibility
 - **Contains**: Pure functions, instruction builders
 - **Imports from**: @solana/web3.js, constants
+
+**Example import paths:**
+
+```typescript
+// New feature-based import (recommended)
+import { createTransferInstruction } from "@/features/transfer/services";
+
+// Backward-compatible import (also works)
+import { createTransferInstruction } from "@/lib/services";
+```
 
 ---
 

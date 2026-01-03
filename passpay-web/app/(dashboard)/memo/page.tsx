@@ -24,7 +24,7 @@ import {
   InfoBanner,
   HistoryList,
 } from "@/components/dashboard";
-import { truncateAddress } from "@/lib/services/transfer";
+import { truncateAddress } from "@/lib/services";
 
 interface MemoHistory {
   message: string;

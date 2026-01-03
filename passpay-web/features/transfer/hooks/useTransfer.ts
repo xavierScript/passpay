@@ -11,9 +11,8 @@ import {
   createTransferInstruction,
   validateAddress,
   validateAmount,
-} from "@/lib/services/transfer";
-import { useTransaction } from "./useTransaction";
-import { useSolBalance } from "./useSolBalance";
+} from "@/lib/services";
+import { useTransaction, useSolBalance } from "@/features/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseTransferReturn {

@@ -2,6 +2,18 @@
 
 Complete reference for all hooks, services, and utilities in PassPay Web.
 
+> **Note**: PassPay Web uses a feature-based folder structure. Services and hooks are organized by feature (wallet, transfer, staking, memo, subscription) in the `features/` directory. For convenience, all hooks and services are re-exported from their traditional locations (`@/hooks` and `@/lib/services`), so both import paths work:
+>
+> ```typescript
+> // Feature-based import (recommended)
+> import { useSolBalance } from "@/features/wallet/hooks";
+> import { createTransferInstruction } from "@/features/transfer/services";
+>
+> // Backward-compatible import (also works)
+> import { useSolBalance } from "@/hooks";
+> import { createTransferInstruction } from "@/lib/services";
+> ```
+
 ---
 
 ## Table of Contents
@@ -32,9 +44,15 @@ Complete reference for all hooks, services, and utilities in PassPay Web.
 
 A hook that abstracts LazorKit transaction signing with loading states, error handling, and toast notifications.
 
+**Location**: `features/wallet/hooks/useTransaction.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useTransaction } from "@/features/wallet/hooks";
+
+// Or via re-export
 import { useTransaction } from "@/hooks";
 ```
 
@@ -97,9 +115,15 @@ const handleTransfer = async () => {
 
 A hook for gasless SOL transfers with validation and balance checking.
 
+**Location**: `features/transfer/hooks/useTransfer.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useTransfer } from "@/features/transfer/hooks";
+
+// Or via re-export
 import { useTransfer } from "@/hooks";
 ```
 
@@ -155,9 +179,15 @@ return (
 
 A hook that fetches and manages SOL balance with automatic refresh.
 
+**Location**: `features/wallet/hooks/useSolBalance.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useSolBalance } from "@/features/wallet/hooks";
+
+// Or via re-export
 import { useSolBalance } from "@/hooks";
 ```
 
@@ -210,9 +240,15 @@ return (
 
 A hook for SOL staking operations including stake account creation and delegation.
 
+**Location**: `features/staking/hooks/useStaking.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useStaking } from "@/features/staking/hooks";
+
+// Or via re-export
 import { useStaking } from "@/hooks";
 ```
 
@@ -282,9 +318,15 @@ return (
 
 A hook for writing on-chain memos with validation.
 
+**Location**: `features/memo/hooks/useMemo.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useMemoHook } from "@/features/memo/hooks";
+
+// Or via re-export
 import { useMemoHook } from "@/hooks";
 ```
 
@@ -331,9 +373,15 @@ return (
 
 A hook for subscription payments using SOL.
 
+**Location**: `features/subscription/hooks/useSubscription.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import { useSubscription } from "@/features/subscription/hooks";
+
+// Or via re-export
 import { useSubscription } from "@/hooks";
 ```
 
@@ -426,9 +474,20 @@ const balance = await getSolBalanceByAddress("5Qz...");
 
 SOL transfer utilities.
 
+**Location**: `features/transfer/services/transfer.service.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import {
+  validateAddress,
+  validateAmount,
+  createTransferInstruction,
+  truncateAddress,
+} from "@/features/transfer/services";
+
+// Or via re-export
 import {
   validateAddress,
   validateAmount,
@@ -487,9 +546,20 @@ truncateAddress("5Qz...", 4); // "5Qz...XYZ"
 
 Native SOL staking utilities.
 
+**Location**: `features/staking/services/staking.service.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import {
+  createStakeAccountInstructions,
+  getStakeAccounts,
+  DEVNET_VALIDATORS,
+  MIN_STAKE_AMOUNT,
+} from "@/features/staking/services";
+
+// Or via re-export
 import {
   createStakeAccountInstructions,
   getStakeAccounts,
@@ -536,9 +606,20 @@ const accounts = await getStakeAccounts(connection, smartWalletPubkey);
 
 On-chain memo utilities.
 
+**Location**: `features/memo/services/memo.service.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import {
+  createMemoInstruction,
+  createUnsignedMemoInstruction,
+  validateMemo,
+  MEMO_PROGRAM_ID,
+} from "@/features/memo/services";
+
+// Or via re-export
 import {
   createMemoInstruction,
   createUnsignedMemoInstruction,
@@ -574,9 +655,19 @@ if (error) {
 
 Subscription storage utilities.
 
+**Location**: `features/subscription/services/subscription.service.ts`
+
 #### Import
 
 ```typescript
+// Feature-based import
+import {
+  saveSubscription,
+  getSubscription,
+  clearSubscription,
+} from "@/features/subscription/services";
+
+// Or via re-export
 import {
   saveSubscription,
   getSubscription,

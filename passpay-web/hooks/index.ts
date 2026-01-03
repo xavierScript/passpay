@@ -2,6 +2,7 @@
  * Hooks Index
  *
  * Re-export all custom hooks for convenient imports.
+ * Hooks are now organized by feature but re-exported here for convenience.
  *
  * @example
  * ```tsx
@@ -9,9 +10,17 @@
  * ```
  */
 
-export { useSolBalance } from "./useSolBalance";
-export { useTransaction } from "./useTransaction";
-export { useMemoHook } from "./useMemo";
-export { useTransfer } from "./useTransfer";
-export { useStaking } from "./useStaking";
-export { useSubscription } from "./useSubscription";
+// Wallet feature hooks
+export { useSolBalance, useTransaction } from "@/features/wallet/hooks";
+
+// Transfer feature hooks
+export { useTransfer } from "@/features/transfer/hooks";
+
+// Staking feature hooks
+export { useStaking } from "@/features/staking/hooks";
+
+// Memo feature hooks
+export { useMemoHook } from "@/features/memo/hooks";
+
+// Subscription feature hooks
+export { useSubscription } from "@/features/subscription/hooks";

@@ -13,10 +13,10 @@ import {
   getStakeAccounts,
   MIN_STAKE_AMOUNT,
   StakeAccountInfo,
-} from "@/lib/services/staking";
+} from "@/lib/services";
 import { getSolBalance } from "@/lib/services/rpc";
 import { DEFAULT_CONFIG } from "@/lib/constants";
-import { useTransaction } from "./useTransaction";
+import { useTransaction } from "@/features/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseStakingReturn {
