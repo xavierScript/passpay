@@ -4,7 +4,7 @@
     "slug": "passpay-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/passpay-icon.png",
     "scheme": "passpaymobile",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -18,28 +18,23 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/passpay-icon.png"
       },
       "package": "com.passpay.mobile",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
-      ]
+      "permissions": ["USE_BIOMETRIC", "USE_FINGERPRINT"]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/passpay-icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/passpay-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#000000",

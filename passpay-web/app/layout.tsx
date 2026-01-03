@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   title: "PassPay - Gasless Solana Payments with Passkeys",
   description:
     "A LazorKit-powered Solana starter template featuring passkey authentication, gasless transactions, staking, and subscriptions.",
+  icons: {
+    icon: "/passpay-icon.png",
+    apple: "/passpay-icon.png",
+  },
 };
 
 export default function RootLayout({
