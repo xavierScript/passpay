@@ -198,9 +198,53 @@ export function useTransaction(
       }
 
       if (instructions.length === 0) {
-        toast.error("No instructions provided");
-        return null;
-      }
+```
+
+_Listing 3-1: The useTransaction hook with error parsing and configuration options_
+
+This hook is the foundation for all transaction handling in the app. Let's break down the key design decisions:
+
+```typescript
+function parseTransactionError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (message.includes("NotAllowedError") || message.includes("cancelled")) {
+    return "You cancelled the passkey prompt. Please try again.";
+  }
+  // ... more cases
+}
+```
+
+The `parseTransactionError` function transforms cryptic blockchain errors into human-readable messages. Users don't need to know what "NotAllowedError" means—they just need to know they cancelled the prompt. This error mapping is centralized in one place, so improving error messages benefits every feature that uses transactions.
+
+```typescript
+const {
+  loadingMessage = "Approve with your passkey...",
+  successMessage = "Transaction successful! 🎉",
+} = options;
+```
+
+The hook accepts configurable messages with sensible defaults. This allows each feature (transfer, staking, memos) to customize feedback without duplicating the core transaction logic.
+
+```typescript
+const execute = useCallback(
+  async (instructions: TransactionInstruction[]): Promise<string | null> => {
+    // ...
+  },
+  [
+    isConnected,
+    smartWalletPubkey,
+    signAndSendTransaction,
+    loadingMessage,
+    successMessage,
+  ]
+);
+```
+
+We use `useCallback` with a comprehensive dependency array to memoize the `execute` function. This prevents unnecessary re-renders when the hook is used in components that depend on referential equality.
+toast.error("No instructions provided");
+return null;
+}
 
       setLoading(true);
       setError(null);
@@ -236,11 +280,13 @@ export function useTransaction(
       loadingMessage,
       successMessage,
     ]
-  );
 
-  return { execute, loading, signature, error };
+);
+
+return { execute, loading, signature, error };
 }
-```
+
+````
 
 ### Usage
 
@@ -256,7 +302,11 @@ const handleSend = async () => {
     // Success - sig is the transaction signature
   }
 };
-```
+````
+
+_Listing 3-2: Using the useTransaction hook in a component_
+
+With the hook in place, feature code becomes remarkably simple. The component doesn't need to manage loading state, show toasts, or parse errors—the hook handles all of that. The `if (sig)` check is sufficient to determine success, since `execute` returns `null` on failure.
 
 ---
 
@@ -347,6 +397,38 @@ export function useSolBalance(
 }
 ```
 
+_Listing 3-3: The useSolBalance hook with auto-fetch and reset logic_
+
+This hook manages balance state with careful attention to the connection lifecycle:
+
+```typescript
+const hasFetchedRef = useRef(false);
+```
+
+We use a `useRef` to track whether we've already fetched the balance. This prevents duplicate fetches when React's Strict Mode double-invokes effects in development.
+
+```typescript
+useEffect(() => {
+  if (autoFetch && isConnected && smartWalletPubkey && !hasFetchedRef.current) {
+    hasFetchedRef.current = true;
+    refresh();
+  }
+}, [autoFetch, isConnected, smartWalletPubkey, refresh]);
+```
+
+The auto-fetch effect only runs when all conditions are met: auto-fetch is enabled, wallet is connected, we have a public key, and we haven't fetched yet. This ensures a single fetch on mount.
+
+```typescript
+useEffect(() => {
+  if (!isConnected) {
+    setBalance(null);
+    hasFetchedRef.current = false;
+  }
+}, [isConnected]);
+```
+
+When the wallet disconnects, we reset the balance to `null` and clear the fetch flag. This ensures that reconnecting triggers a fresh fetch—you might have a different wallet with a different balance.
+
 ### Usage
 
 ```typescript
@@ -359,6 +441,10 @@ return (
   </div>
 );
 ```
+
+_Listing 3-4: Consuming the useSolBalance hook in UI_
+
+The consuming code is clean and focused on presentation. The hook handles all the complexity of when to fetch, connection state, and error handling.
 
 ---
 

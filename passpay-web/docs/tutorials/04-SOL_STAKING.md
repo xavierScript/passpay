@@ -97,6 +97,28 @@ const stakeAccountPubkey = await PublicKey.createWithSeed(
 // Result: Deterministic address, no extra signer needed!
 ```
 
+_Listing 4-1: Deriving a stake account address without a keypair_
+
+This code demonstrates the key insight that makes staking work with LazorKit. The `createWithSeed` function derives an address deterministically from three inputs:
+
+```typescript
+walletPubkey,  // Base: your wallet
+```
+
+Your wallet's public key serves as the "base" for derivation. This ties the stake account to your wallet cryptographically.
+
+```typescript
+"stake:12345",  // Seed: unique string
+```
+
+The seed is an arbitrary string that makes each derived address unique. By including a timestamp (`stake:${Date.now()}`), we ensure each stake account gets a unique address.
+
+```typescript
+StakeProgram.programId; // Program
+```
+
+The program ID (the Stake Program's address) is included in the derivation. This ensures the derived address is valid for staking operations.
+
 This approach:
 
 - ✅ Works with LazorKit's single signer
@@ -198,6 +220,48 @@ export async function createStakeAccountInstructions(
   const seed = `stake:${Date.now()}`;
 
   // Derive stake account address (no additional signer needed!)
+```
+
+_Listing 4-2: The staking service structure with constants and helpers_
+
+Let's examine the key parts of this service:
+
+```typescript
+export const MIN_STAKE_AMOUNT = 0.01;
+```
+
+Solana requires a minimum stake amount to cover "rent"—a small SOL deposit that keeps the account alive. We set a reasonable minimum that includes a buffer above the rent-exempt threshold.
+
+```typescript
+export const DEVNET_VALIDATORS = [
+  {
+    name: "Solana Foundation",
+    identity: "dv1ZAGvdsz5hHLwWXsVnM94hWf1pjbKVau1QVkaMJ92",
+    voteAccount: "dv1ZAGvdsz5hHLwWXsVnM94hWf1pjbKVau1QVkaMJ92",
+  },
+  // ...
+];
+```
+
+We hardcode a list of reliable Devnet validators. In production, you'd fetch this list dynamically or let users choose from a validator registry. The `voteAccount` is what we delegate to.
+
+```typescript
+export async function getStakeAccountRent(
+  connection: Connection
+): Promise<number> {
+  return await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+}
+```
+
+This function queries the network for the current rent-exempt minimum for a stake account. The `StakeProgram.space` constant (200 bytes) tells the network how large the account will be.
+
+```typescript
+const seed = `stake:${Date.now()}`;
+```
+
+The timestamp-based seed ensures each stake account gets a unique address. If you wanted to find all stake accounts later, you could iterate through possible seeds—though querying the Stake Program directly is more practical.
+
+```typescript
   const stakeAccountPubkey = await PublicKey.createWithSeed(
     fromPubkey,
     seed,
@@ -234,7 +298,65 @@ export async function createStakeAccountInstructions(
     seed,
   };
 }
+```
 
+_Listing 4-3: Creating stake account and delegation instructions_
+
+This is the core staking logic. Let's examine each part:
+
+```typescript
+const stakeAccountPubkey = await PublicKey.createWithSeed(
+  fromPubkey,
+  seed,
+  StakeProgram.programId
+);
+```
+
+We derive the stake account's address deterministically. Given the same inputs, this always produces the same address—no randomness involved.
+
+```typescript
+const createAccountInstruction = StakeProgram.createAccountWithSeed({
+  fromPubkey,
+  stakePubkey: stakeAccountPubkey,
+  basePubkey: fromPubkey,
+  seed,
+  authorized: new Authorized(fromPubkey, fromPubkey),
+  lockup: new Lockup(0, 0, fromPubkey),
+  lamports: lamports + rentExempt,
+});
+```
+
+The `createAccountWithSeed` instruction does several things atomically:
+
+- Creates the account at the derived address
+- Sets the owner to the Stake Program
+- Initializes stake authorities (staker and withdrawer)
+- Funds it with the stake amount plus rent
+
+The `Authorized` object sets who can manage the stake:
+
+- First parameter: the "staker" who can delegate/undelegate
+- Second parameter: the "withdrawer" who can withdraw funds
+
+The `Lockup` with all zeros means no time-based restrictions—the stake can be withdrawn after deactivation completes.
+
+```typescript
+const delegateInstruction = StakeProgram.delegate({
+  stakePubkey: stakeAccountPubkey,
+  authorizedPubkey: fromPubkey,
+  votePubkey: validatorVoteAccount,
+});
+```
+
+The delegation instruction tells the stake account which validator to support. This must be signed by the "staker" authority set above.
+
+```typescript
+instructions.push(...createAccountInstruction.instructions);
+```
+
+Note the spread operator—`StakeProgram.createAccountWithSeed` returns multiple instructions bundled together. We spread them into our array to flatten the structure.
+
+```typescript
 /**
  * Get all stake accounts owned by a wallet
  */

@@ -191,7 +191,43 @@ export interface UseLazorkitTransactionReturn {
   /** Whether wallet is ready */
   isReady: boolean;
 }
+```
 
+_Listing 3-1: Type definitions for the useLazorkitTransaction hook_
+
+These types define the contract for our transaction hook. Let's examine the key interfaces:
+
+```typescript
+export interface TransactionOptions {
+  instructions: TransactionInstruction[];
+  redirectPath?: string;
+  gasless?: boolean;
+  computeUnitLimit?: number;
+  cluster?: ClusterType;
+}
+```
+
+The `TransactionOptions` interface describes what you pass when executing a transaction:
+
+- `instructions`: The Solana instructions to execute (required)
+- `redirectPath`: Appended to the redirect URL for deep link routing
+- `gasless`: Override the hook's default gasless setting
+- `computeUnitLimit`: For complex transactions that need more compute
+- `cluster`: Switch between devnet and mainnet
+
+```typescript
+export interface UseLazorkitTransactionOptions {
+  gasless?: boolean;
+  onSuccess?: (signature: string) => void;
+  onError?: (error: Error) => void;
+  showAlerts?: boolean;
+  // ...
+}
+```
+
+The hook options configure default behavior. The `onSuccess` and `onError` callbacks let parent components react to transaction outcomes—perfect for refreshing balances or navigating away.
+
+```typescript
 // ============================================
 // HOOK IMPLEMENTATION
 // ============================================
@@ -298,10 +334,43 @@ export function useLazorkitTransaction(
 
               onSuccess?.(sig);
             },
-            onFail: (err) => {
-              console.error("❌ Transaction failed:", err);
-              setError(err);
-              setLoading(false);
+```
+
+_Listing 3-2: The execute function implementation_
+
+Let's examine the key implementation details:
+
+```typescript
+Keyboard.dismiss();
+```
+
+We dismiss the keyboard before starting the transaction. This prevents the keyboard from covering alerts and improves the UX when the browser opens for signing.
+
+```typescript
+if (gasless) {
+  transactionOptions.feeToken = "USDC";
+}
+```
+
+Setting `feeToken: "USDC"` enables gasless mode—the paymaster pays transaction fees in USDC on behalf of the user. Without this, users would need SOL for fees.
+
+```typescript
+const signature = await signAndSendTransaction(
+  { instructions, transactionOptions },
+  {
+    redirectUrl: getRedirectUrl(redirectPath),
+    onSuccess: (sig) => {
+      /* ... */
+    },
+  }
+);
+```
+
+The `signAndSendTransaction` call opens the browser for passkey signing. The `redirectPath` parameter lets you route back to specific screens—for example, passing `"transfer"` might redirect to `passpay://transfer` after signing.
+onFail: (err) => {
+console.error("❌ Transaction failed:", err);
+setError(err);
+setLoading(false);
 
               if (showAlerts) {
                 Alert.alert(
@@ -340,18 +409,20 @@ export function useLazorkitTransaction(
       onSuccess,
       onError,
     ]
-  );
 
-  return {
-    execute,
-    loading,
-    lastSignature,
-    error,
-    clearError,
-    isReady,
-  };
+);
+
+return {
+execute,
+loading,
+lastSignature,
+error,
+clearError,
+isReady,
+};
 }
-```
+
+````
 
 ### Usage Examples
 
@@ -375,7 +446,7 @@ await execute({
   instructions: stakeInstructions,
   computeUnitLimit: 300_000,
 });
-```
+````
 
 ---
 

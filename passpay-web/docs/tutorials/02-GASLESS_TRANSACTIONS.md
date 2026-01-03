@@ -195,6 +195,40 @@ export function truncateAddress(address: string, chars: number = 4): string {
 }
 ```
 
+_Listing 2-1: The transfer service with validation and instruction creation helpers_
+
+This service module provides the building blocks for SOL transfers. Let's examine each function:
+
+```typescript
+export function validateAddress(address: string): PublicKey | null {
+  try {
+    return new PublicKey(address);
+  } catch {
+    return null;
+  }
+}
+```
+
+Solana addresses are Base58-encoded strings. The `PublicKey` constructor validates the format—if the string isn't a valid Solana address, it throws an error. We catch that error and return `null` instead, making it easy to check validity with a simple `if (validateAddress(input))` pattern.
+
+```typescript
+export function createTransferInstruction(
+  fromPubkey: PublicKey,
+  toPubkey: PublicKey,
+  amountSol: number
+): TransactionInstruction {
+  return SystemProgram.transfer({
+    fromPubkey,
+    toPubkey,
+    lamports: Math.floor(amountSol * LAMPORTS_PER_SOL),
+  });
+}
+```
+
+This function creates a _transfer instruction_, not a transaction. Think of an instruction as a single command—"transfer X lamports from A to B". A transaction is an envelope that can contain multiple instructions.
+
+The `LAMPORTS_PER_SOL` constant (1 billion) converts human-readable SOL amounts to lamports, Solana's smallest unit. We use `Math.floor()` to ensure we're working with whole lamports, avoiding floating-point precision issues.
+
 ### Understanding Solana Instructions
 
 ```typescript
@@ -211,6 +245,12 @@ const instruction = SystemProgram.transfer({
 // Multiple instructions can be bundled into one transaction
 const instructions = [instruction1, instruction2, instruction3];
 ```
+
+_Listing 2-2: The relationship between instructions and transactions_
+
+This distinction is fundamental to Solana development. An instruction is a single atomic operation, while a transaction is the container that groups instructions together. This design allows you to execute multiple operations atomically—if any instruction fails, the entire transaction is rolled back.
+
+The numeric literal `1_000_000_000` uses JavaScript's numeric separator feature for readability—it's exactly 1 billion lamports (1 SOL).
 
 ---
 
@@ -398,24 +438,75 @@ const handleTransfer = async () => {
     setLoading(false);
   }
 };
+```
+
+_Listing 2-3: The complete handleTransfer function with validation and transaction execution_
+
+This function orchestrates the entire transfer flow. Let's examine each section:
+
+```typescript
+const recipientPubkey = validateAddress(recipient);
+if (!recipientPubkey) {
+  toast.error("Invalid recipient address");
+  return;
+}
+```
+
+Input validation happens first—we fail fast if the address or amount is invalid. This prevents unnecessary network calls and provides immediate feedback to users.
+
+```typescript
+const instruction = createTransferInstruction(
+  smartWalletPubkey!,
+  recipientPubkey,
+  amountValue
+);
+```
+
+We create the transfer instruction using our service function. The `!` after `smartWalletPubkey` is TypeScript's non-null assertion—we've already checked that the wallet is connected, so we're confident this value exists.
+
+```typescript
+const signature = await signAndSendTransaction({
+  instructions: [instruction],
+  transactionOptions: {
+    feeToken: "USDC",
+  },
+});
+```
+
+This is where the magic happens. `signAndSendTransaction` does several things:
+
+1. Opens the LazorKit portal for passkey signing
+2. User authenticates with their biometrics
+3. Transaction is sent to the paymaster
+4. Paymaster adds fee payment and submits to Solana
+5. Returns the transaction signature
+
+The `feeToken: "USDC"` option enables gasless transactions—the paymaster pays fees in USDC on behalf of the user.
+
+```typescript
+refresh();
+```
+
+After a successful transfer, we call `refresh()` from the `useSolBalance` hook to update the displayed balance. This ensures the UI reflects the new state immediately.
 
 // Helper to parse errors
 function parseError(error: unknown): string {
-  const msg = error instanceof Error ? error.message : String(error);
+const msg = error instanceof Error ? error.message : String(error);
 
-  if (msg.includes("NotAllowedError") || msg.includes("cancelled")) {
-    return "You cancelled the passkey prompt.";
-  }
-  if (msg.includes("insufficient") || msg.includes("Insufficient")) {
-    return "Insufficient balance for this transaction.";
-  }
-  if (msg.includes("Transaction too large")) {
-    return "Transaction too large. Try a smaller amount.";
-  }
-
-  return msg || "Transaction failed. Please try again.";
+if (msg.includes("NotAllowedError") || msg.includes("cancelled")) {
+return "You cancelled the passkey prompt.";
 }
-```
+if (msg.includes("insufficient") || msg.includes("Insufficient")) {
+return "Insufficient balance for this transaction.";
+}
+if (msg.includes("Transaction too large")) {
+return "Transaction too large. Try a smaller amount.";
+}
+
+return msg || "Transaction failed. Please try again.";
+}
+
+````
 
 ---
 
@@ -450,7 +541,7 @@ function parseError(error: unknown): string {
     "Send SOL"
   );
 }
-```
+````
 
 ### View Transaction on Explorer
 

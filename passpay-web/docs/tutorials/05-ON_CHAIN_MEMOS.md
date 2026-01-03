@@ -170,6 +170,49 @@ export function getMemoStats(memo: string): {
 }
 ```
 
+_Listing 5-1: The memo service with validation and instruction creation_
+
+This service provides everything needed for on-chain memos. Let's examine the key functions:
+
+```typescript
+export const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+);
+```
+
+The Memo Program is a standard Solana program deployed at this address on both mainnet and devnet. Unlike your own programs, you don't deploy it—it's already there, waiting for instructions.
+
+```typescript
+const encoder = new TextEncoder();
+const encoded = encoder.encode(memo);
+
+if (encoded.length > MAX_MEMO_SIZE) {
+  // ...
+}
+```
+
+We validate size in _bytes_, not characters. This matters because UTF-8 encoding means some characters (like emojis 🎉) take multiple bytes. A 100-character message with emojis might exceed the byte limit even though the character count looks fine.
+
+```typescript
+return new TransactionInstruction({
+  keys: signerPubkeys.map((pubkey) => ({
+    pubkey,
+    isSigner: true,
+    isWritable: false,
+  })),
+  programId: MEMO_PROGRAM_ID,
+  data: Buffer.from(memo, "utf-8"),
+});
+```
+
+The instruction structure is remarkably simple:
+
+- `keys`: Optional signers whose addresses appear in the memo logs (proves authorship)
+- `programId`: The Memo Program's address
+- `data`: Your message, UTF-8 encoded
+
+The `isWritable: false` flag indicates we're not modifying any account data—memos are stored in transaction logs, not account storage.
+
 ---
 
 ## Step 2: Build the useMemo Hook
@@ -198,14 +241,68 @@ export function useMemoHook(): UseMemoHookReturn {
   const { smartWalletPubkey, isConnected } = useWallet();
   const { execute, loading, error } = useTransaction({
     successMessage: "Memo written to blockchain! 📝",
-  });
+```
 
-  const writeMemo = useCallback(
-    async (memo: string): Promise<string | null> => {
-      if (!isConnected || !smartWalletPubkey) {
-        toast.error("Please connect your wallet first");
-        return null;
-      }
+_Listing 5-2: The useMemoHook that composes useTransaction_
+
+This hook demonstrates the power of composition. Let's look at its design:
+
+```typescript
+export function useMemoHook(): UseMemoHookReturn {
+```
+
+We name it `useMemoHook` instead of `useMemo` to avoid confusion with React's built-in `useMemo` hook for memoization. This is a common convention when your domain concept shares a name with a React primitive.
+
+```typescript
+const { execute, loading, error } = useTransaction({
+  successMessage: "Memo written to blockchain! 📝",
+});
+```
+
+We compose our custom `useTransaction` hook, customizing just the success message. All the loading state management, error handling, and toast notifications come for free—we don't repeat that logic.
+
+The hook's implementation continues to validate the memo and create the instruction:
+
+```typescript
+const writeMemo = useCallback(
+  async (memo: string): Promise<string | null> => {
+    if (!isConnected || !smartWalletPubkey) {
+      toast.error("Please connect your wallet first");
+      return null;
+    }
+
+    const validation = validateMemo(memo);
+    if (!validation.valid) {
+      toast.error(validation.error || "Invalid memo");
+      return null;
+    }
+
+    try {
+      const memoInstruction = createMemoInstruction(memo, [smartWalletPubkey]);
+      return await execute([memoInstruction]);
+    } catch (err) {
+      console.error("Memo error:", err);
+      return null;
+    }
+  },
+  [isConnected, smartWalletPubkey, execute]
+);
+```
+
+The `writeMemo` function handles feature-specific logic (validation, instruction creation) while delegating transaction handling to `useTransaction`. This separation of concerns makes both hooks easier to maintain and test.
+
+---
+
+## Step 3: Create the Memo Page
+
+});
+
+const writeMemo = useCallback(
+async (memo: string): Promise<string | null> => {
+if (!isConnected || !smartWalletPubkey) {
+toast.error("Please connect your wallet first");
+return null;
+}
 
       const validation = validateMemo(memo);
       if (!validation.valid) {
@@ -227,15 +324,17 @@ export function useMemoHook(): UseMemoHookReturn {
       }
     },
     [isConnected, smartWalletPubkey, execute]
-  );
 
-  return {
-    writeMemo,
-    loading,
-    error,
-  };
+);
+
+return {
+writeMemo,
+loading,
+error,
+};
 }
-```
+
+````
 
 ---
 
@@ -302,8 +401,8 @@ export default function MemoPage() {
             onChange={(e) => setMemo(e.target.value)}
             placeholder="Enter your message..."
             rows={4}
-            className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700 
-                       rounded-xl text-white resize-none focus:border-[#9945FF] 
+            className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700
+                       rounded-xl text-white resize-none focus:border-[#9945FF]
                        focus:outline-none"
           />
 
@@ -332,7 +431,7 @@ export default function MemoPage() {
           <button
             onClick={handleSubmit}
             disabled={loading || !memo.trim() || stats.remaining < 0}
-            className="w-full py-4 bg-[#9945FF] hover:bg-[#8035E0] 
+            className="w-full py-4 bg-[#9945FF] hover:bg-[#8035E0]
                        disabled:opacity-50 text-white font-semibold rounded-xl"
           >
             {loading ? "Writing to blockchain..." : "Write Memo"}
@@ -387,7 +486,7 @@ export default function MemoPage() {
     </div>
   );
 }
-```
+````
 
 ---
 

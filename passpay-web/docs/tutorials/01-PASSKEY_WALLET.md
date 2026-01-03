@@ -132,6 +132,44 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 }
 ```
 
+_Listing 1-1: Setting up the LazorkitProvider with configuration_
+
+This code sets up the foundation for passkey authentication. Let's break it down:
+
+The `"use client"` directive at the top tells Next.js this is a client component—necessary because LazorKit uses browser APIs like WebAuthn that don't exist on the server.
+
+```typescript
+import { LazorkitProvider } from "@lazorkit/wallet";
+```
+
+We import `LazorkitProvider`, which is a React context provider that makes wallet functionality available throughout your app. Any component that needs wallet access must be wrapped by this provider.
+
+```typescript
+const LAZORKIT_CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  paymasterConfig: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  },
+};
+```
+
+The configuration object contains three essential URLs:
+
+- `rpcUrl`: The Solana RPC endpoint for blockchain communication (we use Devnet for testing)
+- `portalUrl`: LazorKit's authentication portal where passkey ceremonies happen
+- `paymasterUrl`: The service that sponsors gas fees for gasless transactions
+
+```typescript
+useEffect(() => {
+  if (typeof window !== "undefined" && !window.Buffer) {
+    window.Buffer = Buffer;
+  }
+}, []);
+```
+
+This `useEffect` hook adds a Buffer polyfill to the browser's window object. Solana's web3.js library expects Node.js's Buffer class, which browsers don't have natively. We check for `window` first to avoid errors during server-side rendering.
+
 ### Wrap Your App
 
 ```typescript
@@ -153,6 +191,16 @@ export default function RootLayout({
   );
 }
 ```
+
+_Listing 1-2: Wrapping your application with AppProviders_
+
+This is the root layout that wraps your entire Next.js application. The key line is:
+
+```typescript
+<AppProviders>{children}</AppProviders>
+```
+
+By wrapping `{children}` with `AppProviders`, every page and component in your app gains access to the wallet context via the `useWallet` hook. Without this wrapper, calling `useWallet()` would throw an error.
 
 ---
 
@@ -205,6 +253,31 @@ export default function LoginPage() {
 }
 ```
 
+_Listing 1-3: Basic login page structure with useWallet hook_
+
+This code creates the foundation for our login page. Let's examine the key parts:
+
+```typescript
+const { connect, isConnected, isConnecting, wallet } = useWallet();
+```
+
+The `useWallet` hook is the primary interface to LazorKit. We destructure four essential properties:
+
+- `connect`: An async function that triggers the passkey authentication flow
+- `isConnected`: A boolean that tells us if a wallet session exists
+- `isConnecting`: A boolean that's `true` during the authentication process
+- `wallet`: An object containing the connected wallet's `smartWallet` address
+
+```typescript
+useEffect(() => {
+  if (isConnected && wallet?.smartWallet) {
+    router.push("/transfer");
+  }
+}, [isConnected, wallet, router]);
+```
+
+This effect runs whenever connection state changes. If the user is already connected (perhaps from a previous session stored in the browser), we automatically redirect them to the main app. The optional chaining (`wallet?.smartWallet`) safely handles cases where `wallet` might be null.
+
 ### The `useWallet` Hook Returns
 
 | Property                 | Type                      | Description                       |
@@ -254,6 +327,32 @@ const handleConnect = async () => {
   }
 };
 ```
+
+_Listing 1-4: The handleConnect function that initiates passkey authentication_
+
+This function handles the entire connection flow. Let's walk through it:
+
+```typescript
+const info = await connect({ feeMode: "paymaster" });
+```
+
+The `connect` function opens LazorKit's portal in the browser, triggering the WebAuthn ceremony. The `feeMode: "paymaster"` option tells LazorKit that future transactions should be gasless—the paymaster will sponsor fees. This returns a `WalletInfo` object containing the new wallet's details.
+
+```typescript
+if (info?.credentialId) {
+  console.log("Credential ID:", info.credentialId);
+}
+```
+
+The `credentialId` is a unique identifier for this passkey. You might store this for analytics or to identify returning users. The same passkey always produces the same wallet address.
+
+```typescript
+if (msg.includes("NotAllowedError")) {
+  toast.error("You cancelled the passkey prompt.");
+}
+```
+
+Error handling is crucial for good UX. `NotAllowedError` means the user dismissed the biometric prompt—we show a friendly message rather than a cryptic error code.
 
 ### Understanding `connect()` Options
 

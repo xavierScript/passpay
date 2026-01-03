@@ -108,6 +108,40 @@ export function createUnsignedMemoInstruction(
 }
 ```
 
+_Listing 5-1: The memo service with signed and unsigned instruction creation_
+
+This service provides two ways to create memos. Let's understand the difference:
+
+```typescript
+export const MEMO_PROGRAM_ID = new PublicKey(
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+);
+```
+
+The Memo Program is a standard Solana program deployed at this address on both mainnet and devnet. You don't deploy it—it's already there, waiting for instructions.
+
+```typescript
+return new TransactionInstruction({
+  programId: MEMO_PROGRAM_ID,
+  keys: [
+    {
+      pubkey: signer,
+      isSigner: true,
+      isWritable: false,
+    },
+  ],
+  data: Buffer.from(message, "utf-8"),
+});
+```
+
+The instruction structure is simple:
+
+- `programId`: Where to send this instruction (the Memo Program)
+- `keys`: Accounts involved—here, just the signer for attribution
+- `data`: The memo content, UTF-8 encoded
+
+The `isSigner: true` means this address must sign the transaction. The `isWritable: false` indicates we're not modifying account data—memos are stored in transaction logs, not accounts.
+
 ### Why Two Functions?
 
 | Function                        | Use Case                                         |
@@ -251,6 +285,45 @@ export default function MemoScreen() {
 }
 ```
 
+_Listing 5-2: The complete memo screen with UI and transaction logic_
+
+This screen combines UI and blockchain interaction. Let's examine the key parts:
+
+```typescript
+const isValidMessage = message.trim().length > 0 && message.length <= 500;
+```
+
+We validate the message before allowing submission. Empty messages are rejected, and we cap at 500 characters (well under the 566-byte limit) to leave room for UTF-8 encoding of special characters.
+
+```typescript
+const memoInstruction = createMemoInstruction(
+  message.trim(),
+  smartWalletPubkey
+);
+```
+
+We create the memo instruction with the trimmed message and our wallet as the signer. The wallet address will appear in the transaction logs, proving authorship.
+
+```typescript
+transactionOptions: {
+  feeToken: "USDC", // Gasless!
+},
+```
+
+Setting `feeToken: "USDC"` enables gasless mode—the paymaster pays the transaction fee. Users don't need SOL in their wallet just to write a memo.
+
+```typescript
+Alert.alert("Memo Saved! ✅", "Your message is now permanently on Solana!", [
+  {
+    text: "View on Explorer",
+    onPress: () => openExplorer(sig),
+  },
+  { text: "OK" },
+]);
+```
+
+The success alert offers a link to view the transaction on an explorer. This lets users verify their memo was actually recorded on-chain.
+
 ---
 
 ## Step 3: Using the Custom Hook (Cleaner)
@@ -300,6 +373,40 @@ export default function MemoScreen() {
 }
 ```
 
+_Listing 5-3: Simplified memo screen using custom hooks_
+
+Compare this to the previous implementation—it's dramatically simpler. Let's see what the hooks provide:
+
+```typescript
+const { isConnected, publicKey, NotConnectedView } = useWalletGuard({
+  icon: "📝",
+  message: "Connect wallet to write memos",
+});
+```
+
+The `useWalletGuard` hook handles the "not connected" state. It returns a pre-built `NotConnectedView` component with your customized icon and message. No need to write the same fallback UI on every screen.
+
+```typescript
+const { execute, loading } = useLazorkitTransaction({
+  gasless: true,
+  onSuccess: (signature) => {
+    Alert.alert("Success!", "Memo saved to blockchain");
+    setMessage("");
+  },
+});
+```
+
+The `useLazorkitTransaction` hook manages all transaction complexity:
+
+- Loading states
+- Error handling with alerts
+- Success callbacks
+- Gasless configuration
+
+Your feature code focuses on what makes it unique—the memo content—while the hooks handle the common patterns.
+
+````
+
 **Benefits of the hook approach:**
 
 - Automatic loading state management
@@ -320,7 +427,7 @@ const openExplorer = (signature: string) => {
   const url = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
   Linking.openURL(url);
 };
-```
+````
 
 On the explorer, you'll see:
 

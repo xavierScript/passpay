@@ -97,6 +97,28 @@ const stakeAccountPubkey = await PublicKey.createWithSeed(
 // Result: Deterministic address, no extra signer needed!
 ```
 
+_Listing 4-1: Deriving a stake account address without generating a keypair_
+
+This is the key insight that makes staking work with LazorKit. Let's understand what's happening:
+
+```typescript
+walletPubkey,  // Base: your wallet
+```
+
+Your wallet's public key serves as the "base" for address derivation. This cryptographically ties the stake account to your wallet.
+
+```typescript
+"stake:12345",  // Seed: unique string
+```
+
+The seed is an arbitrary string that makes each derived address unique. By using `stake:${Date.now()}`, we ensure every stake operation creates a unique account.
+
+```typescript
+StakeProgram.programId; // Program
+```
+
+Including the program ID ensures the derived address is valid for the Stake Program. Different programs with the same seed would produce different addresses.
+
 This approach:
 
 - ✅ Works with LazorKit's single signer
@@ -171,7 +193,42 @@ export async function getStakeAccountRent(
 ): Promise<number> {
   return await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
 }
+```
 
+_Listing 4-2: Staking service constants, types, and helper functions_
+
+This sets up the foundation for staking. Let's examine the key parts:
+
+```typescript
+export const MIN_STAKE_AMOUNT = 0.01;
+```
+
+Solana stake accounts need enough SOL to be "rent-exempt"—a small deposit that keeps the account alive. We set a minimum that covers this plus a buffer.
+
+```typescript
+export const DEVNET_VALIDATORS = [
+  {
+    name: "Solana Foundation",
+    identity: "dv1ZAGvdsz5hHLwWXsVnM94hWf1pjbKVau1QVkaMJ92",
+    voteAccount: "dv1ZAGvdsz5hHLwWXsVnM94hWf1pjbKVau1QVkaMJ92",
+  },
+  // ...
+];
+```
+
+We hardcode reliable Devnet validators for testing. The `voteAccount` is the address we delegate to. In production, you'd fetch this list dynamically from a validator registry.
+
+```typescript
+export async function getStakeAccountRent(
+  connection: Connection
+): Promise<number> {
+  return await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+}
+```
+
+This queries the network for the current rent-exempt minimum. The `StakeProgram.space` constant (200 bytes) tells the network the account size.
+
+```typescript
 /**
  * Create instructions to create and delegate a stake account
  *
@@ -210,7 +267,29 @@ export async function createStakeAccountInstructions(
     seed, // Seed: unique string
     StakeProgram.programId // Program: Stake Program
   );
+```
 
+_Listing 4-3: The createStakeAccountInstructions function setup_
+
+This function is the heart of the staking logic:
+
+```typescript
+const seed = `stake:${Date.now()}`;
+```
+
+The timestamp-based seed ensures each stake account gets a unique address. Even if you stake twice in the same second, the millisecond precision prevents collisions.
+
+```typescript
+const stakeAccountPubkey = await PublicKey.createWithSeed(
+  fromPubkey,
+  seed,
+  StakeProgram.programId
+);
+```
+
+Address derivation is _deterministic_—the same inputs always produce the same output. This means you could theoretically recover stake accounts by iterating through historical timestamps.
+
+```typescript
   console.log("Creating stake account:");
   console.log("  Seed:", seed);
   console.log("  Address:", stakeAccountPubkey.toBase58());
@@ -262,95 +341,137 @@ export async function createStakeAccountInstructions(
     seed,
   };
 }
+```
 
-/**
- * Get all stake accounts owned by a wallet
- */
-export async function getStakeAccounts(
+_Listing 4-4: Creating and delegating the stake account_
+
+Let's break down the critical parts:
+
+```typescript
+authorized: new Authorized(
+  fromPubkey,  // Staker: who can delegate
+  fromPubkey   // Withdrawer: who can withdraw
+),
+```
+
+The `Authorized` object sets two authorities:
+
+- **Staker**: Can delegate to validators and deactivate the stake
+- **Withdrawer**: Can withdraw SOL after deactivation
+
+We set both to your wallet address, giving you full control.
+
+```typescript
+lockup: new Lockup(0, 0, fromPubkey),
+```
+
+A lockup with zeros means no time restrictions. The stake can be deactivated and withdrawn at any time (subject to epoch boundaries).
+
+```typescript
+lamports: lamports + rentExempt,
+```
+
+We fund the account with both the stake amount AND the rent-exempt minimum. This ensures the account persists permanently.
+
+```typescript
+instructions.push(...createAccountInstruction.instructions);
+```
+
+Note the spread operator—`StakeProgram.createAccountWithSeed` returns an object containing an array of instructions. We spread them into our flat array.
+
+/\*\*
+
+- Get all stake accounts owned by a wallet
+  \*/
+  export async function getStakeAccounts(
   connection: Connection,
   walletPubkey: PublicKey
-): Promise<StakeAccountInfo[]> {
+  ): Promise<StakeAccountInfo[]> {
   try {
-    // Get all stake accounts where we're the withdrawer
-    const accounts = await connection.getParsedProgramAccounts(
-      StakeProgram.programId,
-      {
-        filters: [
-          // Filter by stake account size
-          { dataSize: 200 },
-          // Filter by withdrawer (our wallet)
-          {
-            memcmp: {
-              offset: 44, // Withdrawer pubkey offset
-              bytes: walletPubkey.toBase58(),
-            },
-          },
-        ],
-      }
-    );
-
-    return accounts.map((account) => {
-      const data = account.account.data as any;
-      const parsed = data.parsed?.info;
-
-      let state: StakeAccountInfo["state"] = "inactive";
-      if (parsed?.stake?.delegation) {
-        const activation = parsed.stake.delegation.activationEpoch;
-        const deactivation = parsed.stake.delegation.deactivationEpoch;
-
-        if (deactivation !== "18446744073709551615") {
-          state = "deactivating";
-        } else if (activation !== "0") {
-          state = "active";
-        } else {
-          state = "activating";
-        }
-      }
-
-      return {
-        address: account.pubkey.toBase58(),
-        lamports: account.account.lamports,
-        state,
-        validator: parsed?.stake?.delegation?.voter,
-      };
-    });
-  } catch (error) {
-    console.error("Error fetching stake accounts:", error);
-    return [];
+  // Get all stake accounts where we're the withdrawer
+  const accounts = await connection.getParsedProgramAccounts(
+  StakeProgram.programId,
+  {
+  filters: [
+  // Filter by stake account size
+  { dataSize: 200 },
+  // Filter by withdrawer (our wallet)
+  {
+  memcmp: {
+  offset: 44, // Withdrawer pubkey offset
+  bytes: walletPubkey.toBase58(),
+  },
+  },
+  ],
   }
-}
+  );
 
-/**
- * Create instruction to deactivate a stake account
- */
-export function createDeactivateInstruction(
+      return accounts.map((account) => {
+        const data = account.account.data as any;
+        const parsed = data.parsed?.info;
+
+        let state: StakeAccountInfo["state"] = "inactive";
+        if (parsed?.stake?.delegation) {
+          const activation = parsed.stake.delegation.activationEpoch;
+          const deactivation = parsed.stake.delegation.deactivationEpoch;
+
+          if (deactivation !== "18446744073709551615") {
+            state = "deactivating";
+          } else if (activation !== "0") {
+            state = "active";
+          } else {
+            state = "activating";
+          }
+        }
+
+        return {
+          address: account.pubkey.toBase58(),
+          lamports: account.account.lamports,
+          state,
+          validator: parsed?.stake?.delegation?.voter,
+        };
+      });
+
+  } catch (error) {
+  console.error("Error fetching stake accounts:", error);
+  return [];
+  }
+  }
+
+/\*\*
+
+- Create instruction to deactivate a stake account
+  \*/
+  export function createDeactivateInstruction(
   stakeAccountPubkey: PublicKey,
   authorizedPubkey: PublicKey
-): TransactionInstruction[] {
+  ): TransactionInstruction[] {
   const deactivate = StakeProgram.deactivate({
-    stakePubkey: stakeAccountPubkey,
-    authorizedPubkey,
+  stakePubkey: stakeAccountPubkey,
+  authorizedPubkey,
   });
   return deactivate.instructions;
-}
+  }
 
-/**
- * Create instruction to withdraw from a deactivated stake account
- */
-export function createWithdrawInstruction(
+/\*\*
+
+- Create instruction to withdraw from a deactivated stake account
+  \*/
+  export function createWithdrawInstruction(
   stakeAccountPubkey: PublicKey,
   withdrawerPubkey: PublicKey,
   toPubkey: PublicKey,
   lamports: number
-): TransactionInstruction[] {
+  ): TransactionInstruction[] {
   const withdraw = StakeProgram.withdraw({
-    stakePubkey: stakeAccountPubkey,
-    authorizedPubkey: withdrawerPubkey,
-    toPubkey,
-    lamports,
+  stakePubkey: stakeAccountPubkey,
+  authorizedPubkey: withdrawerPubkey,
+  toPubkey,
+  lamports,
   });
   return withdraw.instructions;
-}
+  }
+
 ```
 
 ### Understanding the Instructions
@@ -358,8 +479,9 @@ export function createWithdrawInstruction(
 The staking transaction contains **multiple instructions** that execute atomically:
 
 ```
+
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    STAKE TRANSACTION INSTRUCTIONS                            │
+│ STAKE TRANSACTION INSTRUCTIONS │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 Instruction 1: CreateAccountWithSeed
@@ -376,7 +498,8 @@ Instruction 3: Delegate
 └── Stake begins activating next epoch
 
 All execute atomically: Either ALL succeed or NONE do.
-```
+
+````
 
 ---
 
@@ -484,7 +607,7 @@ export default function StakeScreen() {
 
   // ... continue with handleStake and render
 }
-```
+````
 
 ---
 

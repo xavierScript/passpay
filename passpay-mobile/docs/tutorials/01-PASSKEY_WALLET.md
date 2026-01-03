@@ -130,6 +130,45 @@ export default function RootLayout() {
 }
 ```
 
+_Listing 1-1: Root layout configuration with LazorKitProvider_
+
+This code sets up the foundation for passkey authentication in React Native. Let's break it down:
+
+```typescript
+import "../polyfills"; // ⚠️ MUST be first!
+```
+
+The polyfills import must come before anything else. Solana's web3.js library expects Node.js APIs like `Buffer` and `crypto` that don't exist in React Native. Our polyfill file provides these implementations.
+
+```typescript
+import * as WebBrowser from "expo-web-browser";
+WebBrowser.maybeCompleteAuthSession();
+```
+
+When users authenticate with their passkey, they're redirected to LazorKit's portal in a web browser. After authentication, the browser redirects back to your app via deep link. `maybeCompleteAuthSession()` handles this return—it closes the browser and resumes your app with the authentication result.
+
+```typescript
+const LAZORKIT_CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  configPaymaster: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  },
+};
+```
+
+The configuration object specifies three essential endpoints:
+
+- `rpcUrl`: Where to send Solana RPC requests (we use Devnet for testing)
+- `portalUrl`: LazorKit's authentication portal
+- `paymasterUrl`: The service that sponsors gas fees for gasless transactions
+
+```typescript
+isDebug={true}
+```
+
+The `isDebug` flag enables verbose logging during development. You'll see authentication flow details and transaction information in the console. Set this to `false` in production.
+
 ### Why `maybeCompleteAuthSession()`?
 
 When the user returns from the LazorKit portal (browser), Expo needs to know the auth session is complete. This function handles that cleanup.
@@ -183,6 +222,29 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+_Listing 1-2: Basic wallet screen structure with useWallet hook_
+
+This code creates the foundation for wallet connection. Let's examine the key parts:
+
+```typescript
+const { connect, disconnect, isConnected, smartWalletPubkey, isConnecting } =
+  useWallet();
+```
+
+The `useWallet` hook provides everything needed for wallet management:
+
+- `connect`: Opens the authentication flow in the browser
+- `disconnect`: Clears the wallet session
+- `isConnected`: Whether we have an active wallet session
+- `smartWalletPubkey`: A Solana `PublicKey` object representing your wallet address
+- `isConnecting`: True while the browser flow is in progress
+
+```typescript
+const [isLoading, setIsLoading] = useState(false);
+```
+
+We maintain our own loading state in addition to `isConnecting`. This gives us finer control—`isConnecting` covers the browser flow, while `isLoading` can cover post-connection setup like fetching balances.
 
 ### The `useWallet` Hook Returns
 
@@ -243,6 +305,45 @@ const handleConnect = async () => {
   }
 };
 ```
+
+_Listing 1-3: The handleConnect function with callbacks_
+
+This function orchestrates the entire connection flow. Let's examine each part:
+
+```typescript
+if (isConnecting || isLoading) return;
+```
+
+Guard against double-taps. If authentication is already in progress, we ignore additional presses. This prevents confusing race conditions.
+
+```typescript
+await connect({
+  redirectUrl: getRedirectUrl(),
+  // ...
+});
+```
+
+The `redirectUrl` is crucial for mobile apps. After the user authenticates in the browser, this URL tells the browser how to return to your app. It must match the URL scheme configured in your `app.json` (e.g., `passpay://`).
+
+```typescript
+onSuccess: (wallet) => {
+  console.log("Smart Wallet:", wallet.smartWallet);
+  console.log("Credential ID:", wallet.credentialId);
+  console.log("Platform:", wallet.platform);
+  setIsLoading(false);
+},
+```
+
+The `onSuccess` callback receives a `WalletInfo` object with the wallet's details. The `smartWallet` address is what you'll use for receiving funds and displaying to users. The same passkey always produces the same wallet address.
+
+```typescript
+onFail: (error) => {
+  Alert.alert("Connection Failed", error?.message || "Unable to connect wallet");
+  setIsLoading(false);
+},
+```
+
+The `onFail` callback handles authentication failures—user cancelled, network issues, or browser problems. We show a native alert for immediate feedback.
 
 ### The `connect` Options
 

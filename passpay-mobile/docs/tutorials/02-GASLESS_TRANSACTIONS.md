@@ -192,6 +192,38 @@ export function createTransferInstruction(
 }
 ```
 
+_Listing 2-1: The transfer service with validation and instruction creation_
+
+This service provides reusable building blocks for SOL transfers. Let's examine each function:
+
+```typescript
+export function validateAddress(address: string): PublicKey | null {
+  try {
+    return new PublicKey(address);
+  } catch {
+    return null;
+  }
+}
+```
+
+Solana addresses are Base58-encoded strings with a specific format. The `PublicKey` constructor validates this—if the string isn't a valid address, it throws. We catch that and return `null`, making validation as simple as `if (validateAddress(input))`.
+
+```typescript
+export function createTransferInstruction(
+  fromPubkey: PublicKey,
+  toPubkey: PublicKey,
+  amountSol: number
+): TransactionInstruction {
+  return SystemProgram.transfer({
+    fromPubkey,
+    toPubkey,
+    lamports: amountSol * LAMPORTS_PER_SOL,
+  });
+}
+```
+
+This function creates a _transfer instruction_, not a transaction. An instruction is a single command—"move X lamports from A to B". The `LAMPORTS_PER_SOL` constant (1 billion) converts human-friendly SOL amounts to the chain's native unit.
+
 ### Understanding Solana Instructions
 
 ```typescript
@@ -215,6 +247,12 @@ const instructions = [
   instruction3, // Write a memo
 ];
 ```
+
+_Listing 2-2: The relationship between instructions and transactions_
+
+This mental model is fundamental to Solana development. A transaction is an atomic unit—if any instruction fails, the entire transaction is rolled back. This allows you to bundle related operations safely.
+
+The envelope analogy helps: you put multiple letters (instructions) in one envelope (transaction), and either all letters arrive or none do.
 
 ---
 

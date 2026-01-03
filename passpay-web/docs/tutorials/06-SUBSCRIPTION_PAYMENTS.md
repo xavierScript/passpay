@@ -173,6 +173,36 @@ export const RECIPIENT_WALLET = "55czFRi1njMSE7eJyDLx1R5yS1Bi5GiL2Ek4F1cZPLFx";
 export const SUBSCRIPTION_DURATION_DAYS = 30;
 ```
 
+_Listing 6-1: Subscription plan definitions and configuration_
+
+This constants file defines the business logic for subscriptions. Let's examine the key decisions:
+
+```typescript
+export const PLANS = [
+  {
+    id: "basic",
+    name: "Basic",
+    amount: 0.01,
+    features: ["Access to basic features", "Email support", "1 project"],
+  },
+  // ...
+] as const;
+```
+
+The `as const` assertion makes the array deeply readonly and preserves literal types. This means TypeScript knows that `PLANS[0].id` is literally `"basic"`, not just `string`—enabling better type inference.
+
+```typescript
+export type PlanId = (typeof PLANS)[number]["id"];
+```
+
+This type extracts all possible plan IDs into a union type: `"basic" | "pro" | "premium"`. If you add a new plan, the type updates automatically—no manual synchronization needed.
+
+```typescript
+export const RECIPIENT_WALLET = "55czFRi1njMSE7eJyDLx1R5yS1Bi5GiL2Ek4F1cZPLFx";
+```
+
+This is where subscription payments are sent. In production, you'd validate this address exists and you control it. For a real business, this might be a treasury multisig or a payment processor's address.
+
 ---
 
 ## Step 2: Create the Subscription Service
@@ -294,6 +324,58 @@ export function clearSubscription(wallet: string): void {
 }
 ```
 
+_Listing 6-2: Subscription storage service with localStorage_
+
+This service manages subscription persistence. Let's examine the core patterns:
+
+```typescript
+export interface Subscription {
+  wallet: string;
+  plan: string;
+  amount: number;
+  signature: string;
+  subscribedAt: string;
+  expiresAt: string;
+}
+```
+
+The `Subscription` interface defines our data model. The `signature` field is crucial—it links the subscription to an on-chain transaction for verification.
+
+```typescript
+export function saveSubscription(
+  wallet: string,
+  plan: string,
+  amount: number,
+  signature: string
+): Subscription {
+  const now = new Date();
+  const expiresAt = new Date(now);
+  expiresAt.setDate(expiresAt.getDate() + SUBSCRIPTION_DURATION_DAYS);
+```
+
+When saving, we calculate the expiration date by adding 30 days. This creates time-limited access that requires renewal.
+
+```typescript
+if (typeof window !== "undefined") {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(subscriptions));
+}
+```
+
+The `typeof window` check ensures this code works during server-side rendering in Next.js. Without it, the code would crash during build or SSR.
+
+```typescript
+export function hasActiveSubscription(wallet: string): boolean {
+  const subscription = getSubscription(wallet);
+  if (!subscription) return false;
+
+  const now = new Date();
+  const expiresAt = new Date(subscription.expiresAt);
+  return now < expiresAt;
+}
+```
+
+The `hasActiveSubscription` function handles expiration logic—a subscription exists but may have lapsed. This separation (existence vs. validity) enables showing "expired" UI states.
+
 ---
 
 ## Step 3: Build the useSubscription Hook
@@ -368,6 +450,49 @@ export function useSubscription(): UseSubscriptionReturn {
   return { subscribe, loading, error };
 }
 ```
+
+_Listing 6-3: Subscription hook connecting payments to storage_
+
+This hook orchestrates the subscription flow. Let's trace the key parts:
+
+```typescript
+export function useSubscription(): UseSubscriptionReturn {
+  const { smartWalletPubkey, isConnected } = useWallet();
+  const { execute, loading, error } = useTransaction();
+```
+
+We compose two hooks: `useWallet` for authentication state and `useTransaction` for blockchain operations. This hook adds subscription-specific logic on top.
+
+```typescript
+const instruction = SystemProgram.transfer({
+  fromPubkey: smartWalletPubkey,
+  toPubkey: destination,
+  lamports: Math.floor(amount * LAMPORTS_PER_SOL),
+});
+```
+
+Subscriptions are just SOL transfers. `Math.floor` ensures we don't send fractional lamports (which would fail). The `LAMPORTS_PER_SOL` constant (1 billion) converts human-readable SOL to the blockchain's native unit.
+
+```typescript
+const toastId = toast.loading("Approve with your passkey...");
+
+try {
+  const sig = await execute([instruction]);
+  toast.dismiss(toastId);
+
+  if (sig) {
+    saveSubscription(smartWalletPubkey.toBase58(), planName, amount, sig);
+    toast.success(`${planName} subscription activated! 🎉`);
+  }
+```
+
+The flow is: show loading toast → execute transaction → dismiss loading → save to storage → show success. The `toastId` pattern allows dismissing the specific loading toast.
+
+```typescript
+[isConnected, smartWalletPubkey, execute];
+```
+
+The dependency array ensures `subscribe` updates when wallet state changes. Missing dependencies cause stale closures—a common React bug.
 
 ---
 
@@ -545,6 +670,64 @@ export default function PricingPage() {
 }
 ```
 
+_Listing 6-4: Complete pricing page with subscription handling_
+
+This page handles all subscription states. Let's examine the state machine:
+
+```typescript
+const [currentSubscription, setCurrentSubscription] =
+  useState<Subscription | null>(null);
+const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
+
+useEffect(() => {
+  if (isConnected && smartWalletPubkey) {
+    const sub = getActiveSubscription(smartWalletPubkey.toBase58());
+    setCurrentSubscription(sub);
+  }
+}, [isConnected, smartWalletPubkey]);
+```
+
+On mount, we check for an existing subscription. The `useEffect` dependency on wallet state ensures we recheck if the user disconnects and reconnects.
+
+```typescript
+if (!isConnected) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      {/* Redirect to login */}
+    </div>
+  );
+}
+
+if (currentSubscription) {
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] p-8">
+      {/* Show subscription status */}
+    </div>
+  );
+}
+```
+
+This pattern shows different UI based on state: not connected → show login prompt, already subscribed → show status, otherwise → show pricing cards. React renders the first matched condition.
+
+```typescript
+const handleSubscribe = async (planId: PlanId) => {
+  const plan = PLANS.find((p) => p.id === planId);
+  if (!plan) return;
+
+  setSelectedPlan(planId);
+  const sig = await subscribe(plan.amount, plan.name);
+
+  if (sig) {
+    const sub = getActiveSubscription(smartWalletPubkey!.toBase58());
+    setCurrentSubscription(sub);
+    router.push("/dashboard");
+  }
+  setSelectedPlan(null);
+};
+```
+
+The `setSelectedPlan` tracks which button shows the loading state. After success, we refresh subscription state and navigate away. The `null` assignment at the end resets loading state for error cases.
+
 ---
 
 ## Step 5: Build Subscription Gates
@@ -603,6 +786,59 @@ export function SubscriptionGate({ children, fallback }: Props) {
 }
 ```
 
+_Listing 6-5: Subscription gate component for protected content_
+
+The `SubscriptionGate` component protects premium content. Let's analyze its protection logic:
+
+```typescript
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+```
+
+The component takes `children` (protected content) and optional `fallback` (what to show unauthorized users). This pattern makes the gate reusable across different pages.
+
+```typescript
+const [isSubscribed, setIsSubscribed] = useState(false);
+const [checking, setChecking] = useState(true);
+```
+
+Two loading states: `checking` indicates initial verification, `isSubscribed` is the final verdict. Starting `checking` as `true` prevents flash of unauthorized content.
+
+```typescript
+useEffect(() => {
+  if (loading) return;
+
+  if (!isConnected || !smartWalletPubkey) {
+    router.push("/login");
+    return;
+  }
+
+  const hasSubscription = hasActiveSubscription(smartWalletPubkey.toBase58());
+  setIsSubscribed(hasSubscription);
+  setChecking(false);
+
+  if (!hasSubscription) {
+    router.push("/pricing");
+  }
+}, [isConnected, smartWalletPubkey, loading, router]);
+```
+
+The guard logic flows: wait for wallet loading → check connection → verify subscription → redirect if needed. The `router.push` calls create automatic redirects to appropriate pages.
+
+```typescript
+if (loading || checking) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9945FF]" />
+    </div>
+  );
+}
+```
+
+During verification, show a spinner. This prevents content flash and provides feedback that something is happening.
+
 ### Using the Gate
 
 ```typescript
@@ -639,6 +875,18 @@ export default function PremiumPage() {
   );
 }
 ```
+
+_Listing 6-6: Protected premium page using subscription gate_
+
+Using the gate is straightforward—wrap any content that requires subscription:
+
+```typescript
+export default function PremiumPage() {
+  return <SubscriptionGate>{/* Premium content here */}</SubscriptionGate>;
+}
+```
+
+The `SubscriptionGate` handles all authentication and subscription verification. Your page component only needs to define what premium content to show—separation of concerns in action.
 
 ---
 
@@ -686,6 +934,22 @@ export function QuickSubscribe() {
   );
 }
 ```
+
+_Listing 6-7: Minimal subscription button for quick integration_
+
+This stripped-down example shows the core subscription logic without extra abstraction:
+
+```typescript
+const instruction = SystemProgram.transfer({
+  fromPubkey: smartWalletPubkey,
+  toPubkey: new PublicKey(RECIPIENT),
+  lamports: 0.05 * LAMPORTS_PER_SOL,
+});
+
+const signature = await signAndSendTransaction([instruction]);
+```
+
+Just two steps: create a transfer instruction, then sign and send. The `signAndSendTransaction` function triggers the passkey prompt. If you need subscriptions quickly, this pattern works—add the hooks and storage layer later as complexity grows.
 
 ---
 
