@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components";
 
 const features = [
   {
@@ -74,8 +75,7 @@ export default function Home() {
       <nav className="border-b border-[#1a1a1a] px-6 py-4">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🔐</span>
-            <h1 className="text-xl font-bold">PassPay</h1>
+            <Logo size={32} showText />
             <span className="rounded-full bg-[#14F195]/15 px-2 py-0.5 text-xs text-[#14F195]">
               Devnet
             </span>

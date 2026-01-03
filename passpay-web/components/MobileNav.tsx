@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Logo } from "./Logo";
 
 interface NavItem {
   href: string;
@@ -39,10 +40,7 @@ export function MobileNav({ navItems }: MobileNavProps) {
             <div className="flex items-center justify-between">
               <SheetTitle>
                 <div className="flex items-center gap-2.5">
-                  <span className="text-2xl">🔐</span>
-                  <span className="text-lg font-bold tracking-tight">
-                    PassPay
-                  </span>
+                  <Logo size={28} showText />
                   <span className="rounded-full bg-[#14F195]/15 px-2 py-0.5 text-[10px] font-medium text-[#14F195] uppercase tracking-wide">
                     Devnet
                   </span>

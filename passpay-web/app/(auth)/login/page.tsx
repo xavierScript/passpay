@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PasskeySetup } from "@/components/PasskeySetup";
+import { Logo } from "@/components";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,8 +18,7 @@ export default function LoginPage() {
       <nav className="border-b border-[#1a1a1a] px-6 py-4">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🔐</span>
-            <span className="text-xl font-bold text-white">PassPay</span>
+            <Logo size={32} showText />
           </Link>
           <span className="rounded-full bg-[#14F195]/20 px-3 py-1 text-xs text-[#14F195]">
             Devnet
@@ -31,8 +31,8 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-6">
           {/* Header */}
           <div className="text-center">
-            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#14F195]/20">
-              <span className="text-3xl">🔐</span>
+            <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-[#14F195]/10 border border-[#14F195]/20">
+              <Logo size={56} />
             </div>
             <h1 className="text-3xl font-bold text-white">
               Welcome to PassPay

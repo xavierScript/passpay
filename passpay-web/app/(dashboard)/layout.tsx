@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { WalletConnect } from "@/components/WalletConnect";
 import { MobileNav } from "@/components/MobileNav";
+import { Logo } from "@/components";
 
 const navItems = [
   { href: "/manage", label: "Dashboard", icon: "🏠" },
@@ -31,10 +32,7 @@ export default function DashboardLayout({
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🔐</span>
-            <span className="text-xl font-bold text-white tracking-tight">
-              PassPay
-            </span>
+            <Logo size={32} showText />
             <span className="hidden sm:inline-block rounded-full bg-[#14F195]/15 px-2 py-0.5 text-[10px] font-medium text-[#14F195] uppercase tracking-wide">
               Devnet
             </span>
@@ -73,7 +71,7 @@ export default function DashboardLayout({
       <footer className="border-t border-[#1a1a1a] bg-black px-6 py-4 mt-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#8f8f8f]">
           <div className="flex items-center gap-2">
-            <span>🔐</span>
+            <Logo size={20} />
             <span>PassPay - Powered by LazorKit</span>
           </div>
           <div className="flex items-center gap-4">

@@ -12,6 +12,7 @@
  */
 
 // Shared components
+export { Logo } from "./Logo";
 export { WalletConnect } from "./WalletConnect";
 export { MobileNav } from "./MobileNav";
 export { PasskeySetup } from "./PasskeySetup";

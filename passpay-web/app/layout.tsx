@@ -18,8 +18,26 @@ export const metadata: Metadata = {
   description:
     "A LazorKit-powered Solana starter template featuring passkey authentication, gasless transactions, staking, and subscriptions.",
   icons: {
-    icon: "/passpay-icon.png",
+    icon: [
+      { url: "/passpay-icon.png", sizes: "any" },
+      { url: "/passpay-icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/passpay-icon.png", sizes: "16x16", type: "image/png" },
+    ],
     apple: "/passpay-icon.png",
+    shortcut: "/passpay-icon.png",
+  },
+  openGraph: {
+    title: "PassPay - Gasless Solana Payments with Passkeys",
+    description:
+      "Create a Solana wallet with biometrics. No seed phrases, no gas fees.",
+    images: ["/passpay-icon.png"],
+  },
+  twitter: {
+    card: "summary",
+    title: "PassPay - Gasless Solana Payments",
+    description:
+      "Create a Solana wallet with biometrics. No seed phrases, no gas fees.",
+    images: ["/passpay-icon.png"],
   },
 };
 
