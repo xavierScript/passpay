@@ -45,6 +45,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Logo } from "@/components/Logo";
 
 /**
  * Memo History Record Type
@@ -111,6 +112,9 @@ export default function MemoScreen() {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.content}>
+        <View style={{ alignItems: "center", marginBottom: 4 }}>
+          <Logo size={36} />
+        </View>
         <Text style={styles.title}>On-Chain Memo</Text>
         <Text style={styles.subtitle}>Write permanent messages on Solana</Text>
 

@@ -55,6 +55,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Logo } from "@/components/Logo";
 
 /**
  * Transfer History Record Type
@@ -149,7 +150,11 @@ export default function TransferScreen() {
     });
 
     // Create transfer instruction
-    const ix = createTransferInstruction(publicKey, recipientPubkey, transferAmount);
+    const ix = createTransferInstruction(
+      publicKey,
+      recipientPubkey,
+      transferAmount
+    );
 
     // ✨ Execute using the hook - handles loading, errors, alerts automatically!
     await execute({
@@ -173,6 +178,9 @@ export default function TransferScreen() {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.content}>
+        <View style={{ alignItems: "center", marginBottom: 4 }}>
+          <Logo size={36} />
+        </View>
         <Text style={styles.title}>Send SOL</Text>
         <Text style={styles.subtitle}>
           Transfer SOL with gasless transactions
@@ -262,7 +270,9 @@ export default function TransferScreen() {
                 onPress={() => openInExplorer(item.signature)}
               >
                 <View style={styles.historyHeader}>
-                  <Text style={styles.historyAmount}>{item.data.amount} SOL</Text>
+                  <Text style={styles.historyAmount}>
+                    {item.data.amount} SOL
+                  </Text>
                   <Text style={styles.historyTime}>{item.formattedTime}</Text>
                 </View>
                 <Text

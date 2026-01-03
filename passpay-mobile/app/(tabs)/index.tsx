@@ -46,6 +46,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Logo } from "@/components/Logo";
 
 export default function HomeScreen() {
   const { connect, isConnected, smartWalletPubkey, disconnect, isConnecting } =
@@ -136,7 +137,9 @@ export default function HomeScreen() {
       refreshControl={refreshControl}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>PassPay</Text>
+        <View style={{ alignItems: "center", marginBottom: 8 }}>
+          <Logo size={48} showText />
+        </View>
         <Text style={styles.subtitle}>Passkey-Powered Solana Wallet</Text>
 
         {isConnected && smartWalletPubkey ? (

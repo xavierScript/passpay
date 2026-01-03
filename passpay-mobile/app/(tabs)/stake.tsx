@@ -54,6 +54,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Logo } from "@/components/Logo";
 
 // Hardcoded validators to avoid RPC call - getVoteAccounts is expensive
 const STATIC_VALIDATORS = [
@@ -226,6 +227,9 @@ export default function StakeScreen() {
       refreshControl={refreshControl}
     >
       <View style={styles.content}>
+        <View style={{ alignItems: "center", marginBottom: 4 }}>
+          <Logo size={36} />
+        </View>
         <Text style={styles.title}>Stake SOL</Text>
         <Text style={styles.subtitle}>
           Earn rewards by staking with validators

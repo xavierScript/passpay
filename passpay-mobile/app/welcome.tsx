@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
 
+import { Logo } from "@/components/Logo";
 import { welcomeStyles as styles } from "@/styles";
 
 export default function WelcomeScreen() {
@@ -84,9 +85,7 @@ export default function WelcomeScreen() {
             },
           ]}
         >
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>P</Text>
-          </View>
+          <Logo size={100} circular />
         </Animated.View>
 
         {/* Title */}
