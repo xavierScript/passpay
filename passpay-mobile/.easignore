@@ -1,0 +1,47 @@
+# .easignore - Exclude files from EAS Build uploads
+
+# Documentation
+docs/
+*.md
+README.md
+
+# Tests
+__tests__/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+jest.config.js
+jest.setup.js
+
+# Coverage
+coverage/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Scripts (usually not needed for build)
+scripts/
+
+# Local environment files
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.expo/
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
