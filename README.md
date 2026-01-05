@@ -81,7 +81,14 @@ Each platform has comprehensive, step-by-step tutorials with:
 
 ```bash
 cd passpay-web
+
+# Copy environment variables
+cp .env.example .env.local
+
+# Install dependencies
 npm install
+
+# Run development server
 npm run dev
 ```
 
@@ -91,7 +98,14 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 cd passpay-mobile
+
+# Copy environment variables (optional - has defaults)
+cp .env.example .env
+
+# Install dependencies
 npm install --legacy-peer-deps
+
+# Start Expo
 npx expo start
 ```
 
