@@ -25,12 +25,14 @@ Complete reference for all hooks, services, and utilities in PassPay Web.
   - [useStaking](#usestaking)
   - [useMemoHook](#usememohook)
   - [useSubscription](#usesubscription)
+  - [useSession](#usesession)
 - [Services](#services)
   - [RPC Service](#rpc-service)
   - [Transfer Service](#transfer-service)
   - [Staking Service](#staking-service)
   - [Memo Service](#memo-service)
   - [Subscription Service](#subscription-service)
+  - [Session Service](#session-service)
 - [Utilities](#utilities)
   - [Utils](#utils)
   - [Constants](#constants)
@@ -425,6 +427,112 @@ return (
 
 ---
 
+### useSession
+
+A hook for managing user session persistence using local storage.
+
+**Location**: `features/session/hooks/useSession.ts`
+
+#### Import
+
+```typescript
+// Feature-based import
+import { useSession } from "@/features/session/hooks";
+
+// Or via re-export
+import { useSession } from "@/hooks";
+```
+
+#### Interface
+
+```typescript
+interface UseSessionOptions {
+  autoRestore?: boolean;
+  autoSync?: boolean;
+  sessionExpiryMs?: number;
+  expiryWarningMs?: number;
+  activityTrackingIntervalMs?: number;
+}
+
+interface UseSessionReturn {
+  session: SessionData | null;
+  preferences: UserPreferences;
+  isRestoring: boolean;
+  isValid: boolean;
+  isExpiringSoon: boolean;
+  timeRemaining: number;
+  createNewSession: (walletAddress?: string) => SessionData | null;
+  endSession: (keepPreferences?: boolean) => void;
+  extendCurrentSession: (additionalMs?: number) => SessionData | null;
+  updatePreferences: (prefs: Partial<UserPreferences>) => boolean;
+  refresh: () => void;
+}
+```
+
+#### Parameters
+
+| Parameter                    | Type      | Default          | Description                      |
+| ---------------------------- | --------- | ---------------- | -------------------------------- |
+| `autoRestore`                | `boolean` | `true`           | Auto-restore session on mount    |
+| `autoSync`                   | `boolean` | `true`           | Auto-sync with wallet connection |
+| `sessionExpiryMs`            | `number`  | `86400000` (24h) | Session duration in milliseconds |
+| `expiryWarningMs`            | `number`  | `300000` (5min)  | Warning threshold before expiry  |
+| `activityTrackingIntervalMs` | `number`  | `60000` (1min)   | Activity update interval         |
+
+#### Returns
+
+| Property               | Type                  | Description                       |
+| ---------------------- | --------------------- | --------------------------------- |
+| `session`              | `SessionData \| null` | Current session data              |
+| `preferences`          | `UserPreferences`     | User preferences                  |
+| `isRestoring`          | `boolean`             | Session restoration in progress   |
+| `isValid`              | `boolean`             | Whether session is valid          |
+| `isExpiringSoon`       | `boolean`             | Session expiring within threshold |
+| `timeRemaining`        | `number`              | Time until expiry (ms)            |
+| `createNewSession`     | `function`            | Create a new session              |
+| `endSession`           | `function`            | End current session               |
+| `extendCurrentSession` | `function`            | Extend session duration           |
+| `updatePreferences`    | `function`            | Update user preferences           |
+| `refresh`              | `function`            | Manually refresh session state    |
+
+#### Example
+
+```typescript
+const {
+  session,
+  isValid,
+  isExpiringSoon,
+  timeRemaining,
+  endSession,
+  extendCurrentSession,
+  preferences,
+  updatePreferences,
+} = useSession();
+
+// Check if user is authenticated
+if (!isValid) {
+  return <LoginPage />;
+}
+
+// Show session expiry warning
+if (isExpiringSoon) {
+  return (
+    <div>
+      <p>Session expires in {Math.floor(timeRemaining / 60000)} minutes</p>
+      <button onClick={() => extendCurrentSession()}>Stay Logged In</button>
+    </div>
+  );
+}
+
+// Update user preferences
+updatePreferences({ theme: "dark" });
+
+// Logout
+const handleLogout = () => endSession(true); // Keep preferences
+```
+
+---
+
 ## Services
 
 ### RPC Service
@@ -698,6 +806,172 @@ if (sub?.isActive) {
 
 ---
 
+### Session Service
+
+Session management and persistence utilities.
+
+**Location**: `features/session/services/session.service.ts`
+
+#### Import
+
+```typescript
+// Feature-based import
+import {
+  createSession,
+  getSession,
+  clearSession,
+  hasValidSession,
+  updateLastActivity,
+  extendSession,
+  getSessionTimeRemaining,
+  isSessionExpiringSoon,
+  saveUserPreferences,
+  getUserPreferences,
+  clearAllSessionData,
+} from "@/features/session/services";
+
+// Or via re-export
+import {
+  createSession,
+  getSession,
+  clearSession,
+  hasValidSession,
+  updateLastActivity,
+  extendSession,
+  getSessionTimeRemaining,
+  isSessionExpiringSoon,
+  saveUserPreferences,
+  getUserPreferences,
+  clearAllSessionData,
+} from "@/lib/services";
+```
+
+#### Types
+
+```typescript
+interface SessionData {
+  walletAddress: string;
+  createdAt: number;
+  expiresAt: number;
+  lastActivity: number;
+  isAuthenticated: boolean;
+}
+
+interface UserPreferences {
+  theme?: "light" | "dark" | "system";
+  showBalance?: boolean;
+  defaultTransferAmount?: string;
+  notifications?: boolean;
+}
+```
+
+#### Functions
+
+##### `createSession(walletAddress, config?)`
+
+Create a new session.
+
+```typescript
+const session = createSession("5nTuNh...", {
+  expiryMs: 24 * 60 * 60 * 1000, // 24 hours
+});
+```
+
+##### `getSession()`
+
+Get the current session.
+
+```typescript
+const session = getSession();
+if (session) {
+  console.log("Active session:", session.walletAddress);
+}
+```
+
+##### `hasValidSession()`
+
+Check if a valid session exists.
+
+```typescript
+if (hasValidSession()) {
+  // User is authenticated
+}
+```
+
+##### `clearSession()`
+
+Clear the current session.
+
+```typescript
+clearSession();
+```
+
+##### `updateLastActivity()`
+
+Update the last activity timestamp.
+
+```typescript
+updateLastActivity();
+```
+
+##### `extendSession(additionalMs?)`
+
+Extend the session expiry.
+
+```typescript
+extendSession(24 * 60 * 60 * 1000); // Extend by 24 hours
+```
+
+##### `getSessionTimeRemaining()`
+
+Get time remaining in session.
+
+```typescript
+const remaining = getSessionTimeRemaining();
+console.log("Session expires in:", remaining / 1000, "seconds");
+```
+
+##### `isSessionExpiringSoon(thresholdMs?)`
+
+Check if session is expiring soon.
+
+```typescript
+if (isSessionExpiringSoon(5 * 60 * 1000)) {
+  showExpiryWarning();
+}
+```
+
+##### `saveUserPreferences(preferences)`
+
+Save user preferences.
+
+```typescript
+saveUserPreferences({
+  theme: "dark",
+  showBalance: true,
+});
+```
+
+##### `getUserPreferences()`
+
+Get user preferences.
+
+```typescript
+const prefs = getUserPreferences();
+console.log("Theme:", prefs.theme);
+```
+
+##### `clearAllSessionData(keepPreferences?)`
+
+Clear all session data.
+
+```typescript
+clearAllSessionData(true); // Keep preferences
+clearAllSessionData(false); // Full reset
+```
+
+---
+
 ## Utilities
 
 ### Utils
@@ -782,5 +1056,22 @@ interface ValidatorInfo {
   name: string;
   identity: string;
   voteAccount: string;
+}
+
+// Session data
+interface SessionData {
+  walletAddress: string;
+  createdAt: number;
+  expiresAt: number;
+  lastActivity: number;
+  isAuthenticated: boolean;
+}
+
+// User preferences
+interface UserPreferences {
+  theme?: "light" | "dark" | "system";
+  showBalance?: boolean;
+  defaultTransferAmount?: string;
+  notifications?: boolean;
 }
 ```

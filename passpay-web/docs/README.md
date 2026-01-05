@@ -17,6 +17,7 @@ Comprehensive documentation for integrating LazorKit SDK in Next.js web applicat
 - [**Tutorial 4: Native SOL Staking**](./tutorials/04-SOL_STAKING.md) - Stake SOL with multi-instruction transactions
 - [**Tutorial 5: On-Chain Memos**](./tutorials/05-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
 - [**Tutorial 6: Subscription Payments**](./tutorials/06-SUBSCRIPTION_PAYMENTS.md) - Build Netflix-style recurring payments
+- [**Tutorial 7: Session Management**](./tutorials/07-SESSION_MANAGEMENT.md) - Persist user sessions with local storage
 
 ### Reference
 

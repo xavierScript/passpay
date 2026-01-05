@@ -16,3 +16,4 @@ export * from "@/features/transfer/services";
 export * from "@/features/memo/services";
 export * from "@/features/staking/services";
 export * from "@/features/subscription/services";
+export * from "@/features/session/services";
