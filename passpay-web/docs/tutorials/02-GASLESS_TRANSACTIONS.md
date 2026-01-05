@@ -16,8 +16,7 @@ Learn how to send SOL transactions without requiring users to pay gas fees. Lazo
 6. [Step 3: Implement signAndSendTransaction](#step-3-implement-signandsendtransaction)
 7. [Step 4: Handle Success and Errors](#step-4-handle-success-and-errors)
 8. [Complete Code Example](#complete-code-example)
-9. [Advanced: Transaction Options](#advanced-transaction-options)
-10. [Testing Your Implementation](#testing-your-implementation)
+9. [Testing Your Implementation](#testing-your-implementation)
 
 ---
 
@@ -109,7 +108,7 @@ Before starting this tutorial:
 
 ### Get Devnet SOL
 
-You'll need some SOL to test transfers. Get free Devnet SOL:
+You'll need some SOL to test transfers. To get free Devnet SOL:
 
 1. Copy your wallet address from the app
 2. Visit [solfaucet.com](https://solfaucet.com/) or [faucet.solana.com](https://faucet.solana.com/)
@@ -209,7 +208,7 @@ export function validateAddress(address: string): PublicKey | null {
 }
 ```
 
-Solana addresses are Base58-encoded strings. The `PublicKey` constructor validates the format—if the string isn't a valid Solana address, it throws an error. We catch that error and return `null` instead, making it easy to check validity with a simple `if (validateAddress(input))` pattern.
+Solana addresses are Base58-encoded strings. The `PublicKey` constructor validates the format—if the string isn't a valid Solana address, it throws an error. We catch that error and return `null` instead, making it easy to check validity with a simple `if (validateAddress(input))` pattern. Let's look at the next instruction:
 
 ```typescript
 export function createTransferInstruction(
@@ -227,32 +226,8 @@ export function createTransferInstruction(
 
 This function creates a _transfer instruction_, not a transaction. Think of an instruction as a single command—"transfer X lamports from A to B". A transaction is an envelope that can contain multiple instructions.
 
-The `LAMPORTS_PER_SOL` constant (1 billion) converts human-readable SOL amounts to lamports, Solana's smallest unit. We use `Math.floor()` to ensure we're working with whole lamports, avoiding floating-point precision issues.
-
-### Understanding Solana Instructions
-
-```typescript
-// An instruction is NOT a transaction
-// It's one action within a transaction
-
-// Example: Creating a transfer instruction
-const instruction = SystemProgram.transfer({
-  fromPubkey: myWallet, // Who's sending
-  toPubkey: recipient, // Who's receiving
-  lamports: 1_000_000_000, // Amount in lamports (1 SOL)
-});
-
-// Multiple instructions can be bundled into one transaction
-const instructions = [instruction1, instruction2, instruction3];
-```
-
-_Listing 2-2: The relationship between instructions and transactions_
-
-This distinction is fundamental to Solana development. An instruction is a single atomic operation, while a transaction is the container that groups instructions together. This design allows you to execute multiple operations atomically—if any instruction fails, the entire transaction is rolled back.
-
-The numeric literal `1_000_000_000` uses JavaScript's numeric separator feature for readability—it's exactly 1 billion lamports (1 SOL).
-
----
+Note:
+The `LAMPORTS_PER_SOL` constant (which is 1 billion) converts human-readable SOL amounts to lamports, Solana's smallest unit. We use `Math.floor()` to ensure we're working with whole lamports, avoiding floating-point precision issues. 1 SOL = 1,000,000,000 Lamports.
 
 ## Step 2: Build the Transfer Page
 
@@ -263,7 +238,7 @@ Create the transfer page UI:
 "use client";
 import { useState } from "react";
 import { useWallet } from "@lazorkit/wallet";
-import { useSolBalance } from "@/hooks";
+import { useSolBalance } from "@/hooks"; // Custom hook to fetch and track SOL balance
 import toast from "react-hot-toast";
 
 export default function TransferPage() {
@@ -372,13 +347,13 @@ export default function TransferPage() {
 
 ## Step 3: Implement signAndSendTransaction
 
-Add the transfer logic:
+Now, add the transfer logic. First, import the helper functions we created in Step 1:
 
 ```typescript
 import {
-  validateAddress,
-  validateAmount,
-  createTransferInstruction,
+  validateAddress, // Validates and converts address string to PublicKey
+  validateAmount, // Validates and parses the amount
+  createTransferInstruction, // Creates the SOL transfer instruction
 } from "@/lib/services/transfer";
 
 const handleTransfer = async () => {
@@ -440,7 +415,7 @@ const handleTransfer = async () => {
 };
 ```
 
-_Listing 2-3: The complete handleTransfer function with validation and transaction execution_
+_Listing 2-2: The complete handleTransfer function with validation and transaction execution_
 
 This function orchestrates the entire transfer flow. Let's examine each section:
 
@@ -452,7 +427,7 @@ if (!recipientPubkey) {
 }
 ```
 
-Input validation happens first—we fail fast if the address or amount is invalid. This prevents unnecessary network calls and provides immediate feedback to users.
+Input validation happens first. We fail fast if the address or amount is invalid. This prevents unnecessary network calls and provides immediate feedback to users.
 
 ```typescript
 const instruction = createTransferInstruction(
@@ -489,24 +464,26 @@ refresh();
 
 After a successful transfer, we call `refresh()` from the `useSolBalance` hook to update the displayed balance. This ensures the UI reflects the new state immediately.
 
+```typescript
 // Helper to parse errors
 function parseError(error: unknown): string {
-const msg = error instanceof Error ? error.message : String(error);
+  const msg = error instanceof Error ? error.message : String(error);
 
-if (msg.includes("NotAllowedError") || msg.includes("cancelled")) {
-return "You cancelled the passkey prompt.";
-}
-if (msg.includes("insufficient") || msg.includes("Insufficient")) {
-return "Insufficient balance for this transaction.";
-}
-if (msg.includes("Transaction too large")) {
-return "Transaction too large. Try a smaller amount.";
-}
+  if (msg.includes("NotAllowedError") || msg.includes("cancelled")) {
+    return "You cancelled the passkey prompt.";
+  }
+  if (msg.includes("insufficient") || msg.includes("Insufficient")) {
+    return "Insufficient balance for this transaction.";
+  }
+  if (msg.includes("Transaction too large")) {
+    return "Transaction too large. Try a smaller amount.";
+  }
 
-return msg || "Transaction failed. Please try again.";
+  return msg || "Transaction failed. Please try again.";
 }
+```
 
-````
+_Listing 2-3: Error parsing helper for user-friendly error messages_
 
 ---
 
@@ -514,11 +491,18 @@ return msg || "Transaction failed. Please try again.";
 
 ### Transaction States
 
+Provide visual feedback for different transaction states:
+
 ```typescript
-// Visual feedback for each state
-{
-  loading ? (
-    <div className="flex items-center gap-2">
+// Inside your button component
+<button
+  onClick={handleTransfer}
+  disabled={loading || !recipient || !amount}
+  className="w-full py-4 bg-[#9945FF] hover:bg-[#8035E0] 
+             disabled:opacity-50 text-white font-semibold rounded-xl"
+>
+  {loading ? (
+    <div className="flex items-center justify-center gap-2">
       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
         <circle
           className="opacity-25"
@@ -539,9 +523,9 @@ return msg || "Transaction failed. Please try again.";
     </div>
   ) : (
     "Send SOL"
-  );
-}
-````
+  )}
+</button>
+```
 
 ### View Transaction on Explorer
 
@@ -727,27 +711,6 @@ export default function TransferPage() {
     </div>
   );
 }
-```
-
----
-
-## Advanced: Transaction Options
-
-### Multiple Instructions
-
-You can bundle multiple instructions in a single transaction:
-
-```typescript
-const instructions = [
-  createTransferInstruction(wallet, recipient1, 0.1),
-  createTransferInstruction(wallet, recipient2, 0.1),
-  createMemoInstruction("Batch transfer", wallet),
-];
-
-await signAndSendTransaction({
-  instructions,
-  transactionOptions: { feeToken: "USDC" },
-});
 ```
 
 ### Fee Token Options
