@@ -15,10 +15,8 @@ Learn how to implement passwordless wallet authentication using LazorKit's passk
 5. [Step 2: Create the Login Page](#step-2-create-the-login-page)
 6. [Step 3: Implement Connect Function](#step-3-implement-connect-function)
 7. [Step 4: Display Wallet Information](#step-4-display-wallet-information)
-8. [Step 5: Handle Disconnect](#step-5-handle-disconnect)
-9. [Complete Code Example](#complete-code-example)
-10. [How It Works Under the Hood](#how-it-works-under-the-hood)
-11. [Testing Your Implementation](#testing-your-implementation)
+8. [How It Works Under the Hood](#how-it-works-under-the-hood)
+9. [Testing Your Implementation](#testing-your-implementation)
 
 ---
 
@@ -121,7 +119,9 @@ The configuration object contains three essential URLs:
 
 - `rpcUrl`: The Solana RPC endpoint for blockchain communication (we use Devnet for testing in this case)
 - `portalUrl`: LazorKit's authentication portal where passkey ceremonies happen
-- `paymasterUrl`: The service that sponsors gas fees for gasless transactions. Moving on to the next line, we have:
+- `paymasterUrl`: The service that sponsors gas fees for gasless transactions. 
+
+Moving on to the next line, we have:
 
 ```typescript
 useEffect(() => {
@@ -140,7 +140,6 @@ In your `layout.tsx`, do this:
 ```typescript
 // app/layout.tsx
 import { AppProviders } from "./providers";
-import "./globals.css";
 
 export default function RootLayout({
   children,
