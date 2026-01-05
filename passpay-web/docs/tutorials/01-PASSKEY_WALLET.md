@@ -44,43 +44,6 @@ Passkeys are a modern authentication standard (WebAuthn) that replaces passwords
 
 ---
 
-## How LazorKit Passkeys Work
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         PASSKEY AUTHENTICATION FLOW                          │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-    Your App                    LazorKit Portal                  Browser
-       │                              │                             │
-       │  1. connect()                │                             │
-       │─────────────────────────────>│                             │
-       │                              │                             │
-       │                              │  2. Request WebAuthn        │
-       │                              │─────────────────────────────>│
-       │                              │                             │
-       │                              │  3. User authenticates      │
-       │                              │     (FaceID/TouchID/Hello)  │
-       │                              │<─────────────────────────────│
-       │                              │                             │
-       │  4. Return wallet info       │                             │
-       │<─────────────────────────────│                             │
-       │                              │                             │
-       │  5. smartWalletPubkey ready! │                             │
-       ▼                              ▼                             ▼
-```
-
-### Key Concepts
-
-| Concept           | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| **Smart Wallet**  | A Program Derived Address (PDA) controlled by your passkey |
-| **Portal**        | LazorKit's web interface for authentication                |
-| **Credential ID** | Unique identifier for the passkey                          |
-| **WebAuthn**      | Browser API for passkey authentication                     |
-
----
-
 ## Prerequisites
 
 Before starting this tutorial, ensure you have:
@@ -134,9 +97,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
 _Listing 1-1: Setting up the LazorkitProvider with configuration_
 
-This code sets up the foundation for passkey authentication. Let's break it down:
+This code sets up the foundation for passkey authentication. Let's break it down line by line:
 
-The `"use client"` directive at the top tells Next.js this is a client component—necessary because LazorKit uses browser APIs like WebAuthn that don't exist on the server.
+The `"use client"` directive at the top tells Next.js this is a client component. This is necessary because LazorKit uses browser APIs like WebAuthn that don't exist on the server. Next are the imports. One is of particular concern here:
 
 ```typescript
 import { LazorkitProvider } from "@lazorkit/wallet";
@@ -156,9 +119,9 @@ const LAZORKIT_CONFIG = {
 
 The configuration object contains three essential URLs:
 
-- `rpcUrl`: The Solana RPC endpoint for blockchain communication (we use Devnet for testing)
+- `rpcUrl`: The Solana RPC endpoint for blockchain communication (we use Devnet for testing in this case)
 - `portalUrl`: LazorKit's authentication portal where passkey ceremonies happen
-- `paymasterUrl`: The service that sponsors gas fees for gasless transactions
+- `paymasterUrl`: The service that sponsors gas fees for gasless transactions. Moving on to the next line, we have:
 
 ```typescript
 useEffect(() => {
@@ -168,9 +131,11 @@ useEffect(() => {
 }, []);
 ```
 
-This `useEffect` hook adds a Buffer polyfill to the browser's window object. Solana's web3.js library expects Node.js's Buffer class, which browsers don't have natively. We check for `window` first to avoid errors during server-side rendering.
+This `useEffect` hook adds a Buffer polyfill to the browser's window object. Solana's web3.js library expects Node.js's Buffer class, which browsers don't have natively. In other words, we need to add this buffer class. We then check for `window` first to avoid errors during server-side rendering. Moving on, we need to have our app with the AppProviders as Listing 1-2 illustrates.
 
 ### Wrap Your App
+
+In your `layout.tsx`, do this:
 
 ```typescript
 // app/layout.tsx
@@ -206,7 +171,7 @@ By wrapping `{children}` with `AppProviders`, every page and component in your a
 
 ## Step 2: Create the Login Page
 
-Create a login page for wallet connection:
+Now we create a login page for wallet connection:
 
 ```typescript
 // app/(auth)/login/page.tsx
@@ -268,6 +233,8 @@ The `useWallet` hook is the primary interface to LazorKit. We destructure four e
 - `isConnecting`: A boolean that's `true` during the authentication process
 - `wallet`: An object containing the connected wallet's `smartWallet` address
 
+Let's observe the next line, shall we?
+
 ```typescript
 useEffect(() => {
   if (isConnected && wallet?.smartWallet) {
@@ -294,7 +261,7 @@ This effect runs whenever connection state changes. If the user is already conne
 
 ## Step 3: Implement Connect Function
 
-Add the connection logic:
+It is time to add the connection logic:
 
 ```typescript
 const handleConnect = async () => {
@@ -336,7 +303,7 @@ This function handles the entire connection flow. Let's walk through it:
 const info = await connect({ feeMode: "paymaster" });
 ```
 
-The `connect` function opens LazorKit's portal in the browser, triggering the WebAuthn ceremony. The `feeMode: "paymaster"` option tells LazorKit that future transactions should be gasless—the paymaster will sponsor fees. This returns a `WalletInfo` object containing the new wallet's details.
+The `connect` function opens LazorKit's portal in the browser, triggering the WebAuthn ceremony. The `feeMode: "paymaster"` option tells LazorKit that future transactions should be gasless, meaning the paymaster will sponsor fees. This returns a `WalletInfo` object containing the new wallet's details.
 
 ```typescript
 if (info?.credentialId) {
@@ -356,6 +323,8 @@ Error handling is crucial for good UX. `NotAllowedError` means the user dismisse
 
 ### Understanding `connect()` Options
 
+There is a minor detail we should know about the `feeMode`:
+
 ```typescript
 await connect({
   feeMode: "paymaster", // Gasless transactions (recommended)
@@ -367,6 +336,8 @@ await connect({
 | ----------- | ------------------------------------- |
 | `paymaster` | LazorKit sponsors transaction fees    |
 | `self`      | User pays fees from their SOL balance |
+
+So, you choose... depending on what you want your app to do.
 
 ---
 
@@ -505,167 +476,6 @@ export default function LoginPage() {
 
 ---
 
-## Step 5: Handle Disconnect
-
-Create a wallet info component with disconnect functionality:
-
-```typescript
-// components/WalletInfo.tsx
-"use client";
-import { useWallet } from "@lazorkit/wallet";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-
-export function WalletInfo() {
-  const { disconnect, wallet, smartWalletPubkey } = useWallet();
-  const router = useRouter();
-
-  const truncatedAddress = smartWalletPubkey
-    ? `${smartWalletPubkey.toBase58().slice(0, 4)}...${smartWalletPubkey
-        .toBase58()
-        .slice(-4)}`
-    : "";
-
-  const handleDisconnect = async () => {
-    try {
-      await disconnect();
-      toast.success("Disconnected");
-      router.push("/login");
-    } catch (error) {
-      console.error("Disconnect failed:", error);
-      toast.error("Failed to disconnect");
-    }
-  };
-
-  const copyAddress = () => {
-    if (wallet?.smartWallet) {
-      navigator.clipboard.writeText(wallet.smartWallet);
-      toast.success("Address copied!");
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-4">
-      {/* Address Display */}
-      <button
-        onClick={copyAddress}
-        className="px-4 py-2 bg-[#1a1a1a] rounded-lg border border-gray-700
-                   hover:border-gray-600 transition-colors"
-      >
-        <span className="text-sm font-mono text-gray-300">
-          {truncatedAddress}
-        </span>
-      </button>
-
-      {/* Disconnect Button */}
-      <button
-        onClick={handleDisconnect}
-        className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-      >
-        Disconnect
-      </button>
-    </div>
-  );
-}
-```
-
----
-
-## Complete Code Example
-
-### Full Login Page
-
-```typescript
-// app/(auth)/login/page.tsx
-"use client";
-import { useWallet } from "@lazorkit/wallet";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-
-export default function LoginPage() {
-  const router = useRouter();
-  const { connect, isConnected, isConnecting, wallet } = useWallet();
-  const [error, setError] = useState<string | null>(null);
-
-  // Redirect if already connected
-  useEffect(() => {
-    if (isConnected && wallet?.smartWallet) {
-      router.push("/transfer");
-    }
-  }, [isConnected, wallet, router]);
-
-  const handleConnect = async () => {
-    setError(null);
-    try {
-      await connect({ feeMode: "paymaster" });
-      toast.success("Wallet connected! 🎉");
-    } catch (e: unknown) {
-      const err = e as Error;
-      const msg = err?.message || "Connection failed";
-      setError(msg);
-
-      if (msg.includes("NotAllowedError")) {
-        toast.error("You cancelled the passkey prompt.");
-      } else if (msg.includes("PublicKeyCredential")) {
-        toast.error("Your browser does not support passkeys.");
-      } else {
-        toast.error("Login failed. Please try again.");
-      }
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">🔐 PassPay</h1>
-          <p className="text-gray-400">
-            No seed phrases. Just your biometrics.
-          </p>
-        </div>
-
-        <div className="bg-[#1a1a1a] rounded-2xl p-8 border border-gray-800">
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-3 text-gray-300">
-              <span className="text-[#14F195]">✓</span>
-              <span>No passwords or seed phrases</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-300">
-              <span className="text-[#14F195]">✓</span>
-              <span>Hardware-level security</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-300">
-              <span className="text-[#14F195]">✓</span>
-              <span>Syncs across your devices</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="w-full py-4 px-6 bg-[#9945FF] hover:bg-[#8035E0] 
-                       disabled:opacity-50 text-white font-semibold rounded-xl"
-          >
-            {isConnecting ? "Connecting..." : "✨ Continue with Passkey"}
-          </button>
-
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Powered by LazorKit
-          </p>
-
-          {error && (
-            <p className="mt-4 text-sm text-red-400 text-center">{error}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
----
-
 ## How It Works Under the Hood
 
 ### The WebAuthn Flow
@@ -677,7 +487,7 @@ export default function LoginPage() {
 2. **LazorKit Portal opens**
 
    - Browser triggers WebAuthn ceremony
-   - User sees biometric prompt
+   - User sees biometric prompt and proceeds with it
 
 3. **Passkey created/retrieved**
 
@@ -721,36 +531,6 @@ export default function LoginPage() {
                         │ NEVER leaves│
                         └─────────────┘
 ```
-
----
-
-## Testing Your Implementation
-
-### Manual Testing
-
-1. Open your app at `http://localhost:3000/login`
-2. Click "Continue with Passkey"
-3. Complete the biometric prompt
-4. Verify redirect to dashboard
-5. Check wallet address is displayed
-
-### Test Disconnect
-
-1. While connected, click "Disconnect"
-2. Verify redirect to login page
-3. Reconnect with passkey
-4. Verify same wallet address
-
-### Browser Compatibility
-
-Test in multiple browsers:
-
-- Chrome (recommended)
-- Safari
-- Firefox
-- Edge
-
----
 
 ## Next Steps
 
