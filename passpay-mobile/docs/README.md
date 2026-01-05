@@ -16,6 +16,7 @@ Comprehensive documentation for integrating LazorKit SDK in React Native (Expo) 
 - [**Tutorial 3: Building Reusable Hooks**](./tutorials/03-REUSABLE_HOOKS.md) - Abstract LazorKit patterns into custom hooks
 - [**Tutorial 4: Native SOL Staking**](./tutorials/04-SOL_STAKING.md) - Stake SOL with multi-instruction transactions
 - [**Tutorial 5: On-Chain Memos**](./tutorials/05-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
+- [**Tutorial 6: Session Management**](./tutorials/06-SESSION_MANAGEMENT.md) - Persist user sessions with AsyncStorage
 
 ### Reference
 

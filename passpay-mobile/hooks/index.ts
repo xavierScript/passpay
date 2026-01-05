@@ -41,6 +41,12 @@
  *    - System theme detection
  *    - Light/dark mode support
  *
+ * 🔐 useSession
+ *    - Session persistence with AsyncStorage
+ *    - Auto-restore on app launch
+ *    - Wallet connection sync
+ *    - Expiry monitoring and warnings
+ *
  * ═══════════════════════════════════════════════════════════════════════════
  *
  * @example
@@ -103,6 +109,13 @@ export {
   type UseSolBalanceOptions,
   type UseSolBalanceReturn,
 } from "@/features/wallet/hooks/use-sol-balance";
+
+// Session Hooks
+export {
+  useSession,
+  type UseSessionOptions,
+  type UseSessionReturn,
+} from "@/features/session/hooks/use-session";
 
 // Theme Hooks
 export { useColorScheme } from "./use-color-scheme";

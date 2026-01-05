@@ -12,11 +12,13 @@ Complete reference for all hooks, services, and utilities in PassPay.
   - [useSolBalance](#usesolbalance)
   - [useTransactionHistory](#usetransactionhistory)
   - [useClipboard](#useclipboard)
+  - [useSession](#usesession)
 - [Services](#services)
   - [RPC Service](#rpc-service)
   - [Transfer Service](#transfer-service)
   - [Staking Service](#staking-service)
   - [Memo Service](#memo-service)
+  - [Session Service](#session-service)
 - [Utilities](#utilities)
   - [Helpers](#helpers)
   - [Redirect URL](#redirect-url)
@@ -346,6 +348,104 @@ function AddressDisplay({ address }: { address: string }) {
 
 ---
 
+### useSession
+
+A hook for managing user session persistence with AsyncStorage.
+
+#### Import
+
+```typescript
+import { useSession } from "@/hooks";
+```
+
+#### Interface
+
+```typescript
+interface UseSessionOptions {
+  autoRestore?: boolean; // Auto-restore session on mount (default: true)
+  autoSync?: boolean; // Auto-sync with wallet connection (default: true)
+  sessionExpiryMs?: number; // Session expiry in ms (default: 24 hours)
+  expiryWarningMs?: number; // Warning threshold in ms (default: 5 minutes)
+  trackAppState?: boolean; // Update activity on foreground (default: true)
+}
+
+interface UseSessionReturn {
+  session: SessionData | null;
+  preferences: UserPreferences;
+  isRestoring: boolean;
+  isValid: boolean;
+  isExpiringSoon: boolean;
+  timeRemaining: number;
+  createNewSession: (walletAddress?: string) => Promise<SessionData | null>;
+  endSession: (keepPreferences?: boolean) => Promise<void>;
+  extendCurrentSession: (additionalMs?: number) => Promise<SessionData | null>;
+  updatePreferences: (prefs: Partial<UserPreferences>) => Promise<boolean>;
+  refresh: () => Promise<void>;
+}
+```
+
+#### Parameters
+
+| Parameter         | Type      | Default          | Description                      |
+| ----------------- | --------- | ---------------- | -------------------------------- |
+| `autoRestore`     | `boolean` | `true`           | Restore session on mount         |
+| `autoSync`        | `boolean` | `true`           | Sync with wallet connection      |
+| `sessionExpiryMs` | `number`  | `86400000` (24h) | Session duration in milliseconds |
+| `expiryWarningMs` | `number`  | `300000` (5min)  | Warning threshold before expiry  |
+| `trackAppState`   | `boolean` | `true`           | Track app foreground/background  |
+
+#### Returns
+
+| Property               | Type                  | Description                        |
+| ---------------------- | --------------------- | ---------------------------------- |
+| `session`              | `SessionData \| null` | Current session data               |
+| `preferences`          | `UserPreferences`     | User preferences                   |
+| `isRestoring`          | `boolean`             | Session restoration in progress    |
+| `isValid`              | `boolean`             | Whether session is valid           |
+| `isExpiringSoon`       | `boolean`             | Session expires within threshold   |
+| `timeRemaining`        | `number`              | Milliseconds until expiry          |
+| `createNewSession`     | `function`            | Create a new session               |
+| `endSession`           | `function`            | End the current session            |
+| `extendCurrentSession` | `function`            | Extend session duration            |
+| `updatePreferences`    | `function`            | Update user preferences            |
+| `refresh`              | `function`            | Refresh session state from storage |
+
+#### Example
+
+```typescript
+export default function HomeScreen() {
+  const {
+    session,
+    isRestoring,
+    isValid,
+    isExpiringSoon,
+    preferences,
+    extendCurrentSession,
+    endSession,
+  } = useSession();
+
+  if (isRestoring) {
+    return <ActivityIndicator />;
+  }
+
+  if (!isValid) {
+    return <WelcomeScreen />;
+  }
+
+  return (
+    <View>
+      <Text>Welcome, {session?.walletAddress.slice(0, 8)}...</Text>
+      {isExpiringSoon && (
+        <Button title="Extend Session" onPress={() => extendCurrentSession()} />
+      )}
+      <Button title="Logout" onPress={() => endSession()} />
+    </View>
+  );
+}
+```
+
+---
+
 ## Services
 
 ### RPC Service
@@ -572,6 +672,144 @@ if (!isValidMemoLength(message)) {
 
 const memoIx = createMemoInstruction(message, wallet);
 await execute({ instructions: [memoIx] });
+```
+
+---
+
+### Session Service
+
+Utilities for managing user session persistence with AsyncStorage.
+
+#### Location
+
+```
+features/session/services/session.service.ts
+```
+
+#### Imports
+
+```typescript
+// Direct import (recommended)
+import {
+  createSession,
+  getSession,
+  clearSession,
+  hasValidSession,
+} from "@/features/session/services";
+
+// Via hooks index
+import { useSession } from "@/hooks";
+```
+
+#### Types
+
+```typescript
+interface SessionData {
+  walletAddress: string;
+  createdAt: number;
+  expiresAt: number;
+  lastActivity: number;
+  isAuthenticated: boolean;
+}
+
+interface UserPreferences {
+  theme?: "light" | "dark" | "system";
+  showBalance?: boolean;
+  notifications?: boolean;
+  hapticFeedback?: boolean;
+}
+```
+
+#### Functions
+
+```typescript
+/**
+ * Create a new session
+ */
+async function createSession(
+  walletAddress: string,
+  config?: { expiryMs?: number }
+): Promise<SessionData | null>;
+
+/**
+ * Get the current session
+ */
+async function getSession(): Promise<SessionData | null>;
+
+/**
+ * Check if there's a valid session
+ */
+async function hasValidSession(): Promise<boolean>;
+
+/**
+ * Clear the current session
+ */
+async function clearSession(): Promise<boolean>;
+
+/**
+ * Update last activity timestamp
+ */
+async function updateLastActivity(): Promise<boolean>;
+
+/**
+ * Extend session expiry
+ */
+async function extendSession(
+  additionalMs?: number
+): Promise<SessionData | null>;
+
+/**
+ * Get session time remaining
+ */
+async function getSessionTimeRemaining(): Promise<number>;
+
+/**
+ * Check if session is about to expire
+ */
+async function isSessionExpiringSoon(thresholdMs?: number): Promise<boolean>;
+
+/**
+ * Save user preferences
+ */
+async function saveUserPreferences(
+  preferences: Partial<UserPreferences>
+): Promise<boolean>;
+
+/**
+ * Get user preferences
+ */
+async function getUserPreferences(): Promise<UserPreferences>;
+
+/**
+ * Clear all session data
+ */
+async function clearAllSessionData(keepPreferences?: boolean): Promise<boolean>;
+```
+
+#### Example
+
+```typescript
+import {
+  createSession,
+  getSession,
+  hasValidSession,
+  clearSession,
+} from "@/features/session/services";
+
+// Create session after wallet connection
+const session = await createSession(walletAddress);
+
+// Check validity
+if (await hasValidSession()) {
+  console.log("User is authenticated");
+}
+
+// Get session data
+const currentSession = await getSession();
+console.log(`Wallet: ${currentSession?.walletAddress}`);
+
+// Logout
+await clearSession();
 ```
 
 ---
