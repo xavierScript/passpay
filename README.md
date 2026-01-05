@@ -4,7 +4,7 @@
 
 PassPay demonstrates how to build passkey-powered Solana wallets with gasless transactions across **both** Next.js (Web) and React Native/Expo (Mobile) platforms. Users create wallets using biometric authentication (FaceID, TouchID, Windows Hello) instead of seed phrases, and all transaction fees are covered by LazorKit Paymaster.
 
-> 🏆 **Built for the [LazorKit Bounty](https://earn.superteam.fun/)** — Helping Solana developers get started with passkey authentication and smart wallet transactions.
+> I did this to show that Lazorkit integration was possible for both the Web and Mobile SDK, thereby helping Solana developers get started with passkey authentication and smart wallet transactions.
 
 ---
 
@@ -41,7 +41,7 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 ---
 
-## 📚 Tutorials (11 Total)
+## 📚 Tutorials (13 Total)
 
 Each platform has comprehensive, step-by-step tutorials with:
 
@@ -162,29 +162,7 @@ Each platform has comprehensive documentation:
 
 ## 🌐 Live Demo
 
-- **Web:** [Deployed on Vercel](https://passpay.vercel.app) _(Devnet)_
-
----
-
-## 🎯 Bounty Deliverables Checklist
-
-| Requirement            | Status | Notes                               |
-| ---------------------- | ------ | ----------------------------------- |
-| Working Example Repo   | ✅     | Two implementations (Web + Mobile)  |
-| Next.js (React)        | ✅     | `passpay-web/`                      |
-| React Native (Expo)    | ✅     | `passpay-mobile/`                   |
-| Clean folder structure | ✅     | Feature-based architecture          |
-| Well-documented code   | ✅     | JSDoc comments throughout           |
-| Quick-Start Guide      | ✅     | This README + platform READMEs      |
-| At least 2 tutorials   | ✅     | **12+ tutorials** (6+ per platform) |
-| Live Demo              | ✅     | Deployed on Devnet                  |
-
-### Use Cases Demonstrated
-
-- ✅ Passkey login flow with smart wallet
-- ✅ Gasless USDC transfer on Solana
-- ✅ React Native mobile onboarding with biometric login
-- ✅ Subscription service with automated SOL billing
+- **Web:** [Deployed on Vercel](https://passpay-tau.vercel.app/) _(Devnet)_
 
 ---
 
@@ -200,7 +178,15 @@ Each platform has comprehensive documentation:
 
 ---
 
-## 📝 License
+## � Author
+
+**[David Onwuka]** — [@xavierScript](https://twitter.com/xavierScript)
+
+If you found this helpful, give it a ⭐ on GitHub!
+
+---
+
+## �📝 License
 
 MIT © PassPay
 
