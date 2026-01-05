@@ -180,7 +180,7 @@ Each platform has comprehensive documentation:
 
 ## � Author
 
-**[David Onwuka]** — [@xavierScript](https://twitter.com/xavierScript)
+**David Onwuka** — [@xavierScript](https://twitter.com/xavierScript)
 
 If you found this helpful, give it a ⭐ on GitHub!
 
