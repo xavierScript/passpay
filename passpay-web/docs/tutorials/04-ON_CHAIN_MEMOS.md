@@ -170,7 +170,7 @@ export function getMemoStats(memo: string): {
 }
 ```
 
-_Listing 5-1: The memo service with validation and instruction creation_
+_Listing 4-1: The memo service with validation and instruction creation_
 
 This service provides everything needed for on-chain memos. Let's examine the key functions:
 
@@ -243,7 +243,7 @@ export function useMemoHook(): UseMemoHookReturn {
     successMessage: "Memo written to blockchain! 📝",
 ```
 
-_Listing 5-2: The useMemoHook that composes useTransaction_
+_Listing 4-2: The useMemoHook that composes useTransaction_
 
 This hook demonstrates the power of composition. Let's look at its design:
 
@@ -290,51 +290,6 @@ const writeMemo = useCallback(
 ```
 
 The `writeMemo` function handles feature-specific logic (validation, instruction creation) while delegating transaction handling to `useTransaction`. This separation of concerns makes both hooks easier to maintain and test.
-
----
-
-## Step 3: Create the Memo Page
-
-});
-
-const writeMemo = useCallback(
-async (memo: string): Promise<string | null> => {
-if (!isConnected || !smartWalletPubkey) {
-toast.error("Please connect your wallet first");
-return null;
-}
-
-      const validation = validateMemo(memo);
-      if (!validation.valid) {
-        toast.error(validation.error || "Invalid memo");
-        return null;
-      }
-
-      try {
-        // Create memo instruction with signer for verification
-        const memoInstruction = createMemoInstruction(memo, [
-          smartWalletPubkey,
-        ]);
-
-        // Execute the transaction
-        return await execute([memoInstruction]);
-      } catch (err) {
-        console.error("Memo error:", err);
-        return null;
-      }
-    },
-    [isConnected, smartWalletPubkey, execute]
-
-);
-
-return {
-writeMemo,
-loading,
-error,
-};
-}
-
-````
 
 ---
 
@@ -486,13 +441,11 @@ export default function MemoPage() {
     </div>
   );
 }
-````
+```
 
----
+## Minimal Code Example
 
-## Complete Code Example
-
-Here's a minimal, self-contained example:
+TLDR? Here's a minimal, self-contained example:
 
 ```typescript
 import { useWallet } from "@lazorkit/wallet";
@@ -532,112 +485,6 @@ export function MemoWriter() {
   );
 }
 ```
-
----
-
-## Viewing Memos on Explorer
-
-After writing a memo, you can view it on Solscan:
-
-1. Click the "View on Solscan" link
-2. Scroll to the "Instructions" section
-3. Find "Memo" instruction
-4. Your message appears in the "Instruction Data" field
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SOLSCAN TRANSACTION VIEW                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Signature: 4vJ7...abc123                                                    │
-│  Status: ✅ Success                                                          │
-│  Block: 234567890                                                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Instructions:                                                               │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │  #1 Memo Program                                                       │  │
-│  │  Program: MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr                 │  │
-│  │  Data: "Hello from PassPay! 🎉"                                        │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Testing Your Implementation
-
-### Unit Tests
-
-```typescript
-// tests/services/memo.test.ts
-import { describe, it, expect } from "vitest";
-import {
-  validateMemo,
-  createMemoInstruction,
-  getMemoStats,
-  MEMO_PROGRAM_ID,
-} from "@/lib/services/memo";
-
-describe("Memo Service", () => {
-  describe("validateMemo", () => {
-    it("accepts valid memo", () => {
-      const result = validateMemo("Hello, blockchain!");
-      expect(result.valid).toBe(true);
-    });
-
-    it("rejects empty memo", () => {
-      const result = validateMemo("");
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe("Memo cannot be empty");
-    });
-
-    it("rejects whitespace-only memo", () => {
-      const result = validateMemo("   ");
-      expect(result.valid).toBe(false);
-    });
-
-    it("rejects oversized memo", () => {
-      const longMemo = "x".repeat(600);
-      const result = validateMemo(longMemo);
-      expect(result.valid).toBe(false);
-      expect(result.error).toContain("too long");
-    });
-  });
-
-  describe("createMemoInstruction", () => {
-    it("creates valid instruction", () => {
-      const instruction = createMemoInstruction("Test memo");
-      expect(instruction.programId.equals(MEMO_PROGRAM_ID)).toBe(true);
-      expect(instruction.data.toString()).toBe("Test memo");
-    });
-
-    it("throws on empty memo", () => {
-      expect(() => createMemoInstruction("")).toThrow();
-    });
-  });
-
-  describe("getMemoStats", () => {
-    it("counts ASCII correctly", () => {
-      const stats = getMemoStats("Hello");
-      expect(stats.characters).toBe(5);
-      expect(stats.bytes).toBe(5);
-    });
-
-    it("counts Unicode correctly", () => {
-      const stats = getMemoStats("🎉");
-      expect(stats.characters).toBe(2); // Emoji is 2 JS characters
-      expect(stats.bytes).toBe(4); // But 4 UTF-8 bytes
-    });
-  });
-});
-```
-
-### Manual Testing
-
-1. **Enter a short message** - "Hello, Solana!"
-2. **Click "Write Memo"** - Approve with passkey
-3. **Wait for confirmation** - Toast appears
-4. **View on Solscan** - Click the link
-5. **Find your memo** - In the Instructions section
 
 ---
 
