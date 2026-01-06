@@ -97,7 +97,7 @@ const stakeAccountPubkey = await PublicKey.createWithSeed(
 // Result: Deterministic address, no extra signer needed!
 ```
 
-_Listing 4-1: Deriving a stake account address without a keypair_
+_Listing 3-1: Deriving a stake account address without a keypair_
 
 This code demonstrates the key insight that makes staking work with LazorKit. The `createWithSeed` function derives an address deterministically from three inputs:
 
@@ -221,7 +221,7 @@ export async function createStakeAccountInstructions(
   // Derive stake account address (no additional signer needed!)
 ```
 
-_Listing 4-2: The staking service structure with constants and helpers_
+_Listing 3-2: The staking service structure with constants and helpers_
 
 Let's examine the key parts of this service:
 
@@ -299,7 +299,7 @@ The timestamp-based seed ensures each stake account gets a unique address. If yo
 }
 ```
 
-_Listing 4-3: Creating stake account and delegation instructions_
+_Listing 3-3: Creating stake account and delegation instructions_
 
 This is the core staking logic. Let's examine each part:
 
@@ -890,3 +890,4 @@ Now that you can stake SOL, continue with:
 
 - [Tutorial 4: On-Chain Memos](./04-ON_CHAIN_MEMOS.md) - Simpler transaction type
 - [Tutorial 5: Subscription Payments](./05-SUBSCRIPTION_PAYMENTS.md) - Recurring payments
+

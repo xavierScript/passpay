@@ -233,7 +233,7 @@ function safeRemoveItem(key: string): boolean {
 }
 ```
 
-_Listing 7-1: Session service foundation with types and safe storage utilities_
+_Listing 6-1: Session service foundation with types and safe storage utilities_
 
 This foundation establishes the core patterns for session management. Let's examine the key design decisions:
 
@@ -377,7 +377,7 @@ export function clearSession(): boolean {
 }
 ```
 
-_Listing 7-2: Core session lifecycle functions_
+_Listing 6-2: Core session lifecycle functions_
 
 Let's break down the session lifecycle logic:
 
@@ -497,7 +497,7 @@ export function clearAllSessionData(keepPreferences: boolean = true): boolean {
 }
 ```
 
-_Listing 7-3: Session expiry and cleanup utilities_
+_Listing 6-3: Session expiry and cleanup utilities_
 
 These functions handle the session lifecycle after creation:
 
@@ -587,7 +587,7 @@ export function getUserPreferences(): UserPreferences {
 }
 ```
 
-_Listing 7-4: User preferences storage with sensible defaults_
+_Listing 6-4: User preferences storage with sensible defaults_
 
 ```typescript
 export function saveUserPreferences(preferences: UserPreferences): boolean {
@@ -696,7 +696,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
 }
 ```
 
-_Listing 7-5: useSession hook setup with configuration options_
+_Listing 6-5: useSession hook setup with configuration options_
 
 Let's examine the hook architecture:
 
@@ -826,7 +826,7 @@ const updatePreferences = useCallback(
 );
 ```
 
-_Listing 7-6: Hook methods for session management_
+_Listing 6-6: Hook methods for session management_
 
 All methods are wrapped in `useCallback` for performance:
 
@@ -973,7 +973,7 @@ return {
 };
 ```
 
-_Listing 7-7: Automatic effects for session restoration, wallet sync, and expiry monitoring_
+_Listing 6-7: Automatic effects for session restoration, wallet sync, and expiry monitoring_
 
 Let's examine each effect:
 
@@ -1066,7 +1066,7 @@ export function SessionExpiryWarning() {
 }
 ```
 
-_Listing 7-8: Session expiry warning component with extend/logout options_
+_Listing 6-8: Session expiry warning component with extend/logout options_
 
 ```typescript
 if (!isExpiringSoon) return null;
@@ -1105,7 +1105,7 @@ export default function Layout({ children }) {
 }
 ```
 
-_Listing 7-9: Adding session warning to dashboard layout_
+_Listing 6-9: Adding session warning to dashboard layout_
 
 ---
 
@@ -1165,7 +1165,7 @@ export function SettingsPanel() {
 }
 ```
 
-_Listing 7-10: Settings panel for managing user preferences_
+_Listing 6-10: Settings panel for managing user preferences_
 
 ```typescript
 onChange={(e) =>
@@ -1216,7 +1216,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 ```
 
-_Listing 7-11: Protected route component for authenticated pages_
+_Listing 6-11: Protected route component for authenticated pages_
 
 ```typescript
 useEffect(() => {
@@ -1265,7 +1265,7 @@ export default function DashboardLayout({
 }
 ```
 
-_Listing 7-12: Dashboard layout combining protection and session warnings_
+_Listing 6-12: Dashboard layout combining protection and session warnings_
 
 ### Logout Button
 
@@ -1296,7 +1296,7 @@ export function LogoutButton() {
 }
 ```
 
-_Listing 7-13: Logout button with session and wallet cleanup_
+_Listing 6-13: Logout button with session and wallet cleanup_
 
 ```typescript
 const handleLogout = () => {
@@ -1421,7 +1421,7 @@ export default function App() {
 }
 ```
 
-_Listing 7-14: Complete app integration with session management_
+_Listing 6-14: Complete app integration with session management_
 
 ---
 
@@ -1449,7 +1449,7 @@ function decryptSession(encrypted: string, key: string): SessionData | null {
 }
 ```
 
-_Listing 7-15: Optional session encryption for sensitive data_
+_Listing 6-15: Optional session encryption for sensitive data_
 
 2. **Session Fingerprinting**
 
@@ -1462,7 +1462,7 @@ interface EnhancedSessionData extends SessionData {
 }
 ```
 
-_Listing 7-16: Enhanced session data with device fingerprinting_
+_Listing 6-16: Enhanced session data with device fingerprinting_
 
 3. **Token Refresh Strategy**
 
@@ -1477,7 +1477,7 @@ function onUserActivity() {
 }
 ```
 
-_Listing 7-17: Sliding window session extension on activity_
+_Listing 6-17: Sliding window session extension on activity_
 
 ### Storage Limits
 
@@ -1502,7 +1502,7 @@ useEffect(() => {
 }, [refresh]);
 ```
 
-_Listing 7-18: Cross-tab session synchronization_
+_Listing 6-18: Cross-tab session synchronization_
 
 When a user logs out in one tab, this listener updates other tabs. The `storage` event only fires in other tabs, not the one that made the change.
 
@@ -1561,7 +1561,7 @@ describe("Session Service", () => {
 });
 ```
 
-_Listing 7-19: Unit tests for session service functions_
+_Listing 6-19: Unit tests for session service functions_
 
 ### Integration Tests
 
@@ -1601,7 +1601,7 @@ describe("useSession Hook", () => {
 });
 ```
 
-_Listing 7-20: Integration tests for useSession hook_
+_Listing 6-20: Integration tests for useSession hook_
 
 ---
 
@@ -1639,3 +1639,4 @@ You've learned how to:
 - [API Reference](../API_REFERENCE.md) - Complete hook and service documentation
 - [Architecture Overview](../ARCHITECTURE.md) - How PassPay Web is structured
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
+

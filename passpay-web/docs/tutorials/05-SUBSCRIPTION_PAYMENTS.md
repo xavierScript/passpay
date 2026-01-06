@@ -57,17 +57,6 @@ Subscription payments allow users to pay for access to premium features on a rec
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Why Use Crypto Subscriptions?
-
-| Benefit             | Description                        |
-| ------------------- | ---------------------------------- |
-| **No Credit Cards** | Users pay with SOL directly        |
-| **Lower Fees**      | Avoid 2-3% payment processor fees  |
-| **Global Access**   | Anyone with internet can subscribe |
-| **Passkey Auth**    | No passwords, no seed phrases      |
-| **Gasless UX**      | Fees covered by your paymaster     |
-| **Transparent**     | All payments verifiable on-chain   |
-
 ---
 
 ## Architecture Overview
@@ -172,7 +161,7 @@ export const RECIPIENT_WALLET = "55czFRi1njMSE7eJyDLx1R5yS1Bi5GiL2Ek4F1cZPLFx";
 export const SUBSCRIPTION_DURATION_DAYS = 30;
 ```
 
-_Listing 6-1: Subscription plan definitions and configuration_
+_Listing 5-1: Subscription plan definitions and configuration_
 
 This constants file defines the business logic for subscriptions. Let's examine the key decisions:
 
@@ -323,7 +312,7 @@ export function clearSubscription(wallet: string): void {
 }
 ```
 
-_Listing 6-2: Subscription storage service with localStorage_
+_Listing 5-2: Subscription storage service with localStorage_
 
 This service manages subscription persistence. Let's examine the core patterns:
 
@@ -450,7 +439,7 @@ export function useSubscription(): UseSubscriptionReturn {
 }
 ```
 
-_Listing 6-3: Subscription hook connecting payments to storage_
+_Listing 5-3: Subscription hook connecting payments to storage_
 
 This hook orchestrates the subscription flow. Let's trace the key parts:
 
@@ -669,7 +658,7 @@ export default function PricingPage() {
 }
 ```
 
-_Listing 6-4: Complete pricing page with subscription handling_
+_Listing 5-4: Complete pricing page with subscription handling_
 
 This page handles all subscription states. Let's examine the state machine:
 
@@ -785,7 +774,7 @@ export function SubscriptionGate({ children, fallback }: Props) {
 }
 ```
 
-_Listing 6-5: Subscription gate component for protected content_
+_Listing 5-5: Subscription gate component for protected content_
 
 The `SubscriptionGate` component protects premium content. Let's analyze its protection logic:
 
@@ -875,7 +864,7 @@ export default function PremiumPage() {
 }
 ```
 
-_Listing 6-6: Protected premium page using subscription gate_
+_Listing 5-6: Protected premium page using subscription gate_
 
 Using the gate is straightforward—wrap any content that requires subscription:
 
@@ -934,7 +923,7 @@ export function QuickSubscribe() {
 }
 ```
 
-_Listing 6-7: Minimal subscription button for quick integration_
+_Listing 5-7: Minimal subscription button for quick integration_
 
 This stripped-down example shows the core subscription logic without extra abstraction:
 
@@ -1021,74 +1010,6 @@ CREATE INDEX idx_expires ON subscriptions(expires_at);
 ```
 
 ---
-
-## Testing Your Implementation
-
-### Unit Tests
-
-```typescript
-// tests/services/subscription.test.ts
-import { describe, it, expect, beforeEach } from "vitest";
-import {
-  saveSubscription,
-  getSubscription,
-  hasActiveSubscription,
-  clearSubscription,
-} from "@/lib/services/subscription";
-
-describe("Subscription Service", () => {
-  const testWallet = "TestWallet123";
-
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  describe("saveSubscription", () => {
-    it("saves and returns subscription", () => {
-      const sub = saveSubscription(testWallet, "Pro", 0.05, "sig123");
-
-      expect(sub.wallet).toBe(testWallet);
-      expect(sub.plan).toBe("Pro");
-      expect(sub.amount).toBe(0.05);
-      expect(sub.signature).toBe("sig123");
-    });
-  });
-
-  describe("getSubscription", () => {
-    it("returns subscription for wallet", () => {
-      saveSubscription(testWallet, "Basic", 0.01, "sig1");
-
-      const sub = getSubscription(testWallet);
-      expect(sub?.plan).toBe("Basic");
-    });
-
-    it("returns null for unknown wallet", () => {
-      const sub = getSubscription("unknown");
-      expect(sub).toBeNull();
-    });
-  });
-
-  describe("hasActiveSubscription", () => {
-    it("returns true for active subscription", () => {
-      saveSubscription(testWallet, "Pro", 0.05, "sig2");
-      expect(hasActiveSubscription(testWallet)).toBe(true);
-    });
-
-    it("returns false for no subscription", () => {
-      expect(hasActiveSubscription("noWallet")).toBe(false);
-    });
-  });
-
-  describe("clearSubscription", () => {
-    it("removes subscription", () => {
-      saveSubscription(testWallet, "Pro", 0.05, "sig3");
-      clearSubscription(testWallet);
-
-      expect(getSubscription(testWallet)).toBeNull();
-    });
-  });
-});
-```
 
 ### Manual Testing
 

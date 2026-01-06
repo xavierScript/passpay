@@ -97,7 +97,7 @@ const stakeAccountPubkey = await PublicKey.createWithSeed(
 // Result: Deterministic address, no extra signer needed!
 ```
 
-_Listing 4-1: Deriving a stake account address without generating a keypair_
+_Listing 3-1: Deriving a stake account address without generating a keypair_
 
 This is the key insight that makes staking work with LazorKit. Let's understand what's happening:
 
@@ -194,7 +194,7 @@ export async function getStakeAccountRent(
 }
 ```
 
-_Listing 4-2: Staking service constants, types, and helper functions_
+_Listing 3-2: Staking service constants, types, and helper functions_
 
 This sets up the foundation for staking. Let's examine the key parts:
 
@@ -268,7 +268,7 @@ export async function createStakeAccountInstructions(
   );
 ```
 
-_Listing 4-3: The createStakeAccountInstructions function setup_
+_Listing 3-3: The createStakeAccountInstructions function setup_
 
 This function is the heart of the staking logic:
 
@@ -342,7 +342,7 @@ Address derivation is _deterministic_—the same inputs always produce the same 
 }
 ```
 
-_Listing 4-4: Creating and delegating the stake account_
+_Listing 3-4: Creating and delegating the stake account_
 
 Let's break down the critical parts:
 
@@ -1340,3 +1340,4 @@ You've completed all four LazorKit tutorials! You now have the knowledge to buil
 - 🌐 Switch to mainnet
 - 📖 Contribute to LazorKit documentation
 - 💬 Join the [LazorKit Telegram](https://t.me/lazorkit)
+

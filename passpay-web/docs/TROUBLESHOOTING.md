@@ -209,14 +209,7 @@ npm install process
 **Possible Causes & Solutions:**
 
 1. **Not using HTTPS:**
-   WebAuthn requires HTTPS. In development, use `localhost`:
-
-   ```bash
-   # This works (localhost is allowed)
-   npm run dev
-
-   # Visit http://localhost:3000
-   ```
+   WebAuthn requires HTTPS. In development, use HTTPS on`localhost`:
 
 2. **Browser doesn't support WebAuthn:**
    Check browser compatibility:
@@ -410,11 +403,10 @@ const retryTransaction = async (fn: () => Promise<string>, maxRetries = 3) => {
 
 ### ❌ "SecurityError: The operation is insecure"
 
-**Cause:** Not running on HTTPS or localhost.
+**Cause:** Not running on HTTPS.
 
 **Solution:**
 
-- Use `localhost` for development (not `127.0.0.1` or IP address)
 - Deploy to HTTPS for production
 
 ---
@@ -543,7 +535,7 @@ If you're still stuck:
 1. **Check the console** - Browser DevTools often have more details
 2. **Check network tab** - Look for failed RPC requests
 3. **Try a different browser** - Rule out browser-specific issues
-4. **Check LazorKit status** - Visit [status.lazorkit.com](https://status.lazorkit.com)
+4. **Try creating another passkey**
 
 ### Useful Debug Code
 

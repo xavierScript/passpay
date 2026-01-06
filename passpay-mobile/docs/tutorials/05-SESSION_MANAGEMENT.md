@@ -194,7 +194,7 @@ export interface UserPreferences {
 }
 ```
 
-_Listing 6-1: Session service foundation with types and storage keys_
+_Listing 5-1: Session service foundation with types and storage keys_
 
 This foundation establishes the core patterns for session management. Let's examine the key design decisions:
 
@@ -271,7 +271,7 @@ async function safeRemoveItem(key: string): Promise<boolean> {
 }
 ```
 
-_Listing 6-2: Safe AsyncStorage utilities with error handling_
+_Listing 5-2: Safe AsyncStorage utilities with error handling_
 
 The `safeGetItem`, `safeSetItem`, and `safeRemoveItem` wrappers add error handling. AsyncStorage can throw exceptions in edge cases (e.g., storage quota exceeded). Wrapping all access in try-catch prevents crashes and returns graceful fallbacks.
 
@@ -366,7 +366,7 @@ export async function clearSession(): Promise<boolean> {
 }
 ```
 
-_Listing 6-3: Core session lifecycle functions_
+_Listing 5-3: Core session lifecycle functions_
 
 Let's break down the session lifecycle logic:
 
@@ -461,7 +461,7 @@ export async function clearAllSessionData(
 }
 ```
 
-_Listing 6-4: Session expiry and cleanup utilities_
+_Listing 5-4: Session expiry and cleanup utilities_
 
 The `extendSession` function implements a common UX pattern: allowing users to "stay logged in" when their session is about to expire. The `clearAllSessionData` function's `keepPreferences` parameter enables two logout modes:
 
@@ -515,7 +515,7 @@ export async function getUserPreferences(): Promise<UserPreferences> {
 }
 ```
 
-_Listing 6-5: User preferences storage with sensible defaults_
+_Listing 5-5: User preferences storage with sensible defaults_
 
 The merge pattern (`{ ...current, ...preferences }`) enables partial updates. You can call `saveUserPreferences({ hapticFeedback: false })` without losing other preferences.
 
@@ -572,7 +572,7 @@ export interface UseSessionReturn {
 }
 ```
 
-_Listing 6-6: useSession hook interface with options and return types_
+_Listing 5-6: useSession hook interface with options and return types_
 
 The options interface makes the hook configurable. Default values (`autoRestore = true`, etc.) mean it works out-of-the-box while allowing customization.
 
@@ -634,7 +634,7 @@ export function useSession(options: UseSessionOptions = {}): UseSessionReturn {
 }
 ```
 
-_Listing 6-7: useSession hook setup with state and refresh function_
+_Listing 5-7: useSession hook setup with state and refresh function_
 
 We use `Promise.all` to fetch all session data in parallel, minimizing latency during restoration.
 
@@ -725,7 +725,7 @@ const updatePreferences = useCallback(
 );
 ```
 
-_Listing 6-8: Session management methods_
+_Listing 5-8: Session management methods_
 
 All methods update both AsyncStorage (via service functions) and React state—this ensures the UI immediately reflects changes.
 
@@ -780,7 +780,7 @@ useEffect(() => {
 }, [autoSync, isConnected, smartWalletPubkey, createNewSession, refresh]);
 ```
 
-_Listing 6-9: Auto-restore and wallet sync effects_
+_Listing 5-9: Auto-restore and wallet sync effects_
 
 The wallet sync effect creates a session when the wallet connects and handles wallet switching—if the user connects a different wallet, a new session is created.
 
@@ -825,7 +825,7 @@ useEffect(() => {
 }, [trackAppState, session, refresh]);
 ```
 
-_Listing 6-10: App state tracking for background/foreground transitions_
+_Listing 5-10: App state tracking for background/foreground transitions_
 
 This is mobile-specific! When the app comes to the foreground (`nextAppState === "active"`), we:
 
@@ -881,7 +881,7 @@ return {
 };
 ```
 
-_Listing 6-11: Expiry monitoring and hook return value_
+_Listing 5-11: Expiry monitoring and hook return value_
 
 ---
 
@@ -960,7 +960,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-_Listing 6-12: Session expiry warning component_
+_Listing 5-12: Session expiry warning component_
 
 ---
 
@@ -1023,7 +1023,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-_Listing 6-13: Settings screen for managing user preferences_
+_Listing 5-13: Settings screen for managing user preferences_
 
 ---
 
@@ -1048,7 +1048,7 @@ export default function RootLayout() {
 }
 ```
 
-_Listing 6-14: Root layout with session warning overlay_
+_Listing 5-14: Root layout with session warning overlay_
 
 ### Protected Screen Pattern
 
@@ -1088,7 +1088,7 @@ export default function DashboardScreen() {
 }
 ```
 
-_Listing 6-15: Protected dashboard screen with session checks_
+_Listing 5-15: Protected dashboard screen with session checks_
 
 ### Logout Button
 
@@ -1131,7 +1131,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-_Listing 6-16: Logout button with confirmation dialog_
+_Listing 5-16: Logout button with confirmation dialog_
 
 ---
 
@@ -1284,7 +1284,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-_Listing 6-17: Complete home screen with session integration_
+_Listing 5-17: Complete home screen with session integration_
 
 ---
 
@@ -1309,7 +1309,7 @@ await AsyncStorage.multiSet([
 ]);
 ```
 
-_Listing 6-18: Batch storage operations for better performance_
+_Listing 5-18: Batch storage operations for better performance_
 
 ### Biometric Lock (Advanced)
 
@@ -1324,7 +1324,7 @@ async function requireBiometricToExtend(): Promise<boolean> {
 }
 ```
 
-_Listing 6-19: Optional biometric authentication for session extension_
+_Listing 5-19: Optional biometric authentication for session extension_
 
 ---
 
@@ -1380,7 +1380,7 @@ describe("Session Service", () => {
 });
 ```
 
-_Listing 6-20: Unit tests for session service functions_
+_Listing 5-20: Unit tests for session service functions_
 
 ---
 
@@ -1421,3 +1421,4 @@ You've learned how to:
 - [API Reference](../API_REFERENCE.md) - Complete hook and service documentation
 - [Architecture Overview](../ARCHITECTURE.md) - How PassPay Mobile is structured
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
+

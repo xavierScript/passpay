@@ -31,44 +31,6 @@ Comprehensive documentation for integrating LazorKit SDK in Next.js web applicat
 
 ---
 
-## 🎯 What Makes This Documentation Special
-
-1. **Real Code Examples** - Every tutorial uses actual code from PassPay Web, not hypothetical snippets
-2. **Progressive Learning** - Start simple, build complexity gradually
-3. **Copy-Paste Ready** - All code blocks are tested and working
-4. **Visual Aids** - Architecture diagrams and flow charts
-5. **Production Patterns** - Learn best practices for real apps
-6. **Web-Focused** - Tailored for Next.js and browser environments
-
----
-
-## 🔗 Quick Links
-
-| Resource        | Link                                                                                  |
-| --------------- | ------------------------------------------------------------------------------------- |
-| LazorKit Docs   | [docs.lazorkit.com](https://docs.lazorkit.com/)                                       |
-| LazorKit GitHub | [github.com/lazor-kit/lazor-kit](https://github.com/lazor-kit/lazor-kit)              |
-| Solana Web3.js  | [solana-labs.github.io/solana-web3.js](https://solana-labs.github.io/solana-web3.js/) |
-| Next.js Docs    | [nextjs.org/docs](https://nextjs.org/docs)                                            |
-| Vercel          | [vercel.com](https://vercel.com)                                                      |
-
----
-
-## 🌐 Web vs Mobile
-
-This documentation is for the **Next.js web version** of PassPay. Key differences from the mobile version:
-
-| Aspect         | Mobile (Expo)                     | Web (Next.js)         |
-| -------------- | --------------------------------- | --------------------- |
-| SDK            | `@lazorkit/wallet-mobile-adapter` | `@lazorkit/wallet`    |
-| Polyfills      | Extensive (Buffer, crypto, URL)   | Minimal (Buffer only) |
-| Authentication | expo-web-browser + deep links     | Native WebAuthn       |
-| UI Framework   | React Native + StyleSheet         | React + Tailwind CSS  |
-| Routing        | Expo Router                       | Next.js App Router    |
-| Deployment     | App Store / Play Store            | Vercel / Any hosting  |
-
----
-
 ## 📝 License
 
 MIT © PassPay

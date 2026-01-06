@@ -108,7 +108,7 @@ export function createUnsignedMemoInstruction(
 }
 ```
 
-_Listing 5-1: The memo service with signed and unsigned instruction creation_
+_Listing 4-1: The memo service with signed and unsigned instruction creation_
 
 This service provides two ways to create memos. Let's understand the difference:
 
@@ -285,7 +285,7 @@ export default function MemoScreen() {
 }
 ```
 
-_Listing 5-2: The complete memo screen with UI and transaction logic_
+_Listing 4-2: The complete memo screen with UI and transaction logic_
 
 This screen combines UI and blockchain interaction. Let's examine the key parts:
 
@@ -373,7 +373,7 @@ export default function MemoScreen() {
 }
 ```
 
-_Listing 5-3: Simplified memo screen using custom hooks_
+_Listing 4-3: Simplified memo screen using custom hooks_
 
 Compare this to the previous implementation—it's dramatically simpler. Let's see what the hooks provide:
 
@@ -638,3 +638,4 @@ Apply this to any Solana program—SPL tokens, NFTs, DeFi, and more!
 - [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
 - [Tutorial 3: SOL Staking](./03-SOL_STAKING.md)
 - [API Reference](../API_REFERENCE.md)
+
