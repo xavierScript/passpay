@@ -8,6 +8,35 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 ---
 
+## 📸 Screenshots
+
+### Web Application
+
+<p align="center">
+  <img src="screenshots/web/connect%20screen.png" alt="Connect Screen" width="45%" />
+  <img src="screenshots/web/dashboard%20screen.png" alt="Dashboard" width="45%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/web/transfer%20screen.png" alt="Transfer Screen" width="45%" />
+  <img src="screenshots/web/staking%20screen.png" alt="Staking Screen" width="45%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/web/memo%20screen.png" alt="Memo Screen" width="45%" />
+  <img src="screenshots/web/subscription%20screen.png" alt="Subscription Screen" width="45%" />
+</p>
+
+### Mobile Application
+
+<p align="center">
+  <img src="screenshots/mobile/transfer%20screen.png" alt="Transfer Screen" width="30%" />
+  <img src="screenshots/mobile/staking%20screen.png" alt="Staking Screen" width="30%" />
+  <img src="screenshots/mobile/subscription%20screen.png" alt="Subscription Screen" width="30%" />
+</p>
+
+---
+
 ## ✨ Why This Project?
 
 | Challenge                            | Solution                                              |
