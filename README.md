@@ -12,6 +12,10 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 - **Web:** [Deployed on Vercel](https://passpay-tau.vercel.app/) _(Devnet)_
 
+## 📚 Blog Post
+
+- [Passkey Login & Smart Wallet Creation on Solana with Next.js and LazorKit — No More Seed Phrases!](https://dev.to/xavier_script/passkey-login-smart-wallet-creation-on-solana-with-nextjs-and-lazorkit-no-more-seed-phrases-1mbp)
+
 ---
 
 ## 📸 Screenshots
@@ -66,7 +70,7 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 | Platform                               | Framework             | Status      | Documentation                                  |
 | -------------------------------------- | --------------------- | ----------- | ---------------------------------------------- |
 | **[PassPay Web](./passpay-web)**       | Next.js 15 + React 19 | ✅ Complete | [6 Tutorials](./passpay-web/docs/tutorials)    |
-| **[PassPay Mobile](./passpay-mobile)** | React Native + Expo   | ✅ Complete | [6 Tutorials](./passpay-mobile/docs/tutorials) |
+| **[PassPay Mobile](./passpay-mobile)** | React Native + Expo   | ✅ Complete | [5 Tutorials](./passpay-mobile/docs/tutorials) |
 
 ### Features Demonstrated
 
@@ -189,8 +193,6 @@ Each platform has comprehensive documentation:
 | Architecture    | [View](./passpay-web/docs/ARCHITECTURE.md)    | [View](./passpay-mobile/docs/ARCHITECTURE.md)    |
 | API Reference   | [View](./passpay-web/docs/API_REFERENCE.md)   | [View](./passpay-mobile/docs/API_REFERENCE.md)   |
 | Troubleshooting | [View](./passpay-web/docs/TROUBLESHOOTING.md) | [View](./passpay-mobile/docs/TROUBLESHOOTING.md) |
-| Testing         | [View](./passpay-web/docs/TESTING.md)         | [View](./passpay-mobile/docs/TESTING.md)         |
-| Deployment      | [View](./passpay-web/docs/DEPLOYMENT.md)      | [View](./passpay-mobile/docs/DEPLOYMENT.md)      |
 
 ---
 
