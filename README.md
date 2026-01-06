@@ -8,6 +8,12 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 ---
 
+## 🌐 Live Demo
+
+- **Web:** [Deployed on Vercel](https://passpay-tau.vercel.app/) _(Devnet)_
+
+---
+
 ## 📸 Screenshots
 
 ### Web Application
@@ -205,12 +211,6 @@ Each platform has comprehensive documentation:
 - **Styling:** React Native StyleSheet
 - **Wallet:** LazorKit Mobile Adapter (`@lazorkit/wallet-mobile-adapter`)
 - **Blockchain:** Solana Web3.js
-
----
-
-## 🌐 Live Demo
-
-- **Web:** [Deployed on Vercel](https://passpay-tau.vercel.app/) _(Devnet)_
 
 ---
 
