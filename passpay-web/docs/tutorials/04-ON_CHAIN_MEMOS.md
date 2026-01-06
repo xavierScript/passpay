@@ -1,4 +1,4 @@
-# Tutorial 5: On-Chain Memos
+# Tutorial 4: On-Chain Memos
 
 **Time to complete: 15-20 minutes**
 
@@ -645,5 +645,5 @@ describe("Memo Service", () => {
 
 Now that you can write on-chain memos, continue with:
 
-- [Tutorial 6: Subscription Payments](./06-SUBSCRIPTION_PAYMENTS.md) - Recurring payment flows
+- [Tutorial 5: Subscription Payments](./05-SUBSCRIPTION_PAYMENTS.md) - Recurring payment flows
 - [API Reference](../API_REFERENCE.md) - Full hook documentation

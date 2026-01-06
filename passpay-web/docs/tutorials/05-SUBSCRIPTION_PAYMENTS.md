@@ -1,4 +1,4 @@
-# Tutorial 6: Subscription Payments
+# Tutorial 5: Subscription Payments
 
 **Time to complete: 25-30 minutes**
 
@@ -109,7 +109,6 @@ Subscription payments allow users to pay for access to premium features on a rec
 Before starting:
 
 - ✅ Completed [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- ✅ Completed [Tutorial 3: Reusable Hooks](./03-REUSABLE_HOOKS.md)
 - ✅ Have a connected wallet with SOL on Devnet
 - ✅ Understand React state management
 

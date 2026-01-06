@@ -43,7 +43,7 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 ---
 
-## 📚 Tutorials (13 Total)
+## 📚 Tutorials (11 Total)
 
 Each platform has comprehensive, step-by-step tutorials with:
 
@@ -58,11 +58,10 @@ Each platform has comprehensive, step-by-step tutorials with:
 | --- | --------------------------------------------------------------------------------- | ---------------------------------------- |
 | 1   | [Passkey Wallet](./passpay-web/docs/tutorials/01-PASSKEY_WALLET.md)               | Connect wallets with WebAuthn biometrics |
 | 2   | [Gasless Transactions](./passpay-web/docs/tutorials/02-GASLESS_TRANSACTIONS.md)   | Paymaster-sponsored transfers            |
-| 3   | [Reusable Hooks](./passpay-web/docs/tutorials/03-REUSABLE_HOOKS.md)               | Custom React hooks patterns              |
-| 4   | [SOL Staking](./passpay-web/docs/tutorials/04-SOL_STAKING.md)                     | Multi-instruction staking                |
-| 5   | [On-Chain Memos](./passpay-web/docs/tutorials/05-ON_CHAIN_MEMOS.md)               | Permanent blockchain messages            |
-| 6   | [Subscription Payments](./passpay-web/docs/tutorials/06-SUBSCRIPTION_PAYMENTS.md) | Recurring payment flows                  |
-| 7   | [Session Management](./passpay-web/docs/tutorials/07-SESSION_MANAGEMENT.md)       | Persist sessions with localStorage       |
+| 3   | [SOL Staking](./passpay-web/docs/tutorials/03-SOL_STAKING.md)                     | Multi-instruction staking                |
+| 4   | [On-Chain Memos](./passpay-web/docs/tutorials/04-ON_CHAIN_MEMOS.md)               | Permanent blockchain messages            |
+| 5   | [Subscription Payments](./passpay-web/docs/tutorials/05-SUBSCRIPTION_PAYMENTS.md) | Recurring payment flows                  |
+| 6   | [Session Management](./passpay-web/docs/tutorials/06-SESSION_MANAGEMENT.md)       | Persist sessions with localStorage       |
 
 ### Mobile Tutorials
 
@@ -70,10 +69,9 @@ Each platform has comprehensive, step-by-step tutorials with:
 | --- | ---------------------------------------------------------------------------------- | ----------------------------------- |
 | 1   | [Passkey Wallet](./passpay-mobile/docs/tutorials/01-PASSKEY_WALLET.md)             | Connect wallets with FaceID/TouchID |
 | 2   | [Gasless Transactions](./passpay-mobile/docs/tutorials/02-GASLESS_TRANSACTIONS.md) | Paymaster-sponsored transfers       |
-| 3   | [Reusable Hooks](./passpay-mobile/docs/tutorials/03-REUSABLE_HOOKS.md)             | Custom React hooks patterns         |
-| 4   | [SOL Staking](./passpay-mobile/docs/tutorials/04-SOL_STAKING.md)                   | Multi-instruction staking           |
-| 5   | [On-Chain Memos](./passpay-mobile/docs/tutorials/05-ON_CHAIN_MEMOS.md)             | Permanent blockchain messages       |
-| 6   | [Session Management](./passpay-mobile/docs/tutorials/06-SESSION_MANAGEMENT.md)     | Persist sessions with AsyncStorage  |
+| 3   | [SOL Staking](./passpay-mobile/docs/tutorials/03-SOL_STAKING.md)                   | Multi-instruction staking           |
+| 4   | [On-Chain Memos](./passpay-mobile/docs/tutorials/04-ON_CHAIN_MEMOS.md)             | Permanent blockchain messages       |
+| 5   | [Session Management](./passpay-mobile/docs/tutorials/05-SESSION_MANAGEMENT.md)     | Persist sessions with AsyncStorage  |
 
 ---
 

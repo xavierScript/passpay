@@ -36,14 +36,14 @@ npm run dev
 
 Step-by-step guides for every feature:
 
-| #   | Tutorial                                                              | Description                     |
-| --- | --------------------------------------------------------------------- | ------------------------------- |
-| 1   | [Passkey Wallet](./docs/tutorials/01-PASSKEY_WALLET.md)               | Connect wallets with biometrics |
-| 2   | [Gasless Transactions](./docs/tutorials/02-GASLESS_TRANSACTIONS.md)   | Paymaster-sponsored transfers   |
-| 3   | [Reusable Hooks](./docs/tutorials/03-REUSABLE_HOOKS.md)               | Custom React hooks pattern      |
-| 4   | [SOL Staking](./docs/tutorials/04-SOL_STAKING.md)                     | Multi-instruction staking       |
-| 5   | [On-Chain Memos](./docs/tutorials/05-ON_CHAIN_MEMOS.md)               | Permanent blockchain messages   |
-| 6   | [Subscription Payments](./docs/tutorials/06-SUBSCRIPTION_PAYMENTS.md) | Recurring payment flows         |
+| #   | Tutorial                                                              | Description                        |
+| --- | --------------------------------------------------------------------- | ---------------------------------- |
+| 1   | [Passkey Wallet](./docs/tutorials/01-PASSKEY_WALLET.md)               | Connect wallets with biometrics    |
+| 2   | [Gasless Transactions](./docs/tutorials/02-GASLESS_TRANSACTIONS.md)   | Paymaster-sponsored transfers      |
+| 3   | [SOL Staking](./docs/tutorials/03-SOL_STAKING.md)                     | Multi-instruction staking          |
+| 4   | [On-Chain Memos](./docs/tutorials/04-ON_CHAIN_MEMOS.md)               | Permanent blockchain messages      |
+| 5   | [Subscription Payments](./docs/tutorials/05-SUBSCRIPTION_PAYMENTS.md) | Recurring payment flows            |
+| 6   | [Session Management](./docs/tutorials/06-SESSION_MANAGEMENT.md)       | Persist sessions with localStorage |
 
 ---
 

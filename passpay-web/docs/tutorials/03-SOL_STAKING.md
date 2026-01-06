@@ -1,4 +1,4 @@
-# Tutorial 4: Native SOL Staking
+# Tutorial 3: Native SOL Staking
 
 **Time to complete: 30-35 minutes**
 
@@ -132,7 +132,6 @@ This approach:
 Before starting:
 
 - ✅ Completed [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- ✅ Completed [Tutorial 3: Reusable Hooks](./03-REUSABLE_HOOKS.md)
 - ✅ Have a connected wallet with 0.5+ SOL on Devnet
 - ✅ Understand multi-instruction transactions
 
@@ -889,5 +888,5 @@ Both in a single atomic transaction!
 
 Now that you can stake SOL, continue with:
 
-- [Tutorial 5: On-Chain Memos](./05-ON_CHAIN_MEMOS.md) - Simpler transaction type
-- [Tutorial 6: Subscription Payments](./06-SUBSCRIPTION_PAYMENTS.md) - Recurring payments
+- [Tutorial 4: On-Chain Memos](./04-ON_CHAIN_MEMOS.md) - Simpler transaction type
+- [Tutorial 5: Subscription Payments](./05-SUBSCRIPTION_PAYMENTS.md) - Recurring payments

@@ -119,7 +119,7 @@ The configuration object contains three essential URLs:
 
 - `rpcUrl`: The Solana RPC endpoint for blockchain communication (we use Devnet for testing in this case)
 - `portalUrl`: LazorKit's authentication portal where passkey ceremonies happen
-- `paymasterUrl`: The service that sponsors gas fees for gasless transactions. 
+- `paymasterUrl`: The service that sponsors gas fees for gasless transactions.
 
 Moving on to the next line, we have:
 
@@ -536,4 +536,4 @@ export default function LoginPage() {
 Now that you have wallet connection working, continue with:
 
 - [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md) - Send SOL without gas fees
-- [Tutorial 3: Building Reusable Hooks](./03-REUSABLE_HOOKS.md) - Abstract patterns into hooks
+- [Tutorial 3: Native SOL Staking](./03-SOL_STAKING.md) - Complex multi-instruction transactions

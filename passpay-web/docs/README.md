@@ -13,11 +13,10 @@ Comprehensive documentation for integrating LazorKit SDK in Next.js web applicat
 
 - [**Tutorial 1: Passkey Wallet Creation**](./tutorials/01-PASSKEY_WALLET.md) - Create passwordless wallets with biometrics
 - [**Tutorial 2: Gasless Transactions**](./tutorials/02-GASLESS_TRANSACTIONS.md) - Send SOL without paying gas fees
-- [**Tutorial 3: Building Reusable Hooks**](./tutorials/03-REUSABLE_HOOKS.md) - Abstract LazorKit patterns into custom hooks
-- [**Tutorial 4: Native SOL Staking**](./tutorials/04-SOL_STAKING.md) - Stake SOL with multi-instruction transactions
-- [**Tutorial 5: On-Chain Memos**](./tutorials/05-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
-- [**Tutorial 6: Subscription Payments**](./tutorials/06-SUBSCRIPTION_PAYMENTS.md) - Build Netflix-style recurring payments
-- [**Tutorial 7: Session Management**](./tutorials/07-SESSION_MANAGEMENT.md) - Persist user sessions with local storage
+- [**Tutorial 3: Native SOL Staking**](./tutorials/03-SOL_STAKING.md) - Stake SOL with multi-instruction transactions
+- [**Tutorial 4: On-Chain Memos**](./tutorials/04-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
+- [**Tutorial 5: Subscription Payments**](./tutorials/05-SUBSCRIPTION_PAYMENTS.md) - Build Netflix-style recurring payments
+- [**Tutorial 6: Session Management**](./tutorials/06-SESSION_MANAGEMENT.md) - Persist user sessions with local storage
 
 ### Reference
 

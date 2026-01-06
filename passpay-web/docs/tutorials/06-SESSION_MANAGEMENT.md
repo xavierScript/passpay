@@ -1,4 +1,4 @@
-# Tutorial 7: Session Management
+# Tutorial 6: Session Management
 
 **Time to complete: 15-20 minutes**
 
@@ -1630,7 +1630,7 @@ You've learned how to:
 
 - Explore [Tutorial 1: Passkey Wallet](./01-PASSKEY_WALLET.md) for wallet creation
 - Learn about [Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- Build [Subscription Payments](./06-SUBSCRIPTION_PAYMENTS.md) with gated content
+- Build [Subscription Payments](./05-SUBSCRIPTION_PAYMENTS.md) with gated content
 
 ---
 

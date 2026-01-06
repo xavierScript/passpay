@@ -67,10 +67,10 @@ Now that you have the app running, dive into the tutorials:
 | -------------------------------------------------------------- | -------------------------------------- |
 | [Passkey Wallet](./tutorials/01-PASSKEY_WALLET.md)             | How passkey authentication works       |
 | [Gasless Transactions](./tutorials/02-GASLESS_TRANSACTIONS.md) | Send SOL without gas fees              |
-| [Reusable Hooks](./tutorials/03-REUSABLE_HOOKS.md)             | Build production-ready patterns        |
-| [SOL Staking](./tutorials/04-SOL_STAKING.md)                   | Complex multi-instruction transactions |
-| [On-Chain Memos](./tutorials/05-ON_CHAIN_MEMOS.md)             | Store permanent messages on Solana     |
-| [Subscriptions](./tutorials/06-SUBSCRIPTION_PAYMENTS.md)       | Build recurring payment flows          |
+| [SOL Staking](./tutorials/03-SOL_STAKING.md)                   | Complex multi-instruction transactions |
+| [On-Chain Memos](./tutorials/04-ON_CHAIN_MEMOS.md)             | Store permanent messages on Solana     |
+| [Subscriptions](./tutorials/05-SUBSCRIPTION_PAYMENTS.md)       | Build recurring payment flows          |
+| [Session Management](./tutorials/06-SESSION_MANAGEMENT.md)     | Persist sessions with localStorage     |
 
 ---
 

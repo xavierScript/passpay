@@ -668,5 +668,5 @@ Notice that:
 
 Now that you can send gasless transactions, continue with:
 
-- [Tutorial 3: Building Reusable Hooks](./03-REUSABLE_HOOKS.md) - Abstract these patterns
-- [Tutorial 4: Native SOL Staking](./04-SOL_STAKING.md) - Complex multi-instruction transactions
+- [Tutorial 3: Native SOL Staking](./03-SOL_STAKING.md) - Complex multi-instruction transactions
+- [Tutorial 4: On-Chain Memos](./04-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
