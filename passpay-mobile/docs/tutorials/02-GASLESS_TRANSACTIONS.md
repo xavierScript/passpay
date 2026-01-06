@@ -17,8 +17,7 @@ Learn how to send SOL transactions without requiring users to pay gas fees. Lazo
 7. [Step 4: Handle Success and Errors](#step-4-handle-success-and-errors)
 8. [Step 5: Add Transaction History](#step-5-add-transaction-history)
 9. [Complete Code Example](#complete-code-example)
-10. [Advanced: Custom Transaction Options](#advanced-custom-transaction-options)
-11. [Testing Your Implementation](#testing-your-implementation)
+10. [Testing Your Implementation](#testing-your-implementation)
 
 ---
 

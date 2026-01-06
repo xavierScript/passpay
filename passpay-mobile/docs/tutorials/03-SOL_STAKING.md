@@ -498,8 +498,6 @@ Instruction 3: Delegate
 
 All execute atomically: Either ALL succeed or NONE do.
 
-````
-
 ---
 
 ## Step 2: Build the Staking Screen
@@ -606,7 +604,7 @@ export default function StakeScreen() {
 
   // ... continue with handleStake and render
 }
-````
+```
 
 _Listing 3-6: Staking screen setup with hooks and state_`
 
