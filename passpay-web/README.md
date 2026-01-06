@@ -111,4 +111,3 @@ MIT
 
 ---
 
-Built with ❤️ for the LazorKit Bounty | January 2026
