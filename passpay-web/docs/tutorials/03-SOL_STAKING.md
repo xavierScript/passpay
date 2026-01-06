@@ -884,10 +884,29 @@ Both in a single atomic transaction!
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(dashboard)/stake/page.tsx](<../../app/(dashboard)/stake/page.tsx>).
+
+```
+📁 Key Files
+├── app/(dashboard)/stake/page.tsx           ← Staking page component
+├── features/staking/
+│   ├── services/staking.service.ts          ← Stake instruction builders
+│   ├── hooks/
+│   │   └── useStaking.ts                    ← Staking logic hook
+│   └── components/
+│       ├── StakeForm.tsx                    ← Staking form
+│       └── StakeAccountList.tsx             ← Account display
+└── lib/services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 Now that you can stake SOL, continue with:
 
 - [Tutorial 4: On-Chain Memos](./04-ON_CHAIN_MEMOS.md) - Simpler transaction type
 - [Tutorial 5: Subscription Payments](./05-SUBSCRIPTION_PAYMENTS.md) - Recurring payments
-

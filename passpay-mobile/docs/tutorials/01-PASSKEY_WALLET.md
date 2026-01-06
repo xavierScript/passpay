@@ -802,6 +802,22 @@ Passkeys require biometric hardware:
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/welcome.tsx](../../app/welcome.tsx).
+
+```
+📁 Key Files
+├── app/welcome.tsx                          ← Welcome/connect screen
+├── app/(tabs)/_layout.tsx                   ← Wallet provider setup
+├── hooks/
+│   └── use-wallet-guard.ts                  ← Connection helper hook
+└── components/common/
+    └── Logo.tsx                             ← UI components
+```
+
+---
+
 ## 🎉 What You've Learned
 
 - ✅ How passkeys replace seed phrases

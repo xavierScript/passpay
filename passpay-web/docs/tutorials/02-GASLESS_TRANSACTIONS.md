@@ -664,6 +664,26 @@ Notice that:
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(dashboard)/transfer/page.tsx](<../../app/(dashboard)/transfer/page.tsx>).
+
+```
+📁 Key Files
+├── app/(dashboard)/transfer/page.tsx       ← Transfer page component
+├── features/transfer/
+│   ├── hooks/
+│   │   └── useTransfer.ts                   ← Transfer logic hook
+│   └── components/
+│       └── TransferForm.tsx                 ← Form component
+├── hooks/
+│   └── useTransaction.ts                    ← Transaction hook
+└── lib/services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 Now that you can send gasless transactions, continue with:

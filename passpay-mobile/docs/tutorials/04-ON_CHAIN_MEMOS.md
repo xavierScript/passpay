@@ -1,6 +1,6 @@
 # 📝 Tutorial 4: On-Chain Memos
 
-Store permanent messages on the Solana blockchain using LazorKit.
+Store permanent messages on the Solana blockchain using LazorKit and the Solana Memo Program.
 
 ---
 
@@ -405,8 +405,6 @@ The `useLazorkitTransaction` hook manages all transaction complexity:
 
 Your feature code focuses on what makes it unique—the memo content—while the hooks handle the common patterns.
 
-````
-
 **Benefits of the hook approach:**
 
 - Automatic loading state management
@@ -427,7 +425,7 @@ const openExplorer = (signature: string) => {
   const url = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
   Linking.openURL(url);
 };
-````
+```
 
 On the explorer, you'll see:
 
@@ -593,7 +591,7 @@ export function validateMemo(message: string): {
 
 ## Complete Example
 
-See the full implementation in [app/(tabs)/memo.tsx](<../../app/(tabs)/memo.tsx>).
+See the full implementation on PassPay in [app/(tabs)/memo.tsx](<../../app/(tabs)/memo.tsx>).
 
 ```
 📁 Key Files
@@ -638,4 +636,3 @@ Apply this to any Solana program—SPL tokens, NFTs, DeFi, and more!
 - [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
 - [Tutorial 3: SOL Staking](./03-SOL_STAKING.md)
 - [API Reference](../API_REFERENCE.md)
-

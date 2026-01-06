@@ -1626,6 +1626,27 @@ You've learned how to:
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in session-related components.
+
+```
+📁 Key Files
+├── features/session/
+│   ├── hooks/
+│   │   └── useSessionWallet.ts              ← Session management hook
+│   ├── components/
+│   │   └── SessionControls.tsx              ← Session UI controls
+│   └── services/
+│       └── session.service.ts               ← Session key helpers
+├── hooks/
+│   └── useTransaction.ts                    ← Transaction hook
+└── lib/services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 - Explore [Tutorial 1: Passkey Wallet](./01-PASSKEY_WALLET.md) for wallet creation
@@ -1639,4 +1660,3 @@ You've learned how to:
 - [API Reference](../API_REFERENCE.md) - Complete hook and service documentation
 - [Architecture Overview](../ARCHITECTURE.md) - How PassPay Web is structured
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
-

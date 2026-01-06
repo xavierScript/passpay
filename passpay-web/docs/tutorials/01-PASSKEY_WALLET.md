@@ -531,6 +531,24 @@ export default function LoginPage() {
                         └─────────────┘
 ```
 
+## Complete Example
+
+See the full implementation on PassPay in [app/page.tsx](../../app/page.tsx).
+
+```
+📁 Key Files
+├── app/
+│   ├── page.tsx                             ← Landing/connect page
+│   ├── layout.tsx                           ← Root layout
+│   └── providers.tsx                        ← Wallet provider setup
+├── components/
+│   └── WalletConnect.tsx                    ← Connect button component
+└── hooks/
+    └── useWallet.ts                         ← Wallet state hook
+```
+
+---
+
 ## Next Steps
 
 Now that you have wallet connection working, continue with:

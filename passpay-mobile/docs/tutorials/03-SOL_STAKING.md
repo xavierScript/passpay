@@ -1316,6 +1316,25 @@ _Listing 3-11: Withdrawing from a deactivated stake account_
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(tabs)/stake.tsx](<../../app/(tabs)/stake.tsx>).
+
+```
+📁 Key Files
+├── app/(tabs)/stake.tsx                     ← Staking screen component
+├── features/staking/
+│   ├── services/staking.service.ts          ← Stake instruction builders
+│   └── styles/staking.styles.ts             ← Styling
+├── hooks/
+│   ├── use-lazorkit-transaction.ts          ← Transaction hook
+│   └── use-sol-balance.ts                   ← Balance fetching
+└── services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## 🎉 What You've Learned
 
 - ✅ How Solana native staking works

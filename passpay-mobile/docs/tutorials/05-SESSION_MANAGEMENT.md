@@ -1408,6 +1408,25 @@ You've learned how to:
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in session-related hooks.
+
+```
+📁 Key Files
+├── features/session/
+│   ├── hooks/
+│   │   └── use-session-wallet.ts            ← Session management hook
+│   └── services/
+│       └── session.service.ts               ← Session key helpers
+├── hooks/
+│   └── use-lazorkit-transaction.ts          ← Transaction hook
+└── services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 - Explore [Tutorial 1: Passkey Wallet](./01-PASSKEY_WALLET.md) for wallet creation
@@ -1421,4 +1440,3 @@ You've learned how to:
 - [API Reference](../API_REFERENCE.md) - Complete hook and service documentation
 - [Architecture Overview](../ARCHITECTURE.md) - How PassPay Mobile is structured
 - [Troubleshooting](../TROUBLESHOOTING.md) - Common issues and solutions
-

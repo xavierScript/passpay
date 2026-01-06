@@ -488,6 +488,26 @@ export function MemoWriter() {
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(dashboard)/memo/page.tsx](<../../app/(dashboard)/memo/page.tsx>).
+
+```
+📁 Key Files
+├── app/(dashboard)/memo/page.tsx            ← Memo page component
+├── features/memo/
+│   ├── services/memo.service.ts             ← Memo instruction builder
+│   └── components/
+│       └── MemoForm.tsx                     ← Form component
+├── hooks/
+│   ├── useTransaction.ts                    ← Transaction hook
+│   └── useTransactionHistory.ts             ← History tracking
+└── lib/services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 Now that you can write on-chain memos, continue with:

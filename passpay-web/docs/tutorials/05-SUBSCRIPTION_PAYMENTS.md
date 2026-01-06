@@ -1022,6 +1022,28 @@ CREATE INDEX idx_expires ON subscriptions(expires_at);
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(dashboard)/pricing/page.tsx](<../../app/(dashboard)/pricing/page.tsx>).
+
+```
+📁 Key Files
+├── app/(dashboard)/pricing/page.tsx         ← Pricing page component
+├── features/subscription/
+│   ├── hooks/
+│   │   └── useSubscription.ts               ← Subscription logic hook
+│   ├── components/
+│   │   ├── PricingCard.tsx                  ← Plan display card
+│   │   └── SubscriptionGate.tsx             ← Access control
+│   └── services/
+│       └── subscription.service.ts          ← Subscription storage
+└── lib/
+    ├── constants.ts                         ← Plan definitions
+    └── services/rpc.ts                      ← Connection setup
+```
+
+---
+
 ## Next Steps
 
 Congratulations! You've learned how to build a complete subscription system.

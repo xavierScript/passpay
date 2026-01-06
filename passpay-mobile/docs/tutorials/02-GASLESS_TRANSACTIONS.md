@@ -1050,6 +1050,25 @@ const styles = StyleSheet.create({
 
 ---
 
+## Complete Example
+
+See the full implementation on PassPay in [app/(tabs)/transfer.tsx](<../../app/(tabs)/transfer.tsx>).
+
+```
+📁 Key Files
+├── app/(tabs)/transfer.tsx                  ← Transfer screen component
+├── features/transfer/
+│   └── styles/transfer.styles.ts            ← Styling
+├── hooks/
+│   ├── use-lazorkit-transaction.ts          ← Transaction hook
+│   ├── use-transaction-history.ts           ← History tracking
+│   └── use-sol-balance.ts                   ← Balance fetching
+└── services/
+    └── rpc.ts                               ← Connection setup
+```
+
+---
+
 ## 🎉 What You've Learned
 
 - ✅ How gasless transactions work with the paymaster
