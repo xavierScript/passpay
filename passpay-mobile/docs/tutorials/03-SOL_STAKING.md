@@ -1,4 +1,4 @@
-# Tutorial 4: Native SOL Staking
+# Tutorial 3: Native SOL Staking
 
 **Time to complete: 30-35 minutes**
 
@@ -132,7 +132,6 @@ This approach:
 Before starting:
 
 - ✅ Completed [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- ✅ Completed [Tutorial 3: Reusable Hooks](./03-REUSABLE_HOOKS.md)
 - ✅ Have a connected wallet with 0.5+ SOL on Devnet
 - ✅ Understand multi-instruction transactions
 
@@ -1332,8 +1331,7 @@ You've completed all four LazorKit tutorials! You now have the knowledge to buil
 | -------- | ----------------- | ------------------------ |
 | 1        | Passkey Wallet    | WebAuthn + Smart Wallets |
 | 2        | Gasless Transfers | Paymaster Integration    |
-| 3        | Reusable Hooks    | Production Patterns      |
-| 4        | SOL Staking       | Multi-instruction Txs    |
+| 3        | SOL Staking       | Multi-instruction Txs    |
 
 ### Next Steps
 

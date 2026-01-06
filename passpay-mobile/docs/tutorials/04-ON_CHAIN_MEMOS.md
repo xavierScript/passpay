@@ -1,4 +1,4 @@
-# 📝 Tutorial 5: On-Chain Memos
+# 📝 Tutorial 4: On-Chain Memos
 
 Store permanent messages on the Solana blockchain using LazorKit.
 
@@ -593,7 +593,7 @@ export function validateMemo(message: string): {
 
 ## Complete Example
 
-See the full implementation in [app/(tabs)/memo.tsx](../../app/(tabs)/memo.tsx).
+See the full implementation in [app/(tabs)/memo.tsx](<../../app/(tabs)/memo.tsx>).
 
 ```
 📁 Key Files
@@ -636,6 +636,5 @@ Apply this to any Solana program—SPL tokens, NFTs, DeFi, and more!
 
 - [Tutorial 1: Passkey Wallet](./01-PASSKEY_WALLET.md)
 - [Tutorial 2: Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- [Tutorial 3: Reusable Hooks](./03-REUSABLE_HOOKS.md)
-- [Tutorial 4: SOL Staking](./04-SOL_STAKING.md)
+- [Tutorial 3: SOL Staking](./03-SOL_STAKING.md)
 - [API Reference](../API_REFERENCE.md)

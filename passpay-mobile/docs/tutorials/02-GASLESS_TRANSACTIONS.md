@@ -1114,4 +1114,6 @@ transactionOptions: {
 
 ## Next Steps
 
-Continue to [Tutorial 3: Reusable Hooks](./03-REUSABLE_HOOKS.md) to learn how to abstract these patterns into production-ready custom hooks!
+## Next Steps
+
+Continue to [Tutorial 3: Native SOL Staking](./03-SOL_STAKING.md) to learn how to create complex multi-instruction transactions with LazorKit!

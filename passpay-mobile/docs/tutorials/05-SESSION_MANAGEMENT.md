@@ -1,4 +1,4 @@
-# 🔐 Tutorial 6: Session Management
+# 🔐 Tutorial 5: Session Management
 
 **Time to complete: 15-20 minutes**
 
@@ -1412,7 +1412,7 @@ You've learned how to:
 
 - Explore [Tutorial 1: Passkey Wallet](./01-PASSKEY_WALLET.md) for wallet creation
 - Learn about [Gasless Transactions](./02-GASLESS_TRANSACTIONS.md)
-- Build [On-Chain Memos](./05-ON_CHAIN_MEMOS.md) with permanent storage
+- Build [On-Chain Memos](./04-ON_CHAIN_MEMOS.md) with permanent storage
 
 ---
 
