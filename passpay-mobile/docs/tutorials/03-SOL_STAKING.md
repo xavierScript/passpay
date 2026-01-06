@@ -378,98 +378,98 @@ instructions.push(...createAccountInstruction.instructions);
 
 Note the spread operator—`StakeProgram.createAccountWithSeed` returns an object containing an array of instructions. We spread them into our flat array.
 
-/\*\*
-
-- Get all stake accounts owned by a wallet
-  \*/
-  export async function getStakeAccounts(
+```typescript
+/**
+ * Get all stake accounts owned by a wallet
+ */
+export async function getStakeAccounts(
   connection: Connection,
   walletPubkey: PublicKey
-  ): Promise<StakeAccountInfo[]> {
+): Promise<StakeAccountInfo[]> {
   try {
-  // Get all stake accounts where we're the withdrawer
-  const accounts = await connection.getParsedProgramAccounts(
-  StakeProgram.programId,
-  {
-  filters: [
-  // Filter by stake account size
-  { dataSize: 200 },
-  // Filter by withdrawer (our wallet)
-  {
-  memcmp: {
-  offset: 44, // Withdrawer pubkey offset
-  bytes: walletPubkey.toBase58(),
-  },
-  },
-  ],
-  }
-  );
+    // Get all stake accounts where we're the withdrawer
+    const accounts = await connection.getParsedProgramAccounts(
+      StakeProgram.programId,
+      {
+        filters: [
+          // Filter by stake account size
+          { dataSize: 200 },
+          // Filter by withdrawer (our wallet)
+          {
+            memcmp: {
+              offset: 44, // Withdrawer pubkey offset
+              bytes: walletPubkey.toBase58(),
+            },
+          },
+        ],
+      }
+    );
 
-      return accounts.map((account) => {
-        const data = account.account.data as any;
-        const parsed = data.parsed?.info;
+    return accounts.map((account) => {
+      const data = account.account.data as any;
+      const parsed = data.parsed?.info;
 
-        let state: StakeAccountInfo["state"] = "inactive";
-        if (parsed?.stake?.delegation) {
-          const activation = parsed.stake.delegation.activationEpoch;
-          const deactivation = parsed.stake.delegation.deactivationEpoch;
+      let state: StakeAccountInfo["state"] = "inactive";
+      if (parsed?.stake?.delegation) {
+        const activation = parsed.stake.delegation.activationEpoch;
+        const deactivation = parsed.stake.delegation.deactivationEpoch;
 
-          if (deactivation !== "18446744073709551615") {
-            state = "deactivating";
-          } else if (activation !== "0") {
-            state = "active";
-          } else {
-            state = "activating";
-          }
+        if (deactivation !== "18446744073709551615") {
+          state = "deactivating";
+        } else if (activation !== "0") {
+          state = "active";
+        } else {
+          state = "activating";
         }
+      }
 
-        return {
-          address: account.pubkey.toBase58(),
-          lamports: account.account.lamports,
-          state,
-          validator: parsed?.stake?.delegation?.voter,
-        };
-      });
-
+      return {
+        address: account.pubkey.toBase58(),
+        lamports: account.account.lamports,
+        state,
+        validator: parsed?.stake?.delegation?.voter,
+      };
+    });
   } catch (error) {
-  console.error("Error fetching stake accounts:", error);
-  return [];
+    console.error("Error fetching stake accounts:", error);
+    return [];
   }
-  }
+}
 
-/\*\*
-
-- Create instruction to deactivate a stake account
-  \*/
-  export function createDeactivateInstruction(
+/**
+ * Create instruction to deactivate a stake account
+ */
+export function createDeactivateInstruction(
   stakeAccountPubkey: PublicKey,
   authorizedPubkey: PublicKey
-  ): TransactionInstruction[] {
+): TransactionInstruction[] {
   const deactivate = StakeProgram.deactivate({
-  stakePubkey: stakeAccountPubkey,
-  authorizedPubkey,
+    stakePubkey: stakeAccountPubkey,
+    authorizedPubkey,
   });
   return deactivate.instructions;
-  }
+}
 
-/\*\*
-
-- Create instruction to withdraw from a deactivated stake account
-  \*/
-  export function createWithdrawInstruction(
+/**
+ * Create instruction to withdraw from a deactivated stake account
+ */
+export function createWithdrawInstruction(
   stakeAccountPubkey: PublicKey,
   withdrawerPubkey: PublicKey,
   toPubkey: PublicKey,
   lamports: number
-  ): TransactionInstruction[] {
+): TransactionInstruction[] {
   const withdraw = StakeProgram.withdraw({
-  stakePubkey: stakeAccountPubkey,
-  authorizedPubkey: withdrawerPubkey,
-  toPubkey,
-  lamports,
+    stakePubkey: stakeAccountPubkey,
+    authorizedPubkey: withdrawerPubkey,
+    toPubkey,
+    lamports,
   });
   return withdraw.instructions;
-  }
+}
+```
+
+_Listing 3-5: Additional staking service functions_
 
 ```
 
