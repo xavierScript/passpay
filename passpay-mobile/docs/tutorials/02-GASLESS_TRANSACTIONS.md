@@ -1007,56 +1007,6 @@ const styles = StyleSheet.create({
 
 ---
 
-## Advanced: Custom Transaction Options
-
-### Increasing Compute Units
-
-For complex transactions, you may need more compute units:
-
-```typescript
-transactionOptions: {
-  feeToken: "USDC",
-  computeUnitLimit: 500_000, // Increase from default ~200k
-  clusterSimulation: "devnet",
-}
-```
-
-### Multiple Instructions
-
-Send multiple operations in one transaction:
-
-```typescript
-const instructions = [
-  // Transfer to Alice
-  createTransferInstruction(wallet, alicePubkey, 0.5),
-  // Transfer to Bob
-  createTransferInstruction(wallet, bobPubkey, 0.3),
-  // Add a memo
-  createMemoInstruction("Payment for services"),
-];
-
-await signAndSendTransaction(
-  {
-    instructions, // All execute atomically
-    transactionOptions: { feeToken: "USDC", clusterSimulation: "devnet" },
-  },
-  { redirectUrl: getRedirectUrl() }
-);
-```
-
-### Non-Gasless Transactions
-
-If you want users to pay their own fees:
-
-```typescript
-transactionOptions: {
-  // Don't set feeToken, or set to SOL
-  clusterSimulation: "devnet",
-}
-```
-
----
-
 ## Testing Your Implementation
 
 ### Test Checklist

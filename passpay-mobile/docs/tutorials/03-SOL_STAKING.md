@@ -608,6 +608,8 @@ export default function StakeScreen() {
 }
 ````
 
+_Listing 3-6: Staking screen setup with hooks and state_`
+
 ---
 
 ## Step 3: Implement Staking Logic
@@ -759,6 +761,8 @@ function getStateDisplay(state: StakeAccountInfo["state"]) {
   );
 }
 ```
+
+_Listing 3-8: Rendering stake accounts with state indicators_
 
 ---
 
@@ -1235,6 +1239,8 @@ const styles = StyleSheet.create({
 });
 ```
 
+_Listing 3-9: Complete staking screen with full implementation_
+
 ---
 
 ## Advanced Topics
@@ -1284,6 +1290,8 @@ const handleWithdraw = async (
 };
 ```
 
+_Listing 3-11: Withdrawing from a deactivated stake account_
+
 ---
 
 ## Testing Your Implementation
@@ -1323,21 +1331,18 @@ const handleWithdraw = async (
 
 ## 🎓 Congratulations!
 
-You've completed all four LazorKit tutorials! You now have the knowledge to build production-ready passkey-powered Solana applications.
+You've completed three LazorKit tutorials! You now have the knowledge to build production-ready passkey-powered Solana applications.
 
 ### Summary of What You Built
 
-| Tutorial | Feature           | Key Concept              |
-| -------- | ----------------- | ------------------------ |
-| 1        | Passkey Wallet    | WebAuthn + Smart Wallets |
-| 2        | Gasless Transfers | Paymaster Integration    |
-| 3        | SOL Staking       | Multi-instruction Txs    |
+| Tutorial | Feature           | Key Concept                     |
+| -------- | ----------------- | ------------------------------- |
+| 1        | Passkey Wallet    | WebAuthn + Smart Wallets        |
+| 2        | Gasless Transfers | Paymaster Integration           |
+| 3        | SOL Staking       | Multi-instruction Txs with Seed |
 
 ### Next Steps
 
-- 🚀 Deploy your app to production
-- 📝 Add more features (token swaps, NFTs)
-- 🌐 Switch to mainnet
-- 📖 Contribute to LazorKit documentation
-- 💬 Join the [LazorKit Telegram](https://t.me/lazorkit)
+Feeling enthusiastic? Let's learn about Lazorkit with Solana's Memo Program
 
+- [Tutorial 4: On-Chain Memos](./04-ON_CHAIN_MEMOS.md) - Store permanent messages on Solana
