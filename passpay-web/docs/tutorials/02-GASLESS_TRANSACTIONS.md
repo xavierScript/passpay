@@ -14,9 +14,8 @@ Learn how to send SOL transactions without requiring users to pay gas fees. Lazo
 4. [Step 1: Create Transfer Service](#step-1-create-transfer-service)
 5. [Step 2: Build the Transfer Page](#step-2-build-the-transfer-page)
 6. [Step 3: Implement signAndSendTransaction](#step-3-implement-signandsendtransaction)
-7. [Step 4: Handle Success and Errors](#step-4-handle-success-and-errors)
-8. [Complete Code Example](#complete-code-example)
-9. [Testing Your Implementation](#testing-your-implementation)
+7. [Complete Code Example](#complete-code-example)
+8. [Testing Your Implementation](#testing-your-implementation)
 
 ---
 
@@ -464,88 +463,6 @@ refresh();
 
 After a successful transfer, we call `refresh()` from the `useSolBalance` hook to update the displayed balance. This ensures the UI reflects the new state immediately.
 
-```typescript
-// Helper to parse errors
-function parseError(error: unknown): string {
-  const msg = error instanceof Error ? error.message : String(error);
-
-  if (msg.includes("NotAllowedError") || msg.includes("cancelled")) {
-    return "You cancelled the passkey prompt.";
-  }
-  if (msg.includes("insufficient") || msg.includes("Insufficient")) {
-    return "Insufficient balance for this transaction.";
-  }
-  if (msg.includes("Transaction too large")) {
-    return "Transaction too large. Try a smaller amount.";
-  }
-
-  return msg || "Transaction failed. Please try again.";
-}
-```
-
-_Listing 2-3: Error parsing helper for user-friendly error messages_
-
----
-
-## Step 4: Handle Success and Errors
-
-### Transaction States
-
-Provide visual feedback for different transaction states:
-
-```typescript
-// Inside your button component
-<button
-  onClick={handleTransfer}
-  disabled={loading || !recipient || !amount}
-  className="w-full py-4 bg-[#9945FF] hover:bg-[#8035E0] 
-             disabled:opacity-50 text-white font-semibold rounded-xl"
->
-  {loading ? (
-    <div className="flex items-center justify-center gap-2">
-      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-          fill="none"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-      Waiting for approval...
-    </div>
-  ) : (
-    "Send SOL"
-  )}
-</button>
-```
-
-### View Transaction on Explorer
-
-```typescript
-const openExplorer = (signature: string) => {
-  const url = `https://solscan.io/tx/${signature}?cluster=devnet`;
-  window.open(url, "_blank");
-};
-
-// After successful transaction
-toast.success(
-  <div>
-    Transfer complete!
-    <button onClick={() => openExplorer(signature)} className="underline ml-2">
-      View →
-    </button>
-  </div>
-);
-```
-
 ---
 
 ## Complete Code Example
@@ -710,16 +627,6 @@ export default function TransferPage() {
       </div>
     </div>
   );
-}
-```
-
-### Fee Token Options
-
-```typescript
-transactionOptions: {
-  feeToken: "USDC",  // Paymaster pays in USDC (gasless)
-  // or
-  feeToken: "SOL",   // User pays in SOL
 }
 ```
 

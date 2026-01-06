@@ -39,6 +39,8 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 | 💳 **Subscriptions**       | ✅  | —      | Netflix-style recurring SOL payments           |
 | 🔄 **Session Persistence** | ✅  | ✅     | Stay logged in across sessions                 |
 
+> **🔗 Protocol Integration:** The SOL Staking feature demonstrates interaction with Solana's native **StakeProgram** — a production protocol used for securing the network and earning rewards. This shows real-world integration with existing Solana infrastructure.
+
 ---
 
 ## 📚 Tutorials (13 Total)
