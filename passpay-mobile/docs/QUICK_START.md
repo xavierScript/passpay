@@ -126,4 +126,4 @@ const LAZORKIT_CONFIG = {
 };
 ```
 
-For mainnet deployment, see the [Deployment Guide](./DEPLOYMENT.md).
+

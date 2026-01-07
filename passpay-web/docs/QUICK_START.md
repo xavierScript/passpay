@@ -48,6 +48,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+Note that WebAuthn only works over HTTPS, so configure HTTPS on localhost.
+
 ---
 
 ## Step 4: Test the App
@@ -131,8 +133,6 @@ export const DEFAULT_CONFIG = {
 };
 ```
 
-For mainnet deployment, see the [Deployment Guide](./DEPLOYMENT.md).
-
 ---
 
 ## 🔒 Browser Compatibility
@@ -146,4 +146,4 @@ PassPay Web uses WebAuthn for passkey authentication. Supported browsers:
 | Firefox | 119+            | Windows, Mac, Linux |
 | Edge    | 108+            | Windows, Mac        |
 
-> ⚠️ **HTTPS Required**: WebAuthn only works over HTTPS (or localhost for development).
+> ⚠️ **HTTPS Required**: WebAuthn only works over HTTPS.
