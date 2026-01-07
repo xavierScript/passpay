@@ -62,7 +62,9 @@ export default function MemoScreen() {
   });
 
   const { history, addTransaction, openInExplorer } =
-    useTransactionHistory<MemoRecord>();
+    useTransactionHistory<MemoRecord>({
+      storageKey: "memo_history",
+    });
 
   const [message, setMessage] = useState("");
 

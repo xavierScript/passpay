@@ -1,11 +1,12 @@
 /**
  * useTransactionHistory Hook
  *
- * A hook for managing in-memory transaction history with:
+ * A hook for managing persistent transaction history with:
  * - Add new transactions
  * - Automatic timestamp
  * - Maximum history limit
  * - Explorer URL generation
+ * - AsyncStorage persistence (survives app restarts)
  *
  * @example
  * ```tsx
@@ -24,8 +25,9 @@
  */
 
 import { getExplorerUrl } from "@/utils/helpers";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Linking } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface HistoryItem<T> {
   /** Unique ID for the item */
@@ -47,6 +49,8 @@ export interface UseTransactionHistoryOptions {
   maxItems?: number;
   /** Cluster for explorer URLs. Default: 'devnet' */
   cluster?: "devnet" | "mainnet";
+  /** Storage key for persistence. Default: 'transaction_history' */
+  storageKey?: string;
 }
 
 export interface UseTransactionHistoryReturn<T> {
@@ -67,9 +71,47 @@ export interface UseTransactionHistoryReturn<T> {
 export function useTransactionHistory<T = Record<string, unknown>>(
   options: UseTransactionHistoryOptions = {}
 ): UseTransactionHistoryReturn<T> {
-  const { maxItems = 10, cluster = "devnet" } = options;
+  const { maxItems = 10, cluster = "devnet", storageKey = "transaction_history" } = options;
 
   const [history, setHistory] = useState<HistoryItem<T>[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load history from AsyncStorage on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem(storageKey);
+        if (storedData) {
+          const parsed = JSON.parse(storedData);
+          // Convert timestamp strings back to Date objects
+          const restored = parsed.map((item: any) => ({
+            ...item,
+            timestamp: new Date(item.timestamp),
+          }));
+          setHistory(restored);
+        }
+      } catch (error) {
+        console.error("Failed to load transaction history:", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadHistory();
+  }, [storageKey]);
+
+  // Save history to AsyncStorage whenever it changes (after initial load)
+  useEffect(() => {
+    if (!isLoaded) return; // Don't save during initial load
+    
+    const saveHistory = async () => {
+      try {
+        await AsyncStorage.setItem(storageKey, JSON.stringify(history));
+      } catch (error) {
+        console.error("Failed to save transaction history:", error);
+      }
+    };
+    saveHistory();
+  }, [history, storageKey, isLoaded]);
 
   const addTransaction = useCallback(
     (signature: string, data: T) => {

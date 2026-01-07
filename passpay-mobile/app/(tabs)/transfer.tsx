@@ -75,7 +75,9 @@ export default function TransferScreen() {
   const { copy, copied } = useClipboard();
 
   const { history, addTransaction, openInExplorer } =
-    useTransactionHistory<TransferRecord>();
+    useTransactionHistory<TransferRecord>({
+      storageKey: "transfer_history",
+    });
 
   const { execute, loading } = useLazorkitTransaction({
     gasless: true,
