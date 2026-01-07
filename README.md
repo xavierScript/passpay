@@ -10,6 +10,7 @@ PassPay is a **production-ready starter template** that shows developers how to 
 
 ## 🌐 Live Demo
 
+- **Mobile:** [Android APK](https://expo.dev/artifacts/eas/vRm5wsXP3bqdG8EsyGbag5.apk) _(Devnet)_
 - **Web:** [Deployed on Vercel](https://passpay-tau.vercel.app/) _(Devnet)_
 
 ## 📚 Blog Post
