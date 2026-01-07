@@ -1,10 +1,10 @@
 # 🔐 PassPay
 
-**A comprehensive LazorKit SDK integration example for Web & Mobile**
+**Starter Template & SDK Integration Guide for LazorKit (Web + Mobile)**
 
-PassPay demonstrates how to build passkey-powered Solana wallets with gasless transactions across **both** Next.js (Web) and React Native/Expo (Mobile) platforms. Users create wallets using biometric authentication (FaceID, TouchID, Windows Hello) instead of seed phrases, and all transaction fees are covered by LazorKit Paymaster.
+PassPay is a **production-ready starter template** that shows developers how to integrate LazorKit SDK for passkey-powered Solana wallets with gasless transactions. This repo provides **complete working examples** for both Next.js (Web) and React Native/Expo (Mobile), designed to be forked and customized for your own projects.
 
-> I did this to show that Lazorkit integration was possible for both the Web and Mobile SDK, thereby helping Solana developers get started with passkey authentication and smart wallet transactions.
+> **🎯 Goal:** Accelerate LazorKit adoption by providing clear, reusable integration patterns across both platforms. Instead of reading docs alone, developers can clone this repo, study working code, and ship faster.
 
 ---
 
@@ -52,27 +52,30 @@ PassPay demonstrates how to build passkey-powered Solana wallets with gasless tr
 
 ---
 
-## ✨ Why This Project?
+## ✨ Why This Starter Template?
 
-| Challenge                            | Solution                                              |
-| ------------------------------------ | ----------------------------------------------------- |
-| Seed phrases are confusing for users | Passkeys use biometrics—nothing to write down         |
-| Gas fees create friction             | Paymaster sponsors all transaction fees               |
-| No cross-platform examples exist     | Full implementations for **web AND mobile**           |
-| Documentation is often lacking       | **12+ step-by-step tutorials** with code explanations |
+| Developer Challenge                            | How This Template Helps                                                 |
+| ---------------------------------------------- | ----------------------------------------------------------------------- |
+| **"How do I integrate LazorKit in Next.js?"**  | Full Next.js 15 example with App Router, hooks, and best practices      |
+| **"What about mobile apps?"**                  | Complete Expo implementation showing mobile-specific SDK integration    |
+| **"I need working code, not just docs"**       | 11 step-by-step tutorials with copy-paste ready code and explanations   |
+| **"How do I structure a production app?"**     | Feature-based architecture with reusable hooks and services             |
+| **"Show me real Solana protocol integration"** | SOL staking example demonstrates complex multi-instruction transactions |
 
 ---
 
 ## 🚀 What's Included
 
-### Two Complete Implementations
+### Two Complete SDK Integration Examples
 
-| Platform                               | Framework             | Status      | Documentation                                  |
-| -------------------------------------- | --------------------- | ----------- | ---------------------------------------------- |
-| **[PassPay Web](./passpay-web)**       | Next.js 15 + React 19 | ✅ Complete | [6 Tutorials](./passpay-web/docs/tutorials)    |
-| **[PassPay Mobile](./passpay-mobile)** | React Native + Expo   | ✅ Complete | [5 Tutorials](./passpay-mobile/docs/tutorials) |
+> **Fork-Ready Templates:** Each platform is a standalone starter template you can clone and customize
 
-### Features Demonstrated
+| Platform                               | Framework             | SDK Package                       | Documentation                                  |
+| -------------------------------------- | --------------------- | --------------------------------- | ---------------------------------------------- |
+| **[PassPay Web](./passpay-web)**       | Next.js 15 + React 19 | `@lazorkit/wallet` v2.0.1         | [6 Tutorials](./passpay-web/docs/tutorials)    |
+| **[PassPay Mobile](./passpay-mobile)** | React Native + Expo   | `@lazorkit/wallet-mobile-adapter` | [5 Tutorials](./passpay-mobile/docs/tutorials) |
+
+### LazorKit SDK Integration Patterns Demonstrated
 
 | Feature                    | Web | Mobile | Description                                    |
 | -------------------------- | --- | ------ | ---------------------------------------------- |
@@ -116,6 +119,32 @@ Each platform has comprehensive, step-by-step tutorials with:
 | 3   | [SOL Staking](./passpay-mobile/docs/tutorials/03-SOL_STAKING.md)                   | Multi-instruction staking           |
 | 4   | [On-Chain Memos](./passpay-mobile/docs/tutorials/04-ON_CHAIN_MEMOS.md)             | Permanent blockchain messages       |
 | 5   | [Session Management](./passpay-mobile/docs/tutorials/05-SESSION_MANAGEMENT.md)     | Persist sessions with AsyncStorage  |
+
+---
+
+## 👨‍💻 How to Use This Template
+
+### Option 1: Study the Examples
+
+1. Browse the [tutorials](./passpay-web/docs/tutorials) to understand integration patterns
+2. Check the [architecture docs](./passpay-web/docs/ARCHITECTURE.md) for code organization
+3. Read inline comments in key files like [`useTransaction.ts`](./passpay-web/hooks/useTransaction.ts)
+
+### Option 2: Fork & Customize
+
+1. Clone this repo: `git clone https://github.com/your-username/passpay.git`
+2. Pick a platform (web or mobile)
+3. Remove features you don't need
+4. Customize UI and add your own business logic
+5. Ship your passkey-powered Solana app!
+
+### Option 3: Copy Specific Patterns
+
+- Need just passkey auth? Copy the `features/wallet` module
+- Need gasless transfers? Copy `features/transfer` + `hooks/useTransaction.ts`
+- Need session persistence? Copy `features/session`
+
+**All code is MIT licensed—use it freely in your own projects!**
 
 ---
 
@@ -242,7 +271,17 @@ MIT © PassPay
 
 ---
 
+## 🤝 Contributing & Learning
+
+This is an open learning resource for the Solana community:
+
+- **Found a better pattern?** Open a PR!
+- **Questions about integration?** Open an issue
+- **Built something cool with this?** Share it on X and tag [@xavierScript](https://twitter.com/xavierScript)
+
+---
+
 <p align="center">
   <b>Built with ❤️ for the Solana developer community</b><br>
-  <sub>Helping developers build passwordless, gasless Solana apps</sub>
+  <sub>A starter template to help developers build passwordless, gasless Solana apps</sub>
 </p>
