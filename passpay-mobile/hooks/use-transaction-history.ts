@@ -71,7 +71,11 @@ export interface UseTransactionHistoryReturn<T> {
 export function useTransactionHistory<T = Record<string, unknown>>(
   options: UseTransactionHistoryOptions = {}
 ): UseTransactionHistoryReturn<T> {
-  const { maxItems = 10, cluster = "devnet", storageKey = "transaction_history" } = options;
+  const {
+    maxItems = 10,
+    cluster = "devnet",
+    storageKey = "transaction_history",
+  } = options;
 
   const [history, setHistory] = useState<HistoryItem<T>[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -102,7 +106,7 @@ export function useTransactionHistory<T = Record<string, unknown>>(
   // Save history to AsyncStorage whenever it changes (after initial load)
   useEffect(() => {
     if (!isLoaded) return; // Don't save during initial load
-    
+
     const saveHistory = async () => {
       try {
         await AsyncStorage.setItem(storageKey, JSON.stringify(history));
