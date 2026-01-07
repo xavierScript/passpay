@@ -14,6 +14,8 @@ PassPay is a **production-ready starter template** that shows developers how to 
 
 ## 📚 Blog Post
 
+- [Passkey Login & Smart Wallet Creation on Solana with React Native and LazorKit — No More Seed Phrases!](https://dev.to/xavier_script/passkey-login-smart-wallet-creation-on-solana-with-react-native-and-lazorkit-no-more-seed-49gk)
+
 - [Passkey Login & Smart Wallet Creation on Solana with Next.js and LazorKit — No More Seed Phrases!](https://dev.to/xavier_script/passkey-login-smart-wallet-creation-on-solana-with-nextjs-and-lazorkit-no-more-seed-phrases-1mbp)
 
 ---
