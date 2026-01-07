@@ -24,11 +24,6 @@ Comprehensive documentation for integrating LazorKit SDK in Next.js web applicat
 - [**API Reference**](./API_REFERENCE.md) - Custom hooks and services documentation
 - [**Troubleshooting**](./TROUBLESHOOTING.md) - Common issues and solutions
 
-### Additional Resources
-
-- [**Deployment Guide**](./DEPLOYMENT.md) - Deploy to Vercel / Production
-- [**Testing Guide**](./TESTING.md) - Unit testing setup and examples
-
 ---
 
 ## 📝 License

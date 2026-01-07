@@ -23,32 +23,6 @@ Comprehensive documentation for integrating LazorKit SDK in React Native (Expo) 
 - [**API Reference**](./API_REFERENCE.md) - Custom hooks and services documentation
 - [**Troubleshooting**](./TROUBLESHOOTING.md) - Common issues and solutions
 
-### Additional Resources
-
-- [**Deployment Guide**](./DEPLOYMENT.md) - Deploy to App Store / Play Store
-- [**Testing Guide**](./TESTING.md) - Unit testing setup and examples
-
----
-
-## 🎯 What Makes This Documentation Special
-
-1. **Real Code Examples** - Every tutorial uses actual code from PassPay, not hypothetical snippets
-2. **Progressive Learning** - Start simple, build complexity gradually
-3. **Copy-Paste Ready** - All code blocks are tested and working
-4. **Visual Aids** - Architecture diagrams and flow charts
-5. **Production Patterns** - Learn best practices for real apps
-
----
-
-## 🔗 Quick Links
-
-| Resource           | Link                                                                                  |
-| ------------------ | ------------------------------------------------------------------------------------- |
-| LazorKit Docs      | [docs.lazorkit.com](https://docs.lazorkit.com/)                                       |
-| LazorKit GitHub    | [github.com/lazor-kit/lazor-kit](https://github.com/lazor-kit/lazor-kit)              |
-| Solana Web3.js     | [solana-labs.github.io/solana-web3.js](https://solana-labs.github.io/solana-web3.js/) |
-| Expo Documentation | [docs.expo.dev](https://docs.expo.dev/)                                               |
-
 ---
 
 ## 📝 License
