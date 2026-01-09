@@ -82,7 +82,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com"
+              href="https://github.com/xavierScript/passpay"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-[#8f8f8f] hover:text-white transition-colors"
@@ -127,7 +127,7 @@ export default function Home() {
               </Button>
             </Link>
             <a
-              href="https://docs.lazorkit.com"
+              href="https://dev.to/xavier_script/passkey-login-smart-wallet-creation-on-solana-with-nextjs-and-lazorkit-no-more-seed-phrases-1mbp"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -287,15 +287,7 @@ function TransferButton() {
               LazorKit Docs
             </a>
             <a
-              href="https://t.me/lazorkit"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-[#14F195] transition-colors"
-            >
-              Telegram
-            </a>
-            <a
-              href="https://github.com/lazor-kit/lazor-kit"
+              href="https://github.com/xavierScript/passpay"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#14F195] transition-colors"
