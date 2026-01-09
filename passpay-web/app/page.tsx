@@ -258,7 +258,7 @@ function TransferButton() {
               </Button>
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/xavierScript/passpay"
               target="_blank"
               rel="noopener noreferrer"
             >
