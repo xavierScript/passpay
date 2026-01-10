@@ -137,7 +137,7 @@ export default function HomeScreen() {
       refreshControl={refreshControl}
     >
       <View style={styles.content}>
-        <View style={{ alignItems: "center", marginBottom: 8 }}>
+        <View style={styles.logoContainer}>
           <Logo size={48} showText />
         </View>
         <Text style={styles.subtitle}>Passkey-Powered Solana Wallet</Text>

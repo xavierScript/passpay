@@ -234,4 +234,8 @@ export const homeStyles = StyleSheet.create({
     color: AppColors.text,
     textAlign: "center",
   },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
 });

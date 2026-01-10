@@ -180,7 +180,7 @@ export default function TransferScreen() {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.content}>
-        <View style={{ alignItems: "center", marginBottom: 4 }}>
+        <View style={styles.logoContainer}>
           <Logo size={36} />
         </View>
         <Text style={styles.title}>Send SOL</Text>
@@ -291,7 +291,7 @@ export default function TransferScreen() {
         )}
 
         {/* Bottom padding */}
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomPadding} />
       </View>
     </ScrollView>
   );

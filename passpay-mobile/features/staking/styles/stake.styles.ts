@@ -219,4 +219,11 @@ export const stakeStyles = StyleSheet.create({
     fontWeight: "bold",
     color: AppColors.text,
   },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  bottomPadding: {
+    height: 40,
+  },
 });

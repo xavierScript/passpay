@@ -227,7 +227,7 @@ export default function StakeScreen() {
       refreshControl={refreshControl}
     >
       <View style={styles.content}>
-        <View style={{ alignItems: "center", marginBottom: 4 }}>
+        <View style={styles.logoContainer}>
           <Logo size={36} />
         </View>
         <Text style={styles.title}>Stake SOL</Text>
@@ -355,7 +355,7 @@ export default function StakeScreen() {
         )}
 
         {/* Bottom padding */}
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomPadding} />
       </View>
     </ScrollView>
   );

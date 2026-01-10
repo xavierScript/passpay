@@ -181,4 +181,11 @@ export const transferStyles = StyleSheet.create({
     color: AppColors.primary,
     fontWeight: "500",
   },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  bottomPadding: {
+    height: 40,
+  },
 });
