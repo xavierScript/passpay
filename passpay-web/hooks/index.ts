@@ -11,19 +11,19 @@
  */
 
 // Wallet feature hooks
-export { useSolBalance, useTransaction } from "@/features/wallet/hooks";
+export { useSolBalance, useTransaction } from "@/feature-examples/wallet/hooks";
 
 // Transfer feature hooks
-export { useTransfer } from "@/features/transfer/hooks";
+export { useTransfer } from "@/feature-examples/transfer/hooks";
 
 // Staking feature hooks
-export { useStaking } from "@/features/staking/hooks";
+export { useStaking } from "@/feature-examples/staking/hooks";
 
 // Memo feature hooks
-export { useMemoHook } from "@/features/memo/hooks";
+export { useMemoHook } from "@/feature-examples/memo/hooks";
 
 // Subscription feature hooks
-export { useSubscription } from "@/features/subscription/hooks";
+export { useSubscription } from "@/feature-examples/subscription/hooks";
 
 // Session feature hooks
-export { useSession } from "@/features/session/hooks";
+export { useSession } from "@/feature-examples/session/hooks";

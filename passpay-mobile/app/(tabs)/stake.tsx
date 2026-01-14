@@ -38,7 +38,7 @@ import {
   getStakeAccounts,
   MIN_STAKE_AMOUNT,
   StakeAccountInfo,
-} from "@/features/staking/services";
+} from "@/feature-examples/staking/services";
 import { stakeStyles as styles } from "@/styles";
 import { getAddressExplorerUrl } from "@/utils/helpers";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";

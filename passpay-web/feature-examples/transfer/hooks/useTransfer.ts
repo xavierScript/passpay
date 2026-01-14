@@ -12,7 +12,7 @@ import {
   validateAddress,
   validateAmount,
 } from "@/lib/services";
-import { useTransaction, useSolBalance } from "@/features/wallet/hooks";
+import { useTransaction, useSolBalance } from "@/feature-examples/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseTransferReturn {

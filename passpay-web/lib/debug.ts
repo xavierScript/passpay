@@ -8,7 +8,7 @@
  * window.passpayDebug.viewSubscriptions()
  */
 
-import { clearAllSubscriptions } from "@/features/subscription/services";
+import { clearAllSubscriptions } from "@/feature-examples/subscription/services";
 
 if (typeof window !== "undefined") {
   (window as any).passpayDebug = {

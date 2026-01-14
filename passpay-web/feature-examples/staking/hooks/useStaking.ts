@@ -16,7 +16,7 @@ import {
 } from "@/lib/services";
 import { getSolBalance } from "@/lib/services/rpc";
 import { DEFAULT_CONFIG } from "@/lib/constants";
-import { useTransaction } from "@/features/wallet/hooks";
+import { useTransaction } from "@/feature-examples/wallet/hooks";
 import toast from "react-hot-toast";
 
 interface UseStakingReturn {

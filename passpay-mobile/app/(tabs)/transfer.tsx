@@ -43,7 +43,7 @@ import {
   createTransferInstruction,
   validateAddress,
   validateAmount,
-} from "@/features/transfer/services";
+} from "@/feature-examples/transfer/services";
 import { transferStyles as styles } from "@/styles";
 import { useState } from "react";
 import {

@@ -102,20 +102,20 @@ export {
   useWalletGuard,
   type UseWalletGuardOptions,
   type UseWalletGuardReturn,
-} from "@/features/wallet/hooks/use-wallet-guard";
+} from "@/feature-examples/wallet/hooks/use-wallet-guard";
 
 export {
   useSolBalance,
   type UseSolBalanceOptions,
   type UseSolBalanceReturn,
-} from "@/features/wallet/hooks/use-sol-balance";
+} from "@/feature-examples/wallet/hooks/use-sol-balance";
 
 // Session Hooks
 export {
   useSession,
   type UseSessionOptions,
   type UseSessionReturn,
-} from "@/features/session/hooks/use-session";
+} from "@/feature-examples/session/hooks/use-session";
 
 // Theme Hooks
 export { useColorScheme } from "./use-color-scheme";

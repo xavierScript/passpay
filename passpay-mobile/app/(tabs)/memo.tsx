@@ -33,7 +33,7 @@ import {
   useTransactionHistory,
   useWalletGuard,
 } from "@/hooks";
-import { createMemoInstruction } from "@/features/memo/services";
+import { createMemoInstruction } from "@/feature-examples/memo/services";
 import { memoStyles as styles } from "@/styles";
 import { useState } from "react";
 import {

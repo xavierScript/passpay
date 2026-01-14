@@ -12,8 +12,8 @@
 export * from "./rpc";
 
 // Feature services (re-exported for backward compatibility)
-export * from "@/features/transfer/services";
-export * from "@/features/memo/services";
-export * from "@/features/staking/services";
-export * from "@/features/subscription/services";
-export * from "@/features/session/services";
+export * from "@/feature-examples/transfer/services";
+export * from "@/feature-examples/memo/services";
+export * from "@/feature-examples/staking/services";
+export * from "@/feature-examples/subscription/services";
+export * from "@/feature-examples/session/services";

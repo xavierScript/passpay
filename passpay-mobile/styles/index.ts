@@ -12,7 +12,7 @@ export { sharedStyles } from "./shared.styles";
 export { welcomeStyles } from "./welcome.styles";
 
 // Re-export feature styles for backward compatibility
-export { homeStyles } from "@/features/wallet/styles/home.styles";
-export { transferStyles } from "@/features/transfer/styles/transfer.styles";
-export { stakeStyles } from "@/features/staking/styles/stake.styles";
-export { memoStyles } from "@/features/memo/styles/memo.styles";
+export { homeStyles } from "@/feature-examples/wallet/styles/home.styles";
+export { transferStyles } from "@/feature-examples/transfer/styles/transfer.styles";
+export { stakeStyles } from "@/feature-examples/staking/styles/stake.styles";
+export { memoStyles } from "@/feature-examples/memo/styles/memo.styles";
